@@ -605,19 +605,32 @@ function MitraDashboard({ role }) {
                           <span className="material-symbols-outlined text-3xl text-outline">person</span>
                         )}
                       </div>
-                      <label className="cursor-pointer bg-surface-container-low hover:bg-surface-container border border-outline px-4 py-2 rounded-xl font-label-md text-label-md text-on-surface transition-colors flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[18px]">upload</span>
-                        Pilih Foto
-                        <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
-                      </label>
+                      <div className="flex-1">
+                        <input
+                          type="file"
+                          id="photo"
+                          accept="image/*"
+                          onChange={handlePhotoChange}
+                          className="hidden"
+                        />
+                        <label
+                          htmlFor="photo"
+                          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-outline bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md cursor-pointer transition-colors shadow-sm"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">upload</span>
+                          Pilih Foto
+                        </label>
+                        <p className="font-body-sm text-body-sm text-on-surface-variant mt-1.5">Format: JPG, PNG atau WEBP. Maks. 2MB.</p>
+                      </div>
                     </div>
                   </div>
                 </div>
+
                 <div className="flex justify-end gap-3 pt-4 border-t border-outline-variant/50">
                   <button
                     type="button"
                     onClick={() => setShowForm(false)}
-                    className="h-12 px-6 bg-surface-container-low hover:bg-surface-container text-on-surface rounded-xl font-label-md text-label-md transition-colors"
+                    className="h-12 px-6 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-xl font-label-md text-label-md transition-colors"
                   >
                     Batal
                   </button>
