@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { mitraService, productService, pendingStockValidationService } from '../lib/services';
+import { useState, useEffect, useMemo } from 'react';
+import { mitraService, productService, pendingStockValidationService, transactionService } from '../lib/services';
 
 function Toast({ message, type = 'success', onClose }) {
   useEffect(() => {
@@ -45,6 +45,7 @@ function MitraDashboard({ role }) {
   const [mitraList, setMitraList] = useState([]);
   const [products, setProducts] = useState([]);
   const [stockInputs, setStockInputs] = useState([]);
+  const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -63,15 +64,20 @@ function MitraDashboard({ role }) {
     status: 'Aktif',
   });
   const [productFilter, setProductFilter] = useState(isMitra ? '1' : 'Semua');
+  const [activeTab, setActiveTab] = useState('stock');
+  const [profitMonth, setProfitMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [profitStartDate, setProfitStartDate] = useState('');
+  const [profitEndDate, setProfitEndDate] = useState('');
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       try {
-        const [mitraData, productData, stockData] = await Promise.all([
+        const [mitraData, productData, stockData, txData] = await Promise.all([
           mitraService.getAll(),
           productService.getAll(),
           pendingStockValidationService.getAll(),
+          transactionService.getHistory(),
         ]);
 
         const mappedMitra = (mitraData || []).map((m) => ({
@@ -96,6 +102,7 @@ function MitraDashboard({ role }) {
           mitraName: p.mitra?.full_name || p.mitra_name || '-',
           mitraId: p.mitra_id,
           unit: p.unit || '',
+          mitraPrice: p.mitra_price || 0,
         }));
 
         const mappedStock = (stockData || []).map((s) => ({
@@ -108,9 +115,18 @@ function MitraDashboard({ role }) {
           status: s.status,
         }));
 
+        const mappedTx = (txData || []).map((tx) => ({
+          id: tx.id,
+          date: tx.created_at ? new Date(tx.created_at).toISOString().split('T')[0] : '',
+          mitraId: tx.mitra_id,
+          total: tx.total || 0,
+          items: tx.items || [],
+        }));
+
         setMitraList(mappedMitra);
         setProducts(mappedProducts);
         setStockInputs(mappedStock);
+        setTransactions(mappedTx);
       } catch (error) {
         console.error('Failed to load dashboard data:', error);
         setToast({ message: 'Gagal memuat data dashboard', type: 'error' });
@@ -136,11 +152,84 @@ function MitraDashboard({ role }) {
   const totalTransaction = mitraList.reduce((sum, m) => sum + (m.totalTransaction || 0), 0);
   const totalOmzet = mitraList.reduce((sum, m) => sum + (m.totalOmzet || 0), 0);
 
+  const today = new Date().toISOString().split('T')[0];
+  const mitraIdNum = Number(selectedMitra);
+
+  const todayTransactions = transactions.filter((tx) => {
+    if (!isMitra) return tx.date === today;
+    return tx.date === today && tx.mitraId === mitraIdNum;
+  });
+
+  const todayOmzet = todayTransactions.reduce((sum, tx) => sum + tx.total, 0);
+  const todayTransactionCount = todayTransactions.length;
+
+  const productMap = useMemo(() => {
+    const map = new Map();
+    products.forEach((p) => map.set(p.id, p));
+    return map;
+  }, [products]);
+
   const filteredMitra = mitraList.filter((mitra) =>
     mitra.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     mitra.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
     mitra.phone.includes(searchQuery)
   );
+
+  const tabs = useMemo(() => {
+    const base = [
+      { id: 'stock', label: 'Input Stok Harian', icon: 'inventory' },
+      { id: 'product', label: 'Daftar Produk', icon: 'shopping_bag' },
+      { id: 'profit', label: 'Riwayat Laba Bersih', icon: 'payments' },
+    ];
+    if (!isMitra) {
+      return [{ id: 'mitra', label: 'Daftar Mitra', icon: 'group' }, ...base];
+    }
+    return base;
+  }, [isMitra]);
+
+  const profitHistory = useMemo(() => {
+    let filtered = transactions;
+
+    if (isMitra) {
+      filtered = filtered.filter((tx) => tx.mitraId === mitraIdNum);
+    }
+
+    if (profitStartDate) {
+      filtered = filtered.filter((tx) => tx.date >= profitStartDate);
+    }
+    if (profitEndDate) {
+      filtered = filtered.filter((tx) => tx.date <= profitEndDate);
+    }
+    if (profitMonth) {
+      filtered = filtered.filter((tx) => tx.date.startsWith(profitMonth));
+    }
+
+    const dailyMap = new Map();
+    filtered.forEach((tx) => {
+      const items = tx.items || [];
+      const profit = items.reduce((sum, item) => {
+        const product = productMap.get(item.product_id);
+        const cost = product ? product.mitraPrice : 0;
+        const revenue = item.harga_satuan || 0;
+        return sum + (revenue - cost) * item.quantity;
+      }, 0);
+
+      const existing = dailyMap.get(tx.date) || { date: tx.date, omzet: 0, modal: 0, profit: 0, count: 0 };
+      existing.omzet += tx.total;
+      existing.modal += items.reduce((sum, item) => {
+        const product = productMap.get(item.product_id);
+        return sum + (product ? product.mitraPrice : 0) * item.quantity;
+      }, 0);
+      existing.profit += profit;
+      existing.count += 1;
+      dailyMap.set(tx.date, existing);
+    });
+
+    return Array.from(dailyMap.values()).sort((a, b) => b.date.localeCompare(a.date));
+  }, [transactions, productMap, isMitra, mitraIdNum, profitMonth, profitStartDate, profitEndDate]);
+
+  const totalProfit = profitHistory.reduce((sum, row) => sum + row.profit, 0);
+  const totalOmzetFiltered = profitHistory.reduce((sum, row) => sum + row.omzet, 0);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -227,7 +316,6 @@ function MitraDashboard({ role }) {
   };
 
   const todayStock = stockInputs.filter((s) => s.date === stockDate);
-  const _selectedMitraObj = mitraList.find((m) => m.id === Number(selectedMitra));
 
   if (loading) {
     return (
@@ -246,6 +334,20 @@ function MitraDashboard({ role }) {
     );
   }
 
+  const statsCards = isMitra ? (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <StatCard icon="receipt_long" label="Transaksi Hari Ini" value={todayTransactionCount} subtitle={today} colorClass="bg-secondary-fixed text-on-secondary-fixed" />
+      <StatCard icon="payments" label="Omzet Hari Ini" value={`Rp ${todayOmzet.toLocaleString('id-ID')}`} subtitle="Total penjualan hari ini" colorClass="bg-primary-fixed text-on-primary-fixed" />
+    </div>
+  ) : (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <StatCard icon="group" label="Total Mitra" value={totalMitra} subtitle="Semua mitra terdaftar" colorClass="bg-primary-fixed text-on-primary-fixed" />
+      <StatCard icon="check_circle" label="Mitra Aktif" value={activeMitra} subtitle={`${totalMitra > 0 ? Math.round((activeMitra / totalMitra) * 100) : 0}% dari total`} trend={`${totalMitra > 0 ? Math.round((activeMitra / totalMitra) * 100) : 0}%`} trendUp colorClass="bg-tertiary-fixed text-on-tertiary-fixed" />
+      <StatCard icon="receipt_long" label="Total Transaksi" value={totalTransaction.toLocaleString('id-ID')} subtitle="Bulan ini" colorClass="bg-secondary-fixed text-on-secondary-fixed" />
+      <StatCard icon="payments" label="Total Omzet" value={`Rp ${totalOmzet.toLocaleString('id-ID')}`} subtitle="Bulan ini" colorClass="bg-primary-fixed text-on-primary-fixed" />
+    </div>
+  );
+
   return (
     <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-full">
       <main className="flex-1 overflow-y-auto pb-24 md:pb-8">
@@ -258,7 +360,7 @@ function MitraDashboard({ role }) {
                 {isMitra ? 'Pantau stok dan performa mitra Anda' : 'Kelola data mitra dan pantau performa penjualan.'}
               </p>
             </div>
-            {!isMitra && (
+            {!isMitra && activeTab === 'mitra' && (
               <button
                 onClick={() => setShowForm(!showForm)}
                 className="h-12 px-6 bg-primary hover:bg-primary-fixed-variant text-on-primary rounded-xl flex items-center gap-2 transition-all duration-200 font-label-md text-label-md shadow-sm hover:shadow-md active:scale-95"
@@ -275,7 +377,7 @@ function MitraDashboard({ role }) {
               <h2 className="font-display-lg text-display-lg text-on-background tracking-tight">Mitra</h2>
               <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">{isMitra ? 'Dashboard Mitra' : 'Kelola data mitra'}</p>
             </div>
-            {!isMitra && (
+            {!isMitra && activeTab === 'mitra' && (
               <button
                 onClick={() => setShowForm(!showForm)}
                 className="h-10 w-10 bg-primary hover:bg-primary-fixed-variant text-on-primary rounded-full flex items-center justify-center transition-all duration-200 shadow-sm active:scale-95"
@@ -286,548 +388,432 @@ function MitraDashboard({ role }) {
           </div>
 
           {/* Statistics Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard icon="group" label="Total Mitra" value={totalMitra} subtitle="Semua mitra terdaftar" colorClass="bg-primary-fixed text-on-primary-fixed" />
-            <StatCard icon="check_circle" label="Mitra Aktif" value={activeMitra} subtitle={`${totalMitra > 0 ? Math.round((activeMitra / totalMitra) * 100) : 0}% dari total`} trend={`${totalMitra > 0 ? Math.round((activeMitra / totalMitra) * 100) : 0}%`} trendUp colorClass="bg-tertiary-fixed text-on-tertiary-fixed" />
-            <StatCard icon="receipt_long" label="Total Transaksi" value={totalTransaction.toLocaleString('id-ID')} subtitle="Bulan ini" colorClass="bg-secondary-fixed text-on-secondary-fixed" />
-            <StatCard icon="payments" label="Total Omzet" value={`Rp ${totalOmzet.toLocaleString('id-ID')}`} subtitle="Bulan ini" colorClass="bg-primary-fixed text-on-primary-fixed" />
-          </div>
+          {statsCards}
 
-          {/* Input Stok Harian */}
+          {/* Tabs */}
           <div className="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-outline-variant/50 bg-surface flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-secondary-container flex items-center justify-center text-on-secondary-container">
-                  <span className="material-symbols-outlined">inventory</span>
-                </div>
-                <div>
-                  <h3 className="font-headline-sm text-headline-sm text-on-background">Input Stok Harian</h3>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant">Catat stok harian per mitra</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowStockForm(!showStockForm)}
-                className="h-10 px-4 bg-primary hover:bg-primary-fixed-variant text-on-primary rounded-lg flex items-center gap-2 transition-colors font-label-md text-label-md"
-              >
-                <span className="material-symbols-outlined text-[18px]">{showStockForm ? 'close' : 'add'}</span>
-                {showStockForm ? 'Batal' : 'Tambah'}
-              </button>
+            <div className="flex border-b border-outline-variant bg-surface overflow-x-auto">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-5 py-3.5 font-label-md text-label-md whitespace-nowrap transition-colors ${
+                    activeTab === tab.id
+                      ? 'text-primary border-b-2 border-primary bg-surface-container-low/50'
+                      : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low/30'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[20px]">{tab.icon}</span>
+                  {tab.label}
+                </button>
+              ))}
             </div>
 
-            {showStockForm && (
-              <form className="p-6 border-b border-outline-variant/30 bg-surface-container-low" onSubmit={handleStockSubmit}>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="space-y-2">
-                    <label className="block font-label-md text-label-md text-on-surface font-medium">Mitra</label>
-                    {isMitra ? (
-                      <div className="w-full h-12 px-4 rounded-xl border border-outline bg-surface-container-low font-body-md text-body-md flex items-center text-on-surface-variant">
-                        {mitraList.find((m) => m.id === Number(selectedMitra))?.fullName || '-'}
+            {/* Tab Content */}
+            <div className="p-4 md:p-6">
+              {activeTab === 'stock' && (
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                    <div className="flex-1">
+                      <label className="block font-label-sm text-label-sm text-on-surface-variant mb-1">Filter Tanggal</label>
+                      <input
+                        type="date"
+                        className="w-full h-10 px-4 rounded-lg border border-outline bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-body-md text-body-md"
+                        value={stockDate}
+                        onChange={(e) => setStockDate(e.target.value)}
+                      />
+                    </div>
+                    {!isMitra && (
+                      <div className="flex-1">
+                        <label className="block font-label-sm text-label-sm text-on-surface-variant mb-1">Filter Mitra</label>
+                        <select
+                          className="w-full h-10 px-4 rounded-lg border border-outline bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-body-md text-body-md"
+                          value={selectedMitra}
+                          onChange={(e) => setSelectedMitra(e.target.value)}
+                        >
+                          <option value="">Semua Mitra</option>
+                          {mitraList.map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.fullName}
+                            </option>
+                          ))}
+                        </select>
                       </div>
-                    ) : (
-                      <select
-                        className="w-full h-12 pl-4 pr-10 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-body-md text-body-md appearance-none"
-                        value={selectedMitra}
-                        onChange={(e) => setSelectedMitra(e.target.value)}
-                        required
-                      >
-                        <option value="">Pilih Mitra</option>
-                        {mitraList.filter((m) => m.status === 'Aktif').map((m) => (
-                          <option key={m.id} value={m.id}>
-                            {m.fullName}
-                          </option>
-                        ))}
-                      </select>
                     )}
                   </div>
-                  <div className="space-y-2">
-                    <label className="block font-label-md text-label-md text-on-surface font-medium">Produk</label>
-                    <select
-                      className="w-full h-12 pl-4 pr-10 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-body-md text-body-md appearance-none"
-                      value={stockFormData.productId}
-                      onChange={(e) => setStockFormData({ ...stockFormData, productId: e.target.value })}
-                      required
-                    >
-                      <option value="">Pilih Produk</option>
-                      {products.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name} ({p.sku})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block font-label-md text-label-md text-on-surface font-medium">Stok</label>
-                    <input
-                      className="w-full h-12 px-4 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-body-md text-body-md"
-                      type="number"
-                      placeholder="0"
-                      value={stockFormData.stock}
-                      onChange={(e) => setStockFormData({ ...stockFormData, stock: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block font-label-md text-label-md text-on-surface font-medium">Catatan</label>
-                    <input
-                      className="w-full h-12 px-4 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-body-md text-body-md"
-                      type="text"
-                      placeholder="Opsional"
-                      value={stockFormData.note}
-                      onChange={(e) => setStockFormData({ ...stockFormData, note: e.target.value })}
-                    />
-                  </div>
-                </div>
-                <div className="flex justify-end gap-3 mt-4">
-                  <button type="submit" className="h-12 px-6 bg-secondary-fixed-dim hover:bg-secondary-container text-on-secondary-container rounded-xl font-label-md text-label-md transition-colors">
-                    Simpan Stok
-                  </button>
-                </div>
-              </form>
-            )}
 
-            <div className="p-6">
-              <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                <div className="flex-1">
-                  <label className="block font-label-sm text-label-sm text-on-surface-variant mb-1">Filter Tanggal</label>
-                  <input
-                    type="date"
-                    className="w-full h-10 px-4 rounded-lg border border-outline bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-body-md text-body-md"
-                    value={stockDate}
-                    onChange={(e) => setStockDate(e.target.value)}
-                  />
-                </div>
-                <div className="flex-1">
-                  <label className="block font-label-sm text-label-sm text-on-surface-variant mb-1">Filter Mitra</label>
-                  <select
-                    className="w-full h-10 px-4 rounded-lg border border-outline bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-body-md text-body-md"
-                    value={selectedMitra}
-                    onChange={(e) => setSelectedMitra(e.target.value)}
-                  >
-                    <option value="">Semua Mitra</option>
-                    {mitraList.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.fullName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-surface-container-low border-b border-outline-variant">
-                      <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Tanggal</th>
-                      <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Mitra</th>
-                      <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Produk</th>
-                      <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-right">Stok</th>
-                      <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Status</th>
-                      <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Catatan</th>
-                    </tr>
-                  </thead>
-                  <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
-                    {todayStock.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="px-6 py-12 text-center">
-                          <span className="material-symbols-outlined text-6xl text-outline mb-3">inventory_2</span>
-                          <p className="font-body-md text-body-md text-on-surface-variant">Tidak ada data stok untuk tanggal ini</p>
-                        </td>
-                      </tr>
-                    ) : (
-                      todayStock.map((stock, idx) => {
-                        const mitra = mitraList.find((m) => m.id === stock.mitraId);
-                        const product = products.find((p) => p.id === stock.productId);
-                        if (selectedMitra && stock.mitraId !== Number(selectedMitra)) return null;
-                        return (
-                          <tr key={stock.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
-                            <td className="px-6 py-4">
-                              <span className="font-body-sm text-body-sm text-on-surface">{stock.date}</span>
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className="font-body-sm text-body-sm text-on-surface">{mitra?.fullName || '-'}</span>
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className="font-body-sm text-body-sm text-on-surface">{product?.name || '-'}</span>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <span className="font-numeric-data text-numeric-data text-on-background">{stock.quantity} {product?.unit || ''}</span>
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-label-md text-label-sm border ${stock.status === 'validated' ? 'bg-tertiary-fixed/15 text-tertiary-container border-tertiary-fixed/30' : 'bg-[#fdf2d5] text-[#7a590c] border-[#ebd083]'}`}>
-                                <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                                {stock.status === 'validated' ? 'Tervalidasi' : 'Menunggu'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className="font-body-sm text-body-sm text-on-surface-variant">{stock.note || '-'}</span>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-surface-container-low border-b border-outline-variant">
+                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Tanggal</th>
+                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Mitra</th>
+                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Produk</th>
+                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-right">Stok</th>
+                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Status</th>
+                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Catatan</th>
+                        </tr>
+                      </thead>
+                      <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
+                        {todayStock.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="px-6 py-12 text-center">
+                              <span className="material-symbols-outlined text-6xl text-outline mb-3">inventory_2</span>
+                              <p className="font-body-md text-body-md text-on-surface-variant">Tidak ada data stok untuk tanggal ini</p>
                             </td>
                           </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          {/* Add Mitra Form - Collapsible */}
-          {showForm && (
-            <div className="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-md overflow-hidden">
-              <div className="p-6 border-b border-outline-variant/50 bg-surface flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-secondary-container flex items-center justify-center text-on-secondary-container">
-                  <span className="material-symbols-outlined">person_add</span>
-                </div>
-                <div>
-                  <h3 className="font-headline-sm text-headline-sm text-on-background">Tambah Mitra Baru</h3>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant">Isi data mitra dengan lengkap</p>
-                </div>
-              </div>
-              <form className="p-6 space-y-6" onSubmit={handleSubmit}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Nama Lengkap */}
-                  <div className="space-y-2">
-                    <label className="block font-label-md text-label-md text-on-surface font-medium" htmlFor="fullName">
-                      Nama Lengkap <span className="text-error">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-outline">
-                        <span className="material-symbols-outlined text-[20px]">person</span>
-                      </div>
-                      <input
-                        className="w-full h-12 pl-12 pr-4 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md text-on-background placeholder:text-outline/70"
-                        id="fullName"
-                        type="text"
-                        placeholder="Masukkan nama lengkap"
-                        value={formData.fullName}
-                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Email */}
-                  <div className="space-y-2">
-                    <label className="block font-label-md text-label-md text-on-surface font-medium" htmlFor="email">
-                      Email <span className="text-error">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-outline">
-                        <span className="material-symbols-outlined text-[20px]">mail</span>
-                      </div>
-                      <input
-                        className="w-full h-12 pl-12 pr-4 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md text-on-background placeholder:text-outline/70"
-                        id="email"
-                        type="email"
-                        placeholder="email@example.com"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* No HP */}
-                  <div className="space-y-2">
-                    <label className="block font-label-md text-label-md text-on-surface font-medium" htmlFor="phone">
-                      No HP <span className="text-error">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-outline">
-                        <span className="material-symbols-outlined text-[20px]">phone</span>
-                      </div>
-                      <input
-                        className="w-full h-12 pl-12 pr-4 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md text-on-background placeholder:text-outline/70"
-                        id="phone"
-                        type="tel"
-                        placeholder="081234567890"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Jenis Kelamin */}
-                  <div className="space-y-2">
-                    <label className="block font-label-md text-label-md text-on-surface font-medium" htmlFor="gender">
-                      Jenis Kelamin <span className="text-error">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-outline">
-                        <span className="material-symbols-outlined text-[20px]">wc</span>
-                      </div>
-                      <select
-                        className="w-full h-12 pl-12 pr-10 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md text-on-background appearance-none cursor-pointer"
-                        id="gender"
-                        value={formData.gender}
-                        onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                      >
-                        <option value="Laki-laki">Laki-laki</option>
-                        <option value="Perempuan">Perempuan</option>
-                      </select>
-                      <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-outline">
-                        <span className="material-symbols-outlined text-[20px]">arrow_drop_down</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Alamat - Full Width */}
-                  <div className="md:col-span-2 space-y-2">
-                    <label className="block font-label-md text-label-md text-on-surface font-medium" htmlFor="address">
-                      Alamat <span className="text-error">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute top-4 left-0 pl-4 flex items-center pointer-events-none text-outline">
-                        <span className="material-symbols-outlined text-[20px]">location_on</span>
-                      </div>
-                      <textarea
-                        className="w-full h-24 pl-12 pr-4 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md text-on-background placeholder:text-outline/70 resize-none"
-                        id="address"
-                        placeholder="Masukkan alamat lengkap"
-                        value={formData.address}
-                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Foto Mitra - Full Width */}
-                  <div className="md:col-span-2 space-y-2">
-                    <label className="block font-label-md text-label-md text-on-surface font-medium" htmlFor="photo">
-                      Foto Mitra
-                    </label>
-                    <div className="flex items-center gap-6">
-                      <div className="w-20 h-20 rounded-full bg-surface-container overflow-hidden border-2 border-outline-variant flex items-center justify-center flex-shrink-0 shadow-sm">
-                        {formData.photo ? (
-                          <img src={formData.photo} alt="Preview" className="w-full h-full object-cover" />
                         ) : (
-                          <span className="material-symbols-outlined text-outline text-4xl">person</span>
+                          todayStock.map((stock, idx) => {
+                            const mitra = mitraList.find((m) => m.id === stock.mitraId);
+                            const product = products.find((p) => p.id === stock.productId);
+                            if (!isMitra && selectedMitra && stock.mitraId !== Number(selectedMitra)) return null;
+                            return (
+                              <tr key={stock.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
+                                <td className="px-6 py-4">
+                                  <span className="font-body-sm text-body-sm text-on-surface">{stock.date}</span>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <span className="font-body-sm text-body-sm text-on-surface">{mitra?.fullName || '-'}</span>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <span className="font-body-sm text-body-sm text-on-surface">{product?.name || '-'}</span>
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                  <span className="font-numeric-data text-numeric-data text-on-background">{stock.quantity} {product?.unit || ''}</span>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-label-md text-label-sm border ${stock.status === 'validated' ? 'bg-tertiary-fixed/15 text-tertiary-container border-tertiary-fixed/30' : 'bg-[#fdf2d5] text-[#7a590c] border-[#ebd083]'}`}>
+                                    <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                                    {stock.status === 'validated' ? 'Tervalidasi' : 'Menunggu'}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <span className="font-body-sm text-body-sm text-on-surface-variant">{stock.note || '-'}</span>
+                                </td>
+                              </tr>
+                            );
+                          })
                         )}
-                      </div>
-                      <div className="flex-1">
-                        <input
-                          className="w-full h-12 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md text-on-background file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-on-primary hover:file:bg-primary-fixed-variant"
-                          id="photo"
-                          type="file"
-                          accept="image/*"
-                          onChange={handlePhotoChange}
-                        />
-                        <p className="font-body-sm text-body-sm text-on-surface-variant mt-1.5">Format: JPG, PNG. Maksimal 2MB</p>
-                      </div>
-                    </div>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
+              )}
 
-                {/* Form Actions */}
-                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-outline-variant/30">
-                  <button
-                    type="submit"
-                    className="h-12 px-8 bg-secondary-fixed-dim hover:bg-secondary-container text-on-secondary-container font-label-md text-label-md rounded-xl flex items-center justify-center gap-2 transition-all duration-200 active:scale-95 shadow-sm"
-                  >
-                    <span className="material-symbols-outlined">save</span>
-                    Simpan Mitra
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowForm(false)}
-                    className="h-12 px-8 bg-surface border border-outline-variant text-on-surface-variant font-label-md text-label-md rounded-xl hover:bg-surface-container transition-all duration-200"
-                  >
-                    Batal
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* Mitra List Table */}
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-outline-variant bg-surface flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h3 className="font-headline-sm text-headline-sm text-on-background">Daftar Mitra</h3>
-                <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Kelola dan pantau semua mitra</p>
-              </div>
-              <div className="relative w-full sm:w-64">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-                <input
-                  className="w-full h-10 pl-10 pr-4 rounded-lg border border-outline bg-surface-container-lowest focus:ring-2 focus:ring-primary focus:border-primary font-body-md text-body-md transition-all placeholder:text-outline/70"
-                  placeholder="Cari mitra..."
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {filteredMitra.length === 0 ? (
-              <div className="p-12 text-center">
-                <span className="material-symbols-outlined text-6xl text-outline mb-3">person_off</span>
-                <p className="font-body-md text-body-md text-on-surface-variant">Tidak ada mitra yang ditemukan</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-surface-container-low border-b border-outline-variant">
-                      <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Mitra</th>
-                      <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Kontak</th>
-                      <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-center">Status</th>
-                      <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-right">Transaksi</th>
-                      <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-right">Omzet</th>
-                    </tr>
-                  </thead>
-                  <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
-                    {filteredMitra.map((mitra, idx) => (
-                      <tr
-                        key={mitra.id}
-                        className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}
-                      >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-surface-container overflow-hidden border border-outline-variant flex-shrink-0 shadow-sm">
-                              {mitra.photo ? (
-                                <img src={mitra.photo} alt={mitra.fullName} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-outline">
-                                  <span className="material-symbols-outlined text-2xl">person</span>
-                                </div>
-                              )}
+              {activeTab === 'mitra' && !isMitra && (
+                <div className="space-y-4">
+                  {showForm && (
+                    <div className="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-md overflow-hidden">
+                      <div className="p-6 border-b border-outline-variant/50 bg-surface flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-secondary-container flex items-center justify-center text-on-secondary-container">
+                          <span className="material-symbols-outlined">person_add</span>
+                        </div>
+                        <div>
+                          <h3 className="font-headline-sm text-headline-sm text-on-background">Tambah Mitra Baru</h3>
+                          <p className="font-body-sm text-body-sm text-on-surface-variant">Isi data mitra dengan lengkap</p>
+                        </div>
+                      </div>
+                      <form className="p-6 space-y-6" onSubmit={handleSubmit}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <label className="block font-label-md text-label-md text-on-surface font-medium" htmlFor="fullName">Nama Lengkap <span className="text-error">*</span></label>
+                            <div className="relative">
+                              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-outline">
+                                <span className="material-symbols-outlined text-[20px]">person</span>
+                              </div>
+                              <input className="w-full h-12 pl-12 pr-4 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md text-on-background placeholder:text-outline/70" id="fullName" type="text" placeholder="Masukkan nama lengkap" value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} required />
                             </div>
-                            <div>
-                              <div className="font-semibold text-on-surface text-base">{mitra.fullName}</div>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <span className="font-label-sm text-label-sm text-on-surface-variant">{mitra.gender}</span>
-                                <span className="w-1 h-1 rounded-full bg-outline-variant"></span>
-                                <span className="font-label-sm text-label-sm text-on-surface-variant">{mitra.address.split(',')[0]}</span>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="block font-label-md text-label-md text-on-surface font-medium" htmlFor="email">Email <span className="text-error">*</span></label>
+                            <div className="relative">
+                              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-outline">
+                                <span className="material-symbols-outlined text-[20px]">mail</span>
+                              </div>
+                              <input className="w-full h-12 pl-12 pr-4 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md text-on-background placeholder:text-outline/70" id="email" type="email" placeholder="email@example.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="block font-label-md text-label-md text-on-surface font-medium" htmlFor="phone">No HP <span className="text-error">*</span></label>
+                            <div className="relative">
+                              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-outline">
+                                <span className="material-symbols-outlined text-[20px]">phone</span>
+                              </div>
+                              <input className="w-full h-12 pl-12 pr-4 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md text-on-background placeholder:text-outline/70" id="phone" type="tel" placeholder="081234567890" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} required />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="block font-label-md text-label-md text-on-surface font-medium" htmlFor="gender">Jenis Kelamin <span className="text-error">*</span></label>
+                            <div className="relative">
+                              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-outline">
+                                <span className="material-symbols-outlined text-[20px]">wc</span>
+                              </div>
+                              <select className="w-full h-12 pl-12 pr-10 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md text-on-background appearance-none cursor-pointer" id="gender" value={formData.gender} onChange={(e) => setFormData({ ...formData, gender: e.target.value })}>
+                                <option value="Laki-laki">Laki-laki</option>
+                                <option value="Perempuan">Perempuan</option>
+                              </select>
+                              <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-outline">
+                                <span className="material-symbols-outlined text-[20px]">arrow_drop_down</span>
                               </div>
                             </div>
                           </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2 text-on-surface mb-1">
-                            <span className="material-symbols-outlined text-[16px] text-on-surface-variant">phone</span>
-                            <span className="font-numeric-data text-numeric-data text-sm">{mitra.phone}</span>
+                          <div className="md:col-span-2 space-y-2">
+                            <label className="block font-label-md text-label-md text-on-surface font-medium" htmlFor="address">Alamat <span className="text-error">*</span></label>
+                            <div className="relative">
+                              <div className="absolute top-4 left-0 pl-4 flex items-center pointer-events-none text-outline">
+                                <span className="material-symbols-outlined text-[20px]">location_on</span>
+                              </div>
+                              <textarea className="w-full h-24 pl-12 pr-4 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md text-on-background placeholder:text-outline/70 resize-none" id="address" placeholder="Masukkan alamat lengkap" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} required />
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2 text-on-surface-variant">
-                            <span className="material-symbols-outlined text-[16px]">mail</span>
-                            <span className="font-body-sm text-body-sm">{mitra.email}</span>
+                          <div className="md:col-span-2 space-y-2">
+                            <label className="block font-label-md text-label-md text-on-surface font-medium" htmlFor="photo">Foto Mitra</label>
+                            <div className="flex items-center gap-6">
+                              <div className="w-20 h-20 rounded-full bg-surface-container overflow-hidden border-2 border-outline-variant flex items-center justify-center flex-shrink-0 shadow-sm">
+                                {formData.photo ? (
+                                  <img src={formData.photo} alt="Preview" className="w-full h-full object-cover" />
+                                ) : (
+                                  <span className="material-symbols-outlined text-outline text-4xl">person</span>
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <input type="file" id="photo" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+                                <label htmlFor="photo" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-outline bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md cursor-pointer transition-colors shadow-sm">
+                                  <span className="material-symbols-outlined text-[18px]">upload</span>
+                                  Pilih Foto
+                                </label>
+                                <p className="font-body-sm text-body-sm text-on-surface-variant mt-1.5">Format: JPG, PNG atau WEBP. Maks. 2MB.</p>
+                              </div>
+                            </div>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span
-                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-label-md text-label-md ${
-                              mitra.status === 'Aktif'
-                                ? 'bg-tertiary-fixed/15 text-tertiary-container border border-tertiary-fixed/30'
-                                : 'bg-error-container/15 text-error border border-error-container/30'
-                            }`}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                            {mitra.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <span className="font-numeric-data text-numeric-data text-on-background">{mitra.totalTransaction}</span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <span className="font-numeric-data text-numeric-data text-primary font-semibold">Rp {mitra.totalOmzet.toLocaleString('id-ID')}</span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-outline-variant/50">
+                          <button type="submit" className="h-12 px-8 bg-secondary-fixed-dim hover:bg-secondary-container text-on-secondary-container font-label-md text-label-md rounded-xl flex items-center justify-center gap-2 transition-all duration-200 active:scale-95 shadow-sm">
+                            <span className="material-symbols-outlined">save</span>
+                            Simpan Mitra
+                          </button>
+                          <button type="button" onClick={() => setShowForm(false)} className="h-12 px-8 bg-surface border border-outline-variant text-on-surface-variant font-label-md text-label-md rounded-xl hover:bg-surface-container transition-all duration-200">
+                            Batal
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
 
-            {/* Table Footer */}
-            <div className="px-6 py-4 border-t border-outline-variant bg-surface flex flex-col sm:flex-row justify-between items-center gap-3">
-              <span className="font-body-sm text-body-sm text-on-surface-variant">
-                Menampilkan {filteredMitra.length} dari {mitraList.length} mitra
-              </span>
-              <div className="flex items-center gap-2">
-                <button className="px-4 py-2 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors font-label-sm text-label-sm disabled:opacity-50" disabled>
-                  <span className="material-symbols-outlined text-[18px]">chevron_left</span>
-                </button>
-                <button className="px-4 py-2 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors font-label-sm text-label-sm">
-                  <span className="material-symbols-outlined text-[18px]">chevron_right</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Daftar Produk */}
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-outline-variant/50 bg-surface">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h3 className="font-headline-sm text-headline-sm text-on-background">Daftar Produk</h3>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
-                    {isMitra ? 'Produk yang Anda kelola' : 'Semua produk mitra'}
-                  </p>
-                </div>
-                {!isMitra && (
-                  <div className="w-full sm:w-64">
-                    <label className="block font-label-sm text-label-sm text-on-surface-variant mb-1">Filter Mitra</label>
-                    <select
-                      className="w-full h-10 px-4 rounded-lg border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-body-md text-body-md appearance-none"
-                      value={productFilter}
-                      onChange={(e) => setProductFilter(e.target.value)}
-                    >
-                      <option value="Semua">Semua Mitra</option>
-                      {mitraList.filter((m) => m.status === 'Aktif').map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.fullName}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-surface-container-low border-b border-outline-variant">
+                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Mitra</th>
+                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Kontak</th>
+                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-center">Status</th>
+                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-right">Transaksi</th>
+                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-right">Omzet</th>
+                        </tr>
+                      </thead>
+                      <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
+                        {filteredMitra.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="px-6 py-12 text-center">
+                              <span className="material-symbols-outlined text-6xl text-outline mb-3">person_off</span>
+                              <p className="font-body-md text-body-md text-on-surface-variant">Tidak ada mitra yang ditemukan</p>
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredMitra.map((mitra, idx) => (
+                            <tr key={mitra.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-12 h-12 rounded-full bg-surface-container overflow-hidden border border-outline-variant flex-shrink-0 shadow-sm">
+                                    {mitra.photo ? (
+                                      <img src={mitra.photo} alt={mitra.fullName} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-outline">
+                                        <span className="material-symbols-outlined text-2xl">person</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <div className="font-semibold text-on-surface text-base">{mitra.fullName}</div>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                      <span className="font-label-sm text-label-sm text-on-surface-variant">{mitra.gender}</span>
+                                      <span className="w-1 h-1 rounded-full bg-outline-variant"></span>
+                                      <span className="font-label-sm text-label-sm text-on-surface-variant">{mitra.address.split(',')[0]}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-2 text-on-surface mb-1">
+                                  <span className="material-symbols-outlined text-[16px] text-on-surface-variant">phone</span>
+                                  <span className="font-numeric-data text-numeric-data text-sm">{mitra.phone}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-on-surface-variant">
+                                  <span className="material-symbols-outlined text-[16px]">mail</span>
+                                  <span className="font-body-sm text-body-sm">{mitra.email}</span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 text-center">
+                                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-label-md text-label-md ${mitra.status === 'Aktif' ? 'bg-tertiary-fixed/15 text-tertiary-container border border-tertiary-fixed/30' : 'bg-error-container/15 text-error border border-error-container/30'}`}>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                                  {mitra.status}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <span className="font-numeric-data text-numeric-data text-on-background">{mitra.totalTransaction}</span>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <span className="font-numeric-data text-numeric-data text-primary font-semibold">Rp {mitra.totalOmzet.toLocaleString('id-ID')}</span>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
                   </div>
-                )}
-              </div>
-            </div>
+                </div>
+              )}
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-surface-container-low border-b border-outline-variant">
-                    <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Produk</th>
-                    <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">SKU</th>
-                    <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Kategori</th>
-                    <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Jenis</th>
-                    <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Mitra</th>
-                  </tr>
-                </thead>
-                <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
-                  {products
-                    .filter((p) => {
-                      if (isMitra) {
-                        return p.mitraId === Number(selectedMitra);
-                      }
-                      return productFilter === 'Semua' || p.mitraId === Number(productFilter);
-                    })
-                    .map((product, idx) => (
-                      <tr key={product.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
-                        <td className="px-6 py-4">
-                          <span className="font-body-sm text-body-sm text-on-surface">{product.name}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="font-mono text-sm bg-surface-container px-2 py-1 rounded-md text-on-surface-variant">{product.sku}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-sm text-label-sm bg-surface-container text-on-surface-variant border border-outline-variant">
-                            {product.category}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-sm text-label-sm bg-surface-container text-on-surface-variant border border-outline-variant">
-                            {product.type}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="font-body-sm text-body-sm text-on-surface">{product.mitraName}</span>
-                        </td>
+              {activeTab === 'product' && (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-surface-container-low border-b border-outline-variant">
+                        <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Produk</th>
+                        <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">SKU</th>
+                        <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Kategori</th>
+                        <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Jenis</th>
+                        <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Mitra</th>
                       </tr>
-                    ))}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
+                      {products
+                        .filter((p) => {
+                          if (isMitra) {
+                            return p.mitraId === mitraIdNum;
+                          }
+                          return productFilter === 'Semua' || p.mitraId === Number(productFilter);
+                        })
+                        .map((product, idx) => (
+                          <tr key={product.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
+                            <td className="px-6 py-4">
+                              <span className="font-body-sm text-body-sm text-on-surface">{product.name}</span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="font-mono text-sm bg-surface-container px-2 py-1 rounded-md text-on-surface-variant">{product.sku}</span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-sm text-label-sm bg-surface-container text-on-surface-variant border border-outline-variant">
+                                {product.category}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-sm text-label-sm bg-surface-container text-on-surface-variant border border-outline-variant">
+                                {product.type}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="font-body-sm text-body-sm text-on-surface">{product.mitraName}</span>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {activeTab === 'profit' && (
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex-1">
+                      <label className="block font-label-sm text-label-sm text-on-surface-variant mb-1">Filter Bulan</label>
+                      <input
+                        type="month"
+                        className="w-full h-10 px-4 rounded-lg border border-outline bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-body-md text-body-md"
+                        value={profitMonth}
+                        onChange={(e) => setProfitMonth(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block font-label-sm text-label-sm text-on-surface-variant mb-1">Dari Tanggal</label>
+                      <input
+                        type="date"
+                        className="w-full h-10 px-4 rounded-lg border border-outline bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-body-md text-body-md"
+                        value={profitStartDate}
+                        onChange={(e) => setProfitStartDate(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block font-label-sm text-label-sm text-on-surface-variant mb-1">Sampai Tanggal</label>
+                      <input
+                        type="date"
+                        className="w-full h-10 px-4 rounded-lg border border-outline bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-body-md text-body-md"
+                        value={profitEndDate}
+                        onChange={(e) => setProfitEndDate(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5">
+                      <p className="font-label-md text-label-md text-on-surface-variant mb-1">Total Omzet</p>
+                      <p className="font-display-lg text-display-lg text-on-background tracking-tight">Rp {totalOmzetFiltered.toLocaleString('id-ID')}</p>
+                    </div>
+                    <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5">
+                      <p className="font-label-md text-label-md text-on-surface-variant mb-1">Total Laba Bersih</p>
+                      <p className="font-display-lg text-display-lg text-primary font-semibold tracking-tight">Rp {totalProfit.toLocaleString('id-ID')}</p>
+                    </div>
+                    <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5">
+                      <p className="font-label-md text-label-md text-on-surface-variant mb-1">Jumlah Transaksi</p>
+                      <p className="font-display-lg text-display-lg text-on-background tracking-tight">{profitHistory.reduce((sum, row) => sum + row.count, 0)}</p>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-surface-container-low border-b border-outline-variant">
+                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Tanggal</th>
+                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-right">Omzet</th>
+                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-right">Modal</th>
+                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-right">Laba Bersih</th>
+                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-center">Transaksi</th>
+                        </tr>
+                      </thead>
+                      <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
+                        {profitHistory.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="px-6 py-12 text-center">
+                              <span className="material-symbols-outlined text-6xl text-outline mb-3">payments</span>
+                              <p className="font-body-md text-body-md text-on-surface-variant">Tidak ada data laba untuk periode ini</p>
+                            </td>
+                          </tr>
+                        ) : (
+                          profitHistory.map((row, idx) => (
+                            <tr key={row.date} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
+                              <td className="px-6 py-4">
+                                <span className="font-body-sm text-body-sm text-on-surface">{row.date}</span>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <span className="font-numeric-data text-numeric-data text-on-surface-variant">Rp {row.omzet.toLocaleString('id-ID')}</span>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <span className="font-numeric-data text-numeric-data text-on-surface-variant">Rp {row.modal.toLocaleString('id-ID')}</span>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <span className="font-numeric-data text-numeric-data text-primary font-semibold">Rp {row.profit.toLocaleString('id-ID')}</span>
+                              </td>
+                              <td className="px-6 py-4 text-center">
+                                <span className="font-numeric-data text-numeric-data text-on-background">{row.count}</span>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
