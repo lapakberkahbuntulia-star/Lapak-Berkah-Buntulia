@@ -602,239 +602,40 @@ function MitraDashboard({ role }) {
                         {formData.photo ? (
                           <img src={formData.photo} alt="Preview" className="w-full h-full object-cover" />
                         ) : (
-                          <span className="material-symbols-outlined text-outline text-4xl">person</span>
+                          <span className="material-symbols-outlined text-3xl text-outline">person</span>
                         )}
                       </div>
-                      <div className="flex-1">
-                        <input
-                          className="w-full h-12 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md text-on-background file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-on-primary hover:file:bg-primary-fixed-variant"
-                          id="photo"
-                          type="file"
-                          accept="image/*"
-                          onChange={handlePhotoChange}
-                        />
-                        <p className="font-body-sm text-body-sm text-on-surface-variant mt-1.5">Format: JPG, PNG. Maksimal 2MB</p>
-                      </div>
+                      <label className="cursor-pointer bg-surface-container-low hover:bg-surface-container border border-outline px-4 py-2 rounded-xl font-label-md text-label-md text-on-surface transition-colors flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[18px]">upload</span>
+                        Pilih Foto
+                        <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+                      </label>
                     </div>
                   </div>
                 </div>
-
-                {/* Form Actions */}
-                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-outline-variant/30">
-                  <button
-                    type="submit"
-                    className="h-12 px-8 bg-secondary-fixed-dim hover:bg-secondary-container text-on-secondary-container font-label-md text-label-md rounded-xl flex items-center justify-center gap-2 transition-all duration-200 active:scale-95 shadow-sm"
-                  >
-                    <span className="material-symbols-outlined">save</span>
-                    Simpan Mitra
-                  </button>
+                <div className="flex justify-end gap-3 pt-4 border-t border-outline-variant/50">
                   <button
                     type="button"
                     onClick={() => setShowForm(false)}
-                    className="h-12 px-8 bg-surface border border-outline-variant text-on-surface-variant font-label-md text-label-md rounded-xl hover:bg-surface-container transition-all duration-200"
+                    className="h-12 px-6 bg-surface-container-low hover:bg-surface-container text-on-surface rounded-xl font-label-md text-label-md transition-colors"
                   >
                     Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="h-12 px-6 bg-primary hover:bg-primary-fixed-variant text-on-primary rounded-xl font-label-md text-label-md transition-colors shadow-sm"
+                  >
+                    Simpan Mitra
                   </button>
                 </div>
               </form>
             </div>
           )}
 
-          {/* Mitra List Table */}
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-outline-variant bg-surface flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h3 className="font-headline-sm text-headline-sm text-on-background">Daftar Mitra</h3>
-                <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Kelola dan pantau semua mitra</p>
-              </div>
-              <div className="relative w-full sm:w-64">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-                <input
-                  className="w-full h-10 pl-10 pr-4 rounded-lg border border-outline bg-surface-container-lowest focus:ring-2 focus:ring-primary focus:border-primary font-body-md text-body-md transition-all placeholder:text-outline/70"
-                  placeholder="Cari mitra..."
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {filteredMitra.length === 0 ? (
-              <div className="p-12 text-center">
-                <span className="material-symbols-outlined text-6xl text-outline mb-3">person_off</span>
-                <p className="font-body-md text-body-md text-on-surface-variant">Tidak ada mitra yang ditemukan</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-surface-container-low border-b border-outline-variant">
-                      <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Mitra</th>
-                      <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Kontak</th>
-                      <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-center">Status</th>
-                      <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-right">Transaksi</th>
-                      <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-right">Omzet</th>
-                    </tr>
-                  </thead>
-                  <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
-                    {filteredMitra.map((mitra, idx) => (
-                      <tr
-                        key={mitra.id}
-                        className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}
-                      >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-surface-container overflow-hidden border border-outline-variant flex-shrink-0 shadow-sm">
-                              {mitra.photo ? (
-                                <img src={mitra.photo} alt={mitra.fullName} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-outline">
-                                  <span className="material-symbols-outlined text-2xl">person</span>
-                                </div>
-                              )}
-                            </div>
-                            <div>
-                              <div className="font-semibold text-on-surface text-base">{mitra.fullName}</div>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <span className="font-label-sm text-label-sm text-on-surface-variant">{mitra.gender}</span>
-                                <span className="w-1 h-1 rounded-full bg-outline-variant"></span>
-                                <span className="font-label-sm text-label-sm text-on-surface-variant">{mitra.address.split(',')[0]}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2 text-on-surface mb-1">
-                            <span className="material-symbols-outlined text-[16px] text-on-surface-variant">phone</span>
-                            <span className="font-numeric-data text-numeric-data text-sm">{mitra.phone}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-on-surface-variant">
-                            <span className="material-symbols-outlined text-[16px]">mail</span>
-                            <span className="font-body-sm text-body-sm">{mitra.email}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span
-                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-label-md text-label-md ${
-                              mitra.status === 'Aktif'
-                                ? 'bg-tertiary-fixed/15 text-tertiary-container border border-tertiary-fixed/30'
-                                : 'bg-error-container/15 text-error border border-error-container/30'
-                            }`}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                            {mitra.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <span className="font-numeric-data text-numeric-data text-on-background">{mitra.totalTransaction}</span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <span className="font-numeric-data text-numeric-data text-primary font-semibold">Rp {mitra.totalOmzet.toLocaleString('id-ID')}</span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Table Footer */}
-            <div className="px-6 py-4 border-t border-outline-variant bg-surface flex flex-col sm:flex-row justify-between items-center gap-3">
-              <span className="font-body-sm text-body-sm text-on-surface-variant">
-                Menampilkan {filteredMitra.length} dari {mitraList.length} mitra
-              </span>
-              <div className="flex items-center gap-2">
-                <button className="px-4 py-2 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors font-label-sm text-label-sm disabled:opacity-50" disabled>
-                  <span className="material-symbols-outlined text-[18px]">chevron_left</span>
-                </button>
-                <button className="px-4 py-2 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors font-label-sm text-label-sm">
-                  <span className="material-symbols-outlined text-[18px]">chevron_right</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Daftar Produk */}
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-outline-variant/50 bg-surface">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h3 className="font-headline-sm text-headline-sm text-on-background">Daftar Produk</h3>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
-                    {isMitra ? 'Produk yang Anda kelola' : 'Semua produk mitra'}
-                  </p>
-                </div>
-                {!isMitra && (
-                  <div className="w-full sm:w-64">
-                    <label className="block font-label-sm text-label-sm text-on-surface-variant mb-1">Filter Mitra</label>
-                    <select
-                      className="w-full h-10 px-4 rounded-lg border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-body-md text-body-md appearance-none"
-                      value={productFilter}
-                      onChange={(e) => setProductFilter(e.target.value)}
-                    >
-                      <option value="Semua">Semua Mitra</option>
-                      {mitraList.filter((m) => m.status === 'Aktif').map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.fullName}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-surface-container-low border-b border-outline-variant">
-                    <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Produk</th>
-                    <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">SKU</th>
-                    <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Kategori</th>
-                    <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Jenis</th>
-                    <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Mitra</th>
-                  </tr>
-                </thead>
-                <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
-                  {products
-                    .filter((p) => {
-                      if (isMitra) {
-                        return p.mitraId === Number(selectedMitra);
-                      }
-                      return productFilter === 'Semua' || p.mitraId === Number(productFilter);
-                    })
-                    .map((product, idx) => (
-                      <tr key={product.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
-                        <td className="px-6 py-4">
-                          <span className="font-body-sm text-body-sm text-on-surface">{product.name}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="font-mono text-sm bg-surface-container px-2 py-1 rounded-md text-on-surface-variant">{product.sku}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-sm text-label-sm bg-surface-container text-on-surface-variant border border-outline-variant">
-                            {product.category}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-sm text-label-sm bg-surface-container text-on-surface-variant border border-outline-variant">
-                            {product.type}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="font-body-sm text-body-sm text-on-surface">{product.mitraName}</span>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          {/* Toast Notification */}
+          {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
       </main>
-
-      {/* Toast Notification */}
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 }
