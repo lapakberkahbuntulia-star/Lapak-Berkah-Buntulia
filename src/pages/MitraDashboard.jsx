@@ -1,25 +1,5 @@
 import { useState, useEffect } from 'react';
-
-const initialMitra = [
-  { id: 1, fullName: 'Toko Makmur', address: 'Jl. Merdeka No. 45, Buntulia', phone: '081234567890', email: 'makmur@example.com', gender: 'Laki-laki', photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB49vG9Vi3qbccoLZTXOLCqShe83hxitKq-wO3Iud7yeRH4bnZt2z0KcWxLd05BsiXOGCsKYwMKMXivhLKmYbr5fjtWgLkZixOEhtdAXQMZFIsO098CSV5idKs-jD4BvjZ4O9yC5r0GgwI95lKuy2oX4MFkNyI0hV-fY2GQnKYnBnyKDMJHPpOFzE66yL9OywVNAdvHQb1dvhuWq4bYsPLpVExHIszD98fWP0RqV2EVmKnMEPCPM_8WEaD-B1rebwVHSrA', status: 'Aktif', totalTransaction: 156, totalOmzet: 42500000 },
-  { id: 2, fullName: 'Grosir Jaya', address: 'Jl. Sudirman No. 12, Buntulia', phone: '087765432101', email: 'jaya@example.com', gender: 'Laki-laki', photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD9S0lXMpRCIso-L8CBlj_U0MUQvoGBrQKhOVgsA54pAt-PbsyTJM5gPW1TDbWseVKIKBbDhf4ZBtI9wMQ3FSzouSGDMY3xbXtIyxirFJxSlk0YSDW7OUkpsvxjNQLl2kWrsF3Q_nFdCLy1SZReZR-SRm3wBB_5OpY9hjjEWFHzgwtfw9gjAbWHi0YbuDlNjGtlO_-LjzIh24qq9oobBsLzLD9oM_y5o3An1VRKRe8fWYF5RiZ30xX89A', status: 'Aktif', totalTransaction: 89, totalOmzet: 22150000 },
-  { id: 3, fullName: 'Toko Harapan', address: 'Jl. Diponegoro No. 8, Buntulia', phone: '089912345678', email: 'harapan@example.com', gender: 'Perempuan', photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAy_dC_R3oRxJ1d0ReP2F5QktKPUd4al-jRFlh_0wQDF5chjbpIErEr9nIyhA_Pak9a2yQqI_V_35NFG_290FDhpcyTxNSv5JBNTx01cGw0SQz98-vHdeijubwm-9cpLLsEVJ-5y1fe19ELkvf8a-Ze0RTkv1a4f7-yK5geAC8q0yx9_JtPC0wk8fWx9NOCBUxQ9rFCz0mwqFdPOaCh0bDJi3PGTTQoQMDveIbCK8762GcRQVbUuz-nkQ', status: 'Tidak Aktif', totalTransaction: 45, totalOmzet: 11200000 },
-];
-
-const products = [
-  { id: 1, name: 'Nasi Kuning', sku: 'BRP-001', category: 'Perishable', type: 'Makanan Basah', mitraName: 'Toko Makmur', mitraId: 1, unit: 'Pcs' },
-  { id: 2, name: 'Kerupuk', sku: 'MNG-002', category: 'Non-Perishable', type: 'Makanan Kering', mitraName: 'Grosir Jaya', mitraId: 2, unit: 'Pack' },
-  { id: 3, name: 'Es Teh Manis', sku: 'GLP-003', category: 'Perishable', type: 'Minuman', mitraName: 'Toko Harapan', mitraId: 3, unit: 'Gelas' },
-  { id: 4, name: 'Susu UHT 250ml', sku: 'MIG-004', category: 'Non-Perishable', type: 'Minuman', mitraName: 'Toko Makmur', mitraId: 1, unit: 'Karton' },
-  { id: 5, name: 'Mie Instan Goreng', sku: 'SUS-005', category: 'Non-Perishable', type: 'Makanan Kering', mitraName: 'Grosir Jaya', mitraId: 2, unit: 'Pcs' },
-  { id: 6, name: 'Kopi Susu Gula Aren', sku: 'KOP-006', category: 'Perishable', type: 'Minuman', mitraName: 'Toko Makmur', mitraId: 1, unit: 'Gelas' },
-];
-
-const initialStockInputs = [
-  { id: 1, mitraId: 1, productId: 1, date: '2025-08-07', stock: 45, note: 'Stok pagi hari' },
-  { id: 2, mitraId: 1, productId: 2, date: '2025-08-07', stock: 120, note: '' },
-  { id: 3, mitraId: 2, productId: 3, date: '2025-08-07', stock: 0, note: 'Stok habis' },
-];
+import { mitraService, productService, pendingStockValidationService } from '../lib/services';
 
 function Toast({ message, type = 'success', onClose }) {
   useEffect(() => {
@@ -62,14 +42,16 @@ function StatCard({ icon, label, value, subtitle, trend, trendUp, colorClass = '
 
 function MitraDashboard({ role }) {
   const isMitra = role === 'mitra';
-  const [mitraList, setMitraList] = useState(initialMitra);
+  const [mitraList, setMitraList] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [stockInputs, setStockInputs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState(null);
   const [showStockForm, setShowStockForm] = useState(false);
   const [selectedMitra, setSelectedMitra] = useState(isMitra ? '1' : '');
   const [stockDate, setStockDate] = useState(new Date().toISOString().split('T')[0]);
-  const [stockInputs, setStockInputs] = useState(initialStockInputs);
   const [stockFormData, setStockFormData] = useState({ productId: '', stock: '', note: '' });
   const [formData, setFormData] = useState({
     fullName: '',
@@ -83,8 +65,66 @@ function MitraDashboard({ role }) {
   const [productFilter, setProductFilter] = useState(isMitra ? '1' : 'Semua');
 
   useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const [mitraData, productData, stockData] = await Promise.all([
+          mitraService.getAll(),
+          productService.getAll(),
+          pendingStockValidationService.getAll(),
+        ]);
+
+        const mappedMitra = (mitraData || []).map((m) => ({
+          id: m.id,
+          fullName: m.full_name,
+          address: m.address,
+          phone: m.phone,
+          email: m.email,
+          gender: m.gender,
+          photo: m.photo,
+          status: m.status,
+          totalTransaction: m.total_transaction || 0,
+          totalOmzet: m.total_omzet || 0,
+        }));
+
+        const mappedProducts = (productData || []).map((p) => ({
+          id: p.id,
+          name: p.nama_produk,
+          sku: p.sku,
+          category: p.category?.name || '',
+          type: p.type?.name || '',
+          mitraName: p.mitra?.full_name || p.mitra_name || '-',
+          mitraId: p.mitra_id,
+          unit: p.unit || '',
+        }));
+
+        const mappedStock = (stockData || []).map((s) => ({
+          id: s.id,
+          mitraId: s.mitra_id,
+          productId: s.product_id,
+          date: s.date,
+          stock: s.stock,
+          note: s.note || '',
+          status: s.status,
+        }));
+
+        setMitraList(mappedMitra);
+        setProducts(mappedProducts);
+        setStockInputs(mappedStock);
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+        setToast({ message: 'Gagal memuat data dashboard', type: 'error' });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  useEffect(() => {
     if (isMitra) {
-      const currentMitra = mitraList.find(m => m.status === 'Aktif');
+      const currentMitra = mitraList.find((m) => m.status === 'Aktif');
       if (currentMitra) {
         setSelectedMitra(String(currentMitra.id));
       }
@@ -93,8 +133,8 @@ function MitraDashboard({ role }) {
 
   const totalMitra = mitraList.length;
   const activeMitra = mitraList.filter((m) => m.status === 'Aktif').length;
-  const totalTransaction = mitraList.reduce((sum, m) => sum + m.totalTransaction, 0);
-  const totalOmzet = mitraList.reduce((sum, m) => sum + m.totalOmzet, 0);
+  const totalTransaction = mitraList.reduce((sum, m) => sum + (m.totalTransaction || 0), 0);
+  const totalOmzet = mitraList.reduce((sum, m) => sum + (m.totalOmzet || 0), 0);
 
   const filteredMitra = mitraList.filter((mitra) =>
     mitra.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -102,19 +142,43 @@ function MitraDashboard({ role }) {
     mitra.phone.includes(searchQuery)
   );
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const newMitra = {
-      id: Date.now(),
-      ...formData,
-      status: 'Aktif',
-      totalTransaction: 0,
-      totalOmzet: 0,
-    };
-    setMitraList([...mitraList, newMitra]);
-    setFormData({ fullName: '', address: '', phone: '', email: '', gender: 'Laki-laki', photo: '' });
-    setShowForm(false);
-    setToast({ message: 'Mitra berhasil ditambahkan!', type: 'success' });
+    try {
+      const newMitra = await mitraService.create({
+        full_name: formData.fullName,
+        address: formData.address,
+        phone: formData.phone,
+        email: formData.email,
+        gender: formData.gender,
+        photo: formData.photo,
+        status: formData.status,
+        total_transaction: 0,
+        total_omzet: 0,
+      });
+
+      setMitraList([
+        ...mitraList,
+        {
+          id: newMitra.id,
+          fullName: newMitra.full_name,
+          address: newMitra.address,
+          phone: newMitra.phone,
+          email: newMitra.email,
+          gender: newMitra.gender,
+          photo: newMitra.photo,
+          status: newMitra.status,
+          totalTransaction: newMitra.total_transaction || 0,
+          totalOmzet: newMitra.total_omzet || 0,
+        },
+      ]);
+      setFormData({ fullName: '', address: '', phone: '', email: '', gender: 'Laki-laki', photo: '' });
+      setShowForm(false);
+      setToast({ message: 'Mitra berhasil ditambahkan!', type: 'success' });
+    } catch (error) {
+      console.error('Failed to create mitra:', error);
+      setToast({ message: 'Gagal menambahkan mitra', type: 'error' });
+    }
   };
 
   const handlePhotoChange = (e) => {
@@ -128,28 +192,59 @@ function MitraDashboard({ role }) {
     }
   };
 
-  const handleStockSubmit = (e) => {
+  const handleStockSubmit = async (e) => {
     e.preventDefault();
     if (!selectedMitra || !stockFormData.productId || !stockFormData.stock) return;
-    const mitra = mitraList.find(m => m.id === Number(selectedMitra));
-    const newStock = {
-      id: Date.now(),
-      mitraId: Number(selectedMitra),
-      mitraName: mitra?.fullName || '-',
-      productId: Number(stockFormData.productId),
-      date: stockDate,
-      stock: Number(stockFormData.stock),
-      note: stockFormData.note,
-      status: 'pending',
-    };
-    setStockInputs([...stockInputs, newStock]);
-    setStockFormData({ productId: '', stock: '', note: '' });
-    setShowStockForm(false);
-    setToast({ message: 'Stok harian berhasil disimpan dan menunggu validasi admin!', type: 'success' });
+    try {
+      const newStock = await pendingStockValidationService.create({
+        mitra_id: Number(selectedMitra),
+        product_id: Number(stockFormData.productId),
+        date: stockDate,
+        stock: Number(stockFormData.stock),
+        note: stockFormData.note,
+        status: 'pending',
+      });
+
+      setStockInputs([
+        ...stockInputs,
+        {
+          id: newStock.id,
+          mitraId: newStock.mitra_id,
+          productId: newStock.product_id,
+          date: newStock.date,
+          stock: newStock.stock,
+          note: newStock.note || '',
+          status: newStock.status,
+        },
+      ]);
+      setStockFormData({ productId: '', stock: '', note: '' });
+      setShowStockForm(false);
+      setToast({ message: 'Stok harian berhasil disimpan dan menunggu validasi admin!', type: 'success' });
+    } catch (error) {
+      console.error('Failed to create stock input:', error);
+      setToast({ message: 'Gagal menyimpan stok harian', type: 'error' });
+    }
   };
 
-  const todayStock = stockInputs.filter(s => s.date === stockDate);
-  const selectedMitraObj = mitraList.find(m => m.id === Number(selectedMitra));
+  const todayStock = stockInputs.filter((s) => s.date === stockDate);
+  const _selectedMitraObj = mitraList.find((m) => m.id === Number(selectedMitra));
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex flex-col md:ml-72 relative z-0 h-full">
+        <main className="flex-1 overflow-y-auto pb-24 md:pb-8">
+          <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
+            <div className="flex items-center justify-center h-64">
+              <div className="flex flex-col items-center gap-4">
+                <span className="material-symbols-outlined text-6xl text-outline animate-spin">progress_activity</span>
+                <p className="font-body-md text-body-md text-on-surface-variant">Memuat data dashboard...</p>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col md:ml-72 relative z-0 h-full">
@@ -226,7 +321,7 @@ function MitraDashboard({ role }) {
                     <label className="block font-label-md text-label-md text-on-surface font-medium">Mitra</label>
                     {isMitra ? (
                       <div className="w-full h-12 px-4 rounded-xl border border-outline bg-surface-container-low font-body-md text-body-md flex items-center text-on-surface-variant">
-                        {mitraList.find(m => m.id === Number(selectedMitra))?.fullName || '-'}
+                        {mitraList.find((m) => m.id === Number(selectedMitra))?.fullName || '-'}
                       </div>
                     ) : (
                       <select
@@ -236,8 +331,10 @@ function MitraDashboard({ role }) {
                         required
                       >
                         <option value="">Pilih Mitra</option>
-                        {mitraList.filter(m => m.status === 'Aktif').map(m => (
-                          <option key={m.id} value={m.id}>{m.fullName}</option>
+                        {mitraList.filter((m) => m.status === 'Aktif').map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.fullName}
+                          </option>
                         ))}
                       </select>
                     )}
@@ -251,8 +348,10 @@ function MitraDashboard({ role }) {
                       required
                     >
                       <option value="">Pilih Produk</option>
-                      {products.map(p => (
-                        <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
+                      {products.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({p.sku})
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -305,8 +404,10 @@ function MitraDashboard({ role }) {
                     onChange={(e) => setSelectedMitra(e.target.value)}
                   >
                     <option value="">Semua Mitra</option>
-                    {mitraList.map(m => (
-                      <option key={m.id} value={m.id}>{m.fullName}</option>
+                    {mitraList.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.fullName}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -334,8 +435,8 @@ function MitraDashboard({ role }) {
                       </tr>
                     ) : (
                       todayStock.map((stock, idx) => {
-                        const mitra = mitraList.find(m => m.id === stock.mitraId);
-                        const product = products.find(p => p.id === stock.productId);
+                        const mitra = mitraList.find((m) => m.id === stock.mitraId);
+                        const product = products.find((p) => p.id === stock.productId);
                         if (selectedMitra && stock.mitraId !== Number(selectedMitra)) return null;
                         return (
                           <tr key={stock.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
@@ -672,8 +773,10 @@ function MitraDashboard({ role }) {
                       onChange={(e) => setProductFilter(e.target.value)}
                     >
                       <option value="Semua">Semua Mitra</option>
-                      {mitraList.filter(m => m.status === 'Aktif').map(m => (
-                        <option key={m.id} value={m.id}>{m.fullName}</option>
+                      {mitraList.filter((m) => m.status === 'Aktif').map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.fullName}
+                        </option>
                       ))}
                     </select>
                   </div>

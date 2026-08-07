@@ -28,3 +28,7 @@ Tracking piutang
 Notifikasi stok menipis
 Alert otomatis di Dashboard/Inventory
 Bisa diset ambang batas stok
+
+lupa saya jelaskan tadi. Jika admin yang menginput
+
+admin (admin@lapakberkah.com / admin123),

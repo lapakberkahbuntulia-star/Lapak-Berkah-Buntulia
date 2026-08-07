@@ -1,30 +1,16 @@
-import { useState } from 'react';
-
-const products = [
-  { id: 1, name: 'Nasi Kuning', sku: 'BRP-001', category: 'Perishable', type: 'Makanan Basah', mitraName: 'Toko Makmur', stock: 45, unit: 'Pcs' },
-  { id: 2, name: 'Kerupuk', sku: 'MNG-002', category: 'Non-Perishable', type: 'Makanan Kering', mitraName: 'Grosir Jaya', stock: 120, unit: 'Pack' },
-  { id: 3, name: 'Es Teh Manis', sku: 'GLP-003', category: 'Perishable', type: 'Minuman', mitraName: 'Toko Harapan', stock: 0, unit: 'Gelas' },
-  { id: 4, name: 'Susu UHT 250ml', sku: 'MIG-004', category: 'Non-Perishable', type: 'Minuman', mitraName: 'Toko Makmur', stock: 24, unit: 'Karton' },
-  { id: 5, name: 'Mie Instan Goreng', sku: 'SUS-005', category: 'Non-Perishable', type: 'Makanan Kering', mitraName: 'Grosir Jaya', stock: 120, unit: 'Pcs' },
-  { id: 6, name: 'Kopi Susu Gula Aren', sku: 'KOP-006', category: 'Perishable', type: 'Minuman', mitraName: 'Toko Makmur', stock: 50, unit: 'Gelas' },
-];
-
-const initialStockMovements = [
-  { id: 1, type: 'in', productId: 1, quantity: 50, date: '2025-08-07', note: 'Stok pagi dari mitra', mitraName: 'Toko Makmur' },
-  { id: 2, type: 'out', productId: 3, quantity: 5, date: '2025-08-07', note: 'Barang rusak', mitraName: '-' },
-  { id: 3, type: 'in', productId: 2, quantity: 100, date: '2025-08-06', note: 'Restok mingguan', mitraName: 'Grosir Jaya' },
-];
-
-const initialPendingValidations = [
-  { id: 1, mitraName: 'Toko Makmur', productId: 1, date: '2025-08-07', quantity: 50, note: 'Stok pagi hari' },
-  { id: 2, mitraName: 'Grosir Jaya', productId: 2, date: '2025-08-07', quantity: 100, note: 'Restok mingguan' },
-  { id: 3, mitraName: 'Toko Harapan', productId: 3, date: '2025-08-07', quantity: 10, note: 'Stok sore' },
-];
+import { useState, useEffect } from 'react';
+import {
+  productService,
+  stockMovementService,
+  pendingStockValidationService,
+  mitraService,
+} from '../lib/services';
 
 function StockManagement() {
-  const [productsList, setProductsList] = useState(products);
-  const [stockMovements, setStockMovements] = useState(initialStockMovements);
-  const [pendingValidations, setPendingValidations] = useState(initialPendingValidations);
+  const [productsList, setProductsList] = useState([]);
+  const [stockMovements, setStockMovements] = useState([]);
+  const [pendingValidations, setPendingValidations] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [filterType, setFilterType] = useState('Semua');
   const [filterProduct, setFilterProduct] = useState('Semua');
@@ -33,7 +19,66 @@ function StockManagement() {
   const [valStartDate, setValStartDate] = useState('');
   const [valEndDate, setValEndDate] = useState('');
   const [valMitra, setValMitra] = useState('Semua');
-  const [formData, setFormData] = useState({ type: 'in', productId: '', quantity: '', note: '', mitraName: '' });
+  const [formData, setFormData] = useState({ type: 'in', productId: '', quantity: '', note: '' });
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [productsData, movementsData, validationsData, mitraData] = await Promise.all([
+          productService.getAll(),
+          stockMovementService.getAll(),
+          pendingStockValidationService.getAll(),
+          mitraService.getAll(),
+        ]);
+
+        setProductsList(
+          productsData.map((p) => ({
+            id: p.id,
+            name: p.nama_produk,
+            sku: p.sku,
+            category: p.category?.name,
+            type: p.type?.name,
+            mitraName: p.mitra?.full_name,
+            mitraId: p.mitra_id,
+            stock: p.stock,
+            unit: p.unit,
+          })),
+        );
+
+        setStockMovements(
+          movementsData.map((m) => ({
+            id: m.id,
+            type: m.type,
+            productId: m.product_id,
+            productName: m.product?.nama_produk,
+            quantity: m.quantity,
+            date: m.date || (m.created_at ? m.created_at.split('T')[0] : ''),
+            note: m.note,
+            mitraName: m.mitra?.full_name,
+          })),
+        );
+
+        setPendingValidations(
+          validationsData.map((v) => ({
+            id: v.id,
+            mitraName: v.mitra?.full_name,
+            mitraId: v.mitra_id,
+            productId: v.product_id,
+            productName: v.product?.nama_produk,
+            quantity: v.quantity,
+            date: v.date,
+            note: v.note,
+          })),
+        );
+      } catch (error) {
+        console.error('Failed to load stock data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   const updateProductStock = (productId, quantity, type) => {
     setProductsList((prev) =>
@@ -45,47 +90,79 @@ function StockManagement() {
     );
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const product = productsList.find((p) => p.id === Number(formData.productId));
     if (!product || !formData.quantity || Number(formData.quantity) <= 0) return;
 
-    const newMovement = {
-      id: Date.now(),
-      type: formData.type,
-      productId: Number(formData.productId),
-      quantity: Number(formData.quantity),
-      date: new Date().toISOString().split('T')[0],
-      note: formData.note,
-      mitraName: formData.type === 'in' ? product.mitraName : '-',
-    };
+    try {
+      const newMovement = await stockMovementService.create({
+        type: formData.type,
+        product_id: Number(formData.productId),
+        quantity: Number(formData.quantity),
+        date: new Date().toISOString().split('T')[0],
+        note: formData.note,
+        mitra_id: formData.type === 'in' ? product.mitraId : null,
+      });
 
-    setStockMovements((prev) => [newMovement, ...prev]);
-    updateProductStock(Number(formData.productId), Number(formData.quantity), formData.type);
-    setFormData({ type: 'in', productId: '', quantity: '', note: '', mitraName: '' });
-    setShowForm(false);
+      setStockMovements((prev) => [
+        {
+          id: newMovement.id,
+          type: newMovement.type,
+          productId: newMovement.product_id,
+          productName: product.name,
+          quantity: newMovement.quantity,
+          date: newMovement.date || (newMovement.created_at ? newMovement.created_at.split('T')[0] : ''),
+          note: newMovement.note,
+          mitraName: newMovement.mitra?.full_name || (formData.type === 'in' ? product.mitraName : '-'),
+        },
+        ...prev,
+      ]);
+      updateProductStock(Number(formData.productId), Number(formData.quantity), formData.type);
+      setFormData({ type: 'in', productId: '', quantity: '', note: '' });
+      setShowForm(false);
+    } catch (error) {
+      console.error('Failed to create stock movement:', error);
+    }
   };
 
-  const handleValidate = (validationId) => {
+  const handleValidate = async (validationId) => {
     const validation = pendingValidations.find((v) => v.id === validationId);
     if (!validation) return;
 
     const product = productsList.find((p) => p.id === validation.productId);
     if (!product) return;
 
-    const newMovement = {
-      id: Date.now(),
-      type: 'in',
-      productId: validation.productId,
-      quantity: validation.quantity,
-      date: validation.date,
-      note: validation.note,
-      mitraName: validation.mitraName,
-    };
+    try {
+      await pendingStockValidationService.validate(validationId);
 
-    setStockMovements((prev) => [newMovement, ...prev]);
-    updateProductStock(validation.productId, validation.quantity, 'in');
-    setPendingValidations((prev) => prev.filter((v) => v.id !== validationId));
+      const newMovement = await stockMovementService.create({
+        type: 'in',
+        product_id: validation.productId,
+        quantity: validation.quantity,
+        date: validation.date,
+        note: validation.note,
+        mitra_id: validation.mitraId,
+      });
+
+      setStockMovements((prev) => [
+        {
+          id: newMovement.id,
+          type: 'in',
+          productId: validation.productId,
+          productName: product.name,
+          quantity: validation.quantity,
+          date: validation.date,
+          note: validation.note,
+          mitraName: validation.mitraName,
+        },
+        ...prev,
+      ]);
+      updateProductStock(validation.productId, validation.quantity, 'in');
+      setPendingValidations((prev) => prev.filter((v) => v.id !== validationId));
+    } catch (error) {
+      console.error('Failed to validate stock:', error);
+    }
   };
 
   const filteredMovements = stockMovements.filter((m) => {
@@ -104,6 +181,21 @@ function StockManagement() {
   const totalIn = stockMovements.filter((m) => m.type === 'in').reduce((sum, m) => sum + m.quantity, 0);
   const totalOut = stockMovements.filter((m) => m.type === 'out').reduce((sum, m) => sum + m.quantity, 0);
   const mitraNames = ['Semua', ...new Set(pendingValidations.map((v) => v.mitraName))];
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex flex-col md:ml-72 relative z-0 h-full">
+        <main className="flex-1 overflow-y-auto pb-24 md:pb-8">
+          <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="font-body-md text-body-md text-on-surface-variant">Memuat data stok...</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col md:ml-72 relative z-0 h-full">

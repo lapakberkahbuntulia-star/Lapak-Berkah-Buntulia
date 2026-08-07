@@ -1,24 +1,49 @@
-import { useState } from 'react';
-
-const products = [
-  { id: 1, name: 'Nasi Kuning', sku: 'BRP-001', category: 'Perishable', type: 'Makanan Basah', mitraName: 'Toko Makmur', mitraPrice: 14500, sellingPrice: 18000, stock: 45, unit: 'Pcs', photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD9S0lXMpRCIso-L8CBlj_U0MUQvoGBrQKhOVgsA54pAt-PbsyTJM5gPW1TDbWseVKIKBbDhf4ZBtI9wMQ3FSzouSGDMY3xbXtIyxirFJxSlk0YSDW7OUkpsvxjNQLl2kWrsF3Q_nFdCLy1SZReZR-SRm3wBB_5OpY9hjjEWFHzgwtfw9gjAbWHi0YbuDlNjGtlO_-LjzIh24qq9oobBsLzLD9oM_y5o3An1VRKRe8fWYF5RiZ30xX89A', description: 'Nasi kuning siap saji', barcodeId: 'BC-001' },
-  { id: 2, name: 'Minyak Goreng 1L', sku: 'MNG-002', category: 'Non-Perishable', type: 'Makanan Kering', mitraName: 'Grosir Jaya', mitraPrice: 16000, sellingPrice: 25000, stock: 0, unit: 'Botol', photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAy_dC_R3oRxJ1d0ReP2F5QktKPUd4al-jRFlh_0wQDF5chjbpIErEr9nIyhA_Pak9a2yQqI_V_35NFG_290FDhpcyTxNSv5JBNTx01cGw0SQz98-vHdeijubwm-9cpLLsEVJ-5y1fe19ELkvf8a-Ze0RTkv1a4f7-yK5geAC8q0yx9_JtPC0wk8fWx9NOCBUxQ9rFCz0mwqFdPOaCh0bDJi3PGTTQoQMDveIbCK8762GcRQVbUuz-nkQ', description: 'Minyak goreng 1L', barcodeId: 'BC-002' },
-  { id: 3, name: 'Gula Pasir 500g', sku: 'GLP-003', category: 'Non-Perishable', type: 'Bumbu Dapur', mitraName: 'Toko Harapan', mitraPrice: 8000, sellingPrice: 12000, stock: 5, unit: 'Pack', photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD45ZfKiOkzCqbc-spfBj-jJwJbWtVxit5ZTkS7gWepe3UrNb1wJVvMnTQqpxYY0-ZaECpGJypxNBWPJcM-NjIkiT99Gbt8kTM09FpleP3YFBpXhOzZQ0ffJVKBjqq2pToEqGI4tGDaiaPIfVWCKuz6X6cMk8NMuVlm9c31YKH5ivXc2IouBfmjKOAsA70ObFR8T5IiVgAcFYtrJHRDfvLySUxMw_I5Aw7HJPd9C1taAui0kx5wEqLipA', description: 'Gula pasir 500g', barcodeId: 'BC-003' },
-  { id: 4, name: 'Mie Instan Goreng', sku: 'SUS-004', category: 'Non-Perishable', type: 'Makanan Kering', mitraName: 'Grosir Jaya', mitraPrice: 3000, sellingPrice: 4500, stock: 120, unit: 'Pcs', photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC5qejlFpuAvF4M0PzqD6tNHnw6z1CjHJelomAYXJWHwCJIMsFaVz4LizVtCJDepveg23kZ1jtsSfCsIZgoL2YHjVkruEf4beb4auqiUQP4BTdIOrcNdPRnhKI3moA-cNa28RClHLo_B-Tr-3AyluWfaAgHALbMmEp6Z9LhFjN18Nfwzl4UblrTmIp1EGoD5YzlVxYofuUezaaJjaQZgJxKGKhGEgPHN77eU21_AVhSJNoszydXrUXxJg', description: 'Mie instan rasa goreng', barcodeId: 'BC-004' },
-  { id: 5, name: 'Kopi Susu Gula Aren', sku: 'KOP-005', category: 'Perishable', type: 'Minuman', mitraName: 'Toko Makmur', mitraPrice: 8000, sellingPrice: 12000, stock: 50, unit: 'Gelas', photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB49vG9Vi3qbccoLZTXOLCqShe83hxitKq-wO3Iud7yeRH4bnZt2z0KcWxLd05BsiXOGCsKYwMKMXivhLKmYbr5fjtWgLkZixOEhtdAXQMZFIsO098CSV5idKs-jD4BvjZ4O9yC5r0GgwI95lKuy2oX4MFkNyI0hV-fY2GQnKYnBnyKDMJHPpOFzE66yL9OywVNAdvHQb1dvhuWq4bYsPLpVExHIszD98fWP0RqV2EVmKnMEPCPM_8WEaD-B1rebwVHSrA', description: 'Kopi susu gula aren premium', barcodeId: 'BC-005' },
-];
-
-const categories = ['Semua', 'Perishable', 'Non-Perishable'];
-
-const initialCart = [
-  { id: 1, name: 'Nasi Kuning', sku: 'BRP-001', category: 'Perishable', type: 'Makanan Basah', mitraName: 'Toko Makmur', mitraPrice: 14500, sellingPrice: 18000, qty: 1, photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD9S0lXMpRCIso-L8CBlj_U0MUQvoGBrQKhOVgsA54pAt-PbsyTJM5gPW1TDbWseVKIKBbDhf4ZBtI9wMQ3FSzouSGDMY3xbXtIyxirFJxSlk0YSDW7OUkpsvxjNQLl2kWrsF3Q_nFdCLy1SZReZR-SRm3wBB_5OpY9hjjEWFHzgwtfw9gjAbWHi0YbuDlNjGtlO_-LjzIh24qq9oobBsLzLD9oM_y5o3An1VRKRe8fWYF5RiZ30xX89A', description: 'Nasi kuning siap saji', barcodeId: 'BC-001' },
-  { id: 4, name: 'Mie Instan Goreng', sku: 'SUS-004', category: 'Non-Perishable', type: 'Makanan Kering', mitraName: 'Grosir Jaya', mitraPrice: 3000, sellingPrice: 4500, qty: 5, photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC5qejlFpuAvF4M0PzqD6tNHnw6z1CjHJelomAYXJWHwCJIMsFaVz4LizVtCJDepveg23kZ1jtsSfCsIZgoL2YHjVkruEf4beb4auqiUQP4BTdIOrcNdPRnhKI3moA-cNa28RClHLo_B-Tr-3AyluWfaAgHALbMmEp6Z9LhFjN18Nfwzl4UblrTmIp1EGoD5YzlVxYofuUezaaJjaQZgJxKGKhGEgPHN77eU21_AVhSJNoszydXrUXxJg', description: 'Mie instan rasa goreng', barcodeId: 'BC-004' },
-];
+import { useState, useEffect } from 'react';
+import { productService } from '../lib/services';
 
 function KasirHP() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua');
-  const [cart, setCart] = useState(initialCart);
+  const [cart, setCart] = useState([
+    { id: 1, name: 'Nasi Kuning', sku: 'BRP-001', category: 'Perishable', type: 'Makanan Basah', mitraName: 'Toko Makmur', mitraPrice: 14500, sellingPrice: 18000, qty: 1, photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD9S0lXMpRCIso-L8CBlj_U0MUQvoGBrQKhOVgsA54pAt-PbsyTJM5gPW1TDbWseVKIKBbDhf4ZBtI9wMQ3FSzouSGDMY3xbXtIyxirFJxSlk0YSDW7OUkpsvxjNQLl2kWrsF3Q_nFdCLy1SZReZR-SRm3wBB_5OpY9hjjEWFHzgwtfw9gjAbWHi0YbuDlNjGtlO_-LjzIh24qq9oobBsLzLD9oM_y5o3An1VRKRe8fWYF5RiZ30xX89A', description: 'Nasi kuning siap saji', barcodeId: 'BC-001' },
+    { id: 4, name: 'Mie Instan Goreng', sku: 'SUS-004', category: 'Non-Perishable', type: 'Makanan Kering', mitraName: 'Grosir Jaya', mitraPrice: 3000, sellingPrice: 4500, qty: 5, photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC5qejlFpuAvF4M0PzqD6tNHnw6z1CjHJelomAYXJWHwCJIMsFaVz4LizVtCJDepveg23kZ1jtsSfCsIZgoL2YHjVkruEf4beb4auqiUQP4BTdIOrcNdPRnhKI3moA-cNa28RClHLo_B-Tr-3AyluWfaAgHALbMmEp6Z9LhFjN18Nfwzl4UblrTmIp1EGoD5YzlVxYofuUezaaJjaQZgJxKGKhGEgPHN77eU21_AVhSJNoszydXrUXxJg', description: 'Mie instan rasa goreng', barcodeId: 'BC-004' },
+  ]);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await productService.getAll();
+        const mapped = data.map((p) => ({
+          id: p.id,
+          name: p.nama_produk,
+          sku: p.sku,
+          sellingPrice: p.selling_price,
+          stock: p.stock,
+          unit: p.unit,
+          photo: p.photo,
+          barcodeId: p.barcode_id,
+          description: p.description,
+          mitraName: p.mitra?.full_name || '',
+          category: p.category,
+          type: p.type,
+          mitraPrice: p.mitra_price,
+        }));
+        setProducts(mapped);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadProducts();
+  }, []);
+
+  const categories = ['Semua', ...new Set(products.map((p) => p.category?.name).filter(Boolean))];
 
   const updateQty = (id, delta) => {
     setCart((prev) =>
@@ -31,6 +56,27 @@ function KasirHP() {
   const subtotal = cart.reduce((sum, item) => sum + item.sellingPrice * item.qty, 0);
   const tax = 0;
   const total = subtotal + tax;
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center bg-surface-container-lowest">
+        <span className="material-symbols-outlined text-6xl text-primary animate-spin" data-icon="progress_activity">progress_activity</span>
+        <p className="mt-4 font-body-md text-body-md text-on-surface-variant">Memuat produk...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center bg-surface-container-lowest p-4">
+        <span className="material-symbols-outlined text-6xl text-error" data-icon="error">error</span>
+        <p className="mt-4 font-body-md text-body-md text-on-surface-variant text-center">Gagal memuat produk: {error}</p>
+        <button onClick={() => window.location.reload()} className="mt-4 px-6 py-2 rounded-xl bg-primary text-on-primary font-label-md">
+          Coba Lagi
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-surface-container-lowest">

@@ -1,15 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-
-const products = [
-  { id: 1, name: 'Nasi Kuning', sku: 'BRP-001', category: 'Perishable', type: 'Makanan Basah', mitraName: 'Toko Makmur', mitraPrice: 14500, sellingPrice: 18000, stock: 45, unit: 'Pcs', photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD9S0lXMpRCIso-L8CBlj_U0MUQvoGBrQKhOVgsA54pAt-PbsyTJM5gPW1TDbWseVKIKBbDhf4ZBtI9wMQ3FSzouSGDMY3xbXtIyxirFJxSlk0YSDW7OUkpsvxjNQLl2kWrsF3Q_nFdCLy1SZReZR-SRm3wBB_5OpY9hjjEWFHzgwtfw9gjAbWHi0YbuDlNjGtlO_-LjzIh24qq9oobBsLzLD9oM_y5o3An1VRKRe8fWYF5RiZ30xX89A', description: 'Nasi kuning siap saji', barcodeId: 'BC-001' },
-  { id: 2, name: 'Kerupuk', sku: 'MNG-002', category: 'Non-Perishable', type: 'Makanan Kering', mitraName: 'Grosir Jaya', mitraPrice: 2000, sellingPrice: 3500, stock: 120, unit: 'Pack', photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAy_dC_R3oRxJ1d0ReP2F5QktKPUd4al-jRFlh_0wQDF5chjbpIErEr9nIyhA_Pak9a2yQqI_V_35NFG_290FDhpcyTxNSv5JBNTx01cGw0SQz98-vHdeijubwm-9cpLLsEVJ-5y1fe19ELkvf8a-Ze0RTkv1a4f7-yK5geAC8q0yx9_JtPC0wk8fWx9NOCBUxQ9rFCz0mwqFdPOaCh0bDJi3PGTTQoQMDveIbCK8762GcRQVbUuz-nkQ', description: 'Kerupuk gurih renyah', barcodeId: 'BC-002' },
-  { id: 3, name: 'Es Teh Manis', sku: 'GLP-003', category: 'Perishable', type: 'Minuman', mitraName: 'Toko Harapan', mitraPrice: 3000, sellingPrice: 5000, stock: 0, unit: 'Gelas', photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD45ZfKiOkzCqbc-spfBj-jJwJbWtVxit5ZTkS7gWepe3UrNb1wJVvMnTQqpxYY0-ZaECpGJypxNBWPJcM-NjIkiT99Gbt8kTM09FpleP3YFBpXhOzZQ0ffJVKBjqq2pToEqGI4tGDaiaPIfVWCKuz6X6cMk8NMuVlm9c31YKH5ivXc2IouBfmjKOAsA70ObFR8T5IiVgAcFYtrJHRDfvLySUxMw_I5Aw7HJPd9C1taAui0kx5wEqLipA', description: 'Es teh manis segar', barcodeId: 'BC-003' },
-  { id: 4, name: 'Susu UHT 250ml', sku: 'MIG-004', category: 'Non-Perishable', type: 'Minuman', mitraName: 'Toko Makmur', mitraPrice: 5500, sellingPrice: 8000, stock: 24, unit: 'Karton', photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBE_TgX6dU09YE_ejm-rY1i1uZgfVoBKai_Mcqh_eObBkWYkJ9vlvLEhzR9L0eIRxdgVFCsXzX8i6alv81Nm7JZmYy-wFiZjceZf3h0EtMmtvkVqWRzbUzrGaNQSKKox1PpDb8pWapwZh1el6BJYVhKwoDoXfib2bPXIENjILDqMOzMttAn97H-Qbn_MWTCSHTPswap9e-wD-XNGzYq8mX8Wdm0z4n8XH7CLGhi_ikJn-tgMjSfz5ZZ3A', description: 'Susu UHT segar', barcodeId: 'BC-004' },
-  { id: 5, name: 'Mie Instan Goreng', sku: 'SUS-005', category: 'Non-Perishable', type: 'Makanan Kering', mitraName: 'Grosir Jaya', mitraPrice: 3000, sellingPrice: 4500, stock: 120, unit: 'Pcs', photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC5qejlFpuAvF4M0PzqD6tNHnw6z1CjHJelomAYXJWHwCJIMsFaVz4LizVtCJDepveg23kZ1jtsSfCsIZgoL2YHjVkruEf4beb4auqiUQP4BTdIOrcNdPRnhKI3moA-cNa28RClHLo_B-Tr-3AyluWfaAgHALbMmEp6Z9LhFjN18Nfwzl4UblrTmIp1EGoD5YzlVxYofuUezaaJjaQZgJxKGKhGEgPHN77eU21_AVhSJNoszydXrUXxJg', description: 'Mie instan rasa goreng', barcodeId: 'BC-005' },
-  { id: 6, name: 'Kopi Susu Gula Aren', sku: 'KOP-006', category: 'Perishable', type: 'Minuman', mitraName: 'Toko Makmur', mitraPrice: 8000, sellingPrice: 12000, stock: 50, unit: 'Gelas', photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB49vG9Vi3qbccoLZTXOLCqShe83hxitKq-wO3Iud7yeRH4bnZt2z0KcWxLd05BsiXOGCsKYwMKMXivhLKmYbr5fjtWgLkZixOEhtdAXQMZFIsO098CSV5idKs-jD4BvjZ4O9yC5r0GgwI95lKuy2oX4MFkNyI0hV-fY2GQnKYnBnyKDMJHPpOFzE66yL9OywVNAdvHQb1dvhuWq4bYsPLpVExHIszD98fWP0RqV2EVmKnMEPCPM_8WEaD-B1rebwVHSrA', description: 'Kopi susu gula aren premium', barcodeId: 'BC-006' },
-];
-
-const categories = ['Semua', 'Perishable', 'Non-Perishable'];
+import { productService, transactionService, transactionItemService } from '../lib/services';
 
 function createEmptyTransaction(id) {
   return {
@@ -26,16 +16,47 @@ const initialTransactions = [
   createEmptyTransaction(3),
 ];
 
-const completedTransactions = [];
-
 function KasirDesktop() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('Semua');
   const [barcode, setBarcode] = useState('');
   const [flash, setFlash] = useState(null);
   const barcodeRef = useRef(null);
 
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const data = await productService.getAll();
+        const mapped = data.map((p) => ({
+          id: p.id,
+          name: p.nama_produk,
+          sku: p.sku,
+          category: p.category ? { name: p.category.name } : null,
+          type: p.type ? { name: p.type.name } : null,
+          mitra: p.mitra ? { full_name: p.mitra.full_name } : null,
+          mitraPrice: p.mitra_price,
+          sellingPrice: p.selling_price,
+          stock: p.stock,
+          unit: p.unit,
+          photo: p.photo,
+          barcodeId: p.barcode_id,
+          description: p.description,
+        }));
+        setProducts(mapped);
+      } catch (err) {
+        console.error('Failed to load products:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadProducts();
+  }, []);
+
+  const categories = ['Semua', ...new Set(products.map((p) => p.category?.name).filter(Boolean))];
+
   const filteredProducts = products.filter((product) => {
-    const matchesCategory = selectedCategory === 'Semua' || product.category === selectedCategory;
+    const matchesCategory = selectedCategory === 'Semua' || product.category?.name === selectedCategory;
     return matchesCategory;
   });
 
@@ -47,7 +68,7 @@ function KasirDesktop() {
     if (product) {
       setFlash(product.id);
       setTimeout(() => setFlash(null), 600);
-      window.dispatchEvent(new CustomEvent('kasir:add-product', { detail: { productId: product.id } }));
+      window.dispatchEvent(new CustomEvent('kasir:add-product', { detail: { productId: product.id, product } }));
     }
     setBarcode('');
     barcodeRef.current?.focus();
@@ -93,47 +114,53 @@ function KasirDesktop() {
 
       {/* Product Grid */}
       <div className="flex-1 overflow-y-auto p-4 md:p-6">
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredProducts.map((product) => (
-            <button
-              key={product.id}
-              onClick={() => {
-                setFlash(product.id);
-                setTimeout(() => setFlash(null), 600);
-                window.dispatchEvent(new CustomEvent('kasir:add-product', { detail: { productId: product.id } }));
-              }}
-              className={`bg-surface border rounded-xl p-3 flex flex-col gap-2 hover:shadow-md transition-all text-left relative overflow-hidden ${
-                product.stock === 0 ? 'border-error-container opacity-75 cursor-not-allowed' : 'border-outline-variant cursor-pointer active:scale-95'
-              } ${flash === product.id ? 'ring-2 ring-primary' : ''}`}
-              disabled={product.stock === 0}
-            >
-              <div className="aspect-square w-full rounded-lg bg-surface-container overflow-hidden relative">
-                <img className="w-full h-full object-cover" data-alt={product.name} src={product.photo} />
-                <div
-                  className={`absolute top-2 right-2 px-2 py-1 rounded-md font-label-sm text-label-sm border ${
-                    product.stock === 0
-                      ? 'bg-error-container text-on-error-container border-error/20 font-bold'
-                      : product.stock <= 5
-                        ? 'bg-[#fdf2d5] text-[#7a590c] border-[#ebd083]'
-                        : 'bg-[#d1f4e0] text-[#0d592a] border-[#93d8b5]'
-                  }`}
-                >
-                  {product.stock === 0 ? 'Habis' : product.stock <= 5 ? `Sisa ${product.stock}` : `Stok: ${product.stock}`}
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="font-body-md text-body-md text-on-surface-variant">Memuat produk...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filteredProducts.map((product) => (
+              <button
+                key={product.id}
+                onClick={() => {
+                  setFlash(product.id);
+                  setTimeout(() => setFlash(null), 600);
+                  window.dispatchEvent(new CustomEvent('kasir:add-product', { detail: { productId: product.id, product } }));
+                }}
+                className={`bg-surface border rounded-xl p-3 flex flex-col gap-2 hover:shadow-md transition-all text-left relative overflow-hidden ${
+                  product.stock === 0 ? 'border-error-container opacity-75 cursor-not-allowed' : 'border-outline-variant cursor-pointer active:scale-95'
+                } ${flash === product.id ? 'ring-2 ring-primary' : ''}`}
+                disabled={product.stock === 0}
+              >
+                <div className="aspect-square w-full rounded-lg bg-surface-container overflow-hidden relative">
+                  <img className="w-full h-full object-cover" data-alt={product.name} src={product.photo} />
+                  <div
+                    className={`absolute top-2 right-2 px-2 py-1 rounded-md font-label-sm text-label-sm border ${
+                      product.stock === 0
+                        ? 'bg-error-container text-on-error-container border-error/20 font-bold'
+                        : product.stock <= 5
+                          ? 'bg-[#fdf2d5] text-[#7a590c] border-[#ebd083]'
+                          : 'bg-[#d1f4e0] text-[#0d592a] border-[#93d8b5]'
+                    }`}
+                  >
+                    {product.stock === 0 ? 'Habis' : product.stock <= 5 ? `Sisa ${product.stock}` : `Stok: ${product.stock}`}
+                  </div>
                 </div>
-              </div>
-              <div className="flex flex-col gap-1">
-                <h3 className="font-headline-sm text-headline-sm text-on-surface line-clamp-2 leading-tight">{product.name}</h3>
-                <p className={`font-numeric-data text-numeric-data ${product.stock === 0 ? 'text-on-surface-variant line-through' : 'text-primary'}`}>
-                  Rp {product.sellingPrice.toLocaleString('id-ID')}
-                </p>
-                <p className="font-label-sm text-label-sm text-on-surface-variant">{product.barcodeId}</p>
-              </div>
-              {product.stock === 0 && (
-                <div className="absolute inset-0 bg-error/5 z-10 pointer-events-none" />
-              )}
-            </button>
-          ))}
-        </div>
+                <div className="flex flex-col gap-1">
+                  <h3 className="font-headline-sm text-headline-sm text-on-surface line-clamp-2 leading-tight">{product.name}</h3>
+                  <p className={`font-numeric-data text-numeric-data ${product.stock === 0 ? 'text-on-surface-variant line-through' : 'text-primary'}`}>
+                    Rp {product.sellingPrice.toLocaleString('id-ID')}
+                  </p>
+                  <p className="font-label-sm text-label-sm text-on-surface-variant">{product.barcodeId}</p>
+                </div>
+                {product.stock === 0 && (
+                  <div className="absolute inset-0 bg-error/5 z-10 pointer-events-none" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -145,7 +172,7 @@ function KasirDesktopCart() {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('Tunai');
   const [toast, setToast] = useState(null);
-  const [completedTransactions, setCompletedTransactions] = useState([]);
+  const [_completedTransactions, setCompletedTransactions] = useState([]);
 
   const activeTransaction = transactions.find((t) => t.id === activeTransactionId) || transactions[0];
 
@@ -170,8 +197,7 @@ function KasirDesktopCart() {
     );
   };
 
-  const addProductToTransaction = (productId) => {
-    const product = products.find((p) => p.id === productId);
+  const addProductToTransaction = ({ productId, product }) => {
     if (!product) return;
 
     setTransactions((prev) =>
@@ -219,7 +245,7 @@ function KasirDesktopCart() {
     }
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     const total = activeTransaction.items.reduce((sum, item) => sum + item.sellingPrice * item.qty, 0);
     const paid = Number(paymentAmount);
     if (!paymentMethod || total <= 0) return;
@@ -227,20 +253,47 @@ function KasirDesktopCart() {
       setToast({ message: 'Jumlah pembayaran kurang', type: 'error' });
       return;
     }
-    const completed = {
-      ...activeTransaction,
-      total,
-      paid: paymentMethod === 'Tunai' ? paid : total,
-      change: paymentMethod === 'Tunai' ? Math.max(0, paid - total) : 0,
-      paymentMethod,
-      completedAt: new Date().toLocaleString('id-ID'),
-    };
-    setCompletedTransactions((prev) => [completed, ...prev]);
-    setToast({ message: `Pembayaran ${paymentMethod} berhasil`, type: 'success' });
-    setPaymentAmount('');
-    setTransactions((prev) => prev.filter((t) => t.id !== activeTransactionId));
-    const remaining = transactions.filter((t) => t.id !== activeTransactionId);
-    setActiveTransactionId(remaining[0]?.id || null);
+
+    try {
+      const transactionData = {
+        total,
+        paid: paymentMethod === 'Tunai' ? paid : total,
+        change: paymentMethod === 'Tunai' ? Math.max(0, paid - total) : 0,
+        payment_method: paymentMethod,
+      };
+
+      const createdTransaction = await transactionService.create(transactionData);
+
+      const items = activeTransaction.items.map((item) => ({
+        transaction_id: createdTransaction.id,
+        product_id: item.productId,
+        qty: item.qty,
+        price: item.sellingPrice,
+        nama_produk: item.name,
+        sku: item.sku,
+        barcode_id: item.barcodeId,
+        unit: item.unit,
+      }));
+
+      await transactionItemService.createBatch(items);
+
+      const completed = {
+        ...activeTransaction,
+        total,
+        paid: paymentMethod === 'Tunai' ? paid : total,
+        change: paymentMethod === 'Tunai' ? Math.max(0, paid - total) : 0,
+        paymentMethod,
+        completedAt: new Date().toLocaleString('id-ID'),
+      };
+      setCompletedTransactions((prev) => [completed, ...prev]);
+      setToast({ message: `Pembayaran ${paymentMethod} berhasil`, type: 'success' });
+      setPaymentAmount('');
+      setTransactions((prev) => prev.filter((t) => t.id !== activeTransactionId));
+      const remaining = transactions.filter((t) => t.id !== activeTransactionId);
+      setActiveTransactionId(remaining[0]?.id || null);
+    } catch {
+      setToast({ message: 'Gagal memproses pembayaran', type: 'error' });
+    }
   };
 
   const printReceipt = (transaction) => {
@@ -310,9 +363,10 @@ function KasirDesktopCart() {
   const total = subtotal - tax;
   const change = paymentMethod === 'Tunai' ? Number(paymentAmount || 0) - total : 0;
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const handler = (e) => {
-      addProductToTransaction(e.detail.productId);
+      addProductToTransaction(e.detail);
     };
     window.addEventListener('kasir:add-product', handler);
     return () => window.removeEventListener('kasir:add-product', handler);

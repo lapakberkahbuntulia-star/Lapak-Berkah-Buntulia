@@ -65,17 +65,20 @@ function FinancialReports() {
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [role, setRole] = useState(null);
+  const [user, setUser] = useState(null);
   const [page, setPage] = useState('dashboard');
 
-  const handleLogin = (selectedRole) => {
+  const handleLogin = (selectedRole, userData = null) => {
     setIsAuthenticated(true);
     setRole(selectedRole);
+    setUser(userData);
     setPage(roleDefaultPage[selectedRole] || 'dashboard');
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
     setRole(null);
+    setUser(null);
   };
 
   const accessiblePages = role ? rolePageAccess[role] || [] : [];

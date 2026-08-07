@@ -1,17 +1,38 @@
-import { useState } from 'react';
-
-const todayTransactions = [
-  { id: 1, time: '08:30', productName: 'Nasi Kuning', qty: 2, total: 36000, paymentMethod: 'Tunai', mitraName: 'Toko Makmur' },
-  { id: 2, time: '09:15', productName: 'Es Teh Manis', qty: 3, total: 15000, paymentMethod: 'QRIS', mitraName: 'Toko Harapan' },
-  { id: 3, time: '10:45', productName: 'Kopi Susu Gula Aren', qty: 1, total: 12000, paymentMethod: 'Tunai', mitraName: 'Toko Makmur' },
-  { id: 4, time: '11:20', productName: 'Mie Instan Goreng', qty: 5, total: 22500, paymentMethod: 'Transfer', mitraName: 'Grosir Jaya' },
-];
+import { useState, useEffect } from 'react';
+import { dashboardService, transactionService } from '../lib/services';
 
 function Dashboard() {
-  const totalTransactions = todayTransactions.length;
-  const totalSales = todayTransactions.reduce((sum, t) => sum + t.total, 0);
-  const totalQty = todayTransactions.reduce((sum, t) => sum + t.qty, 0);
-  const totalMitra = new Set(todayTransactions.map(t => t.mitraName)).size;
+  const [stats, setStats] = useState({ totalTransactions: 0, totalSales: 0, totalItems: 0, activeMitra: 0 });
+  const [todayTransactions, setTodayTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      const [statsData, transactionsData] = await Promise.all([
+        dashboardService.getTodayStats(),
+        transactionService.getHistory(),
+      ]);
+
+      setStats(statsData);
+      setTodayTransactions(transactionsData.slice(0, 10).map(t => ({
+        id: t.id,
+        time: new Date(t.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+        productName: t.items?.[0]?.product?.nama_produk || '-',
+        qty: t.items?.reduce((sum, item) => sum + item.quantity, 0) || 0,
+        total: t.total,
+        paymentMethod: t.metode_pembayaran || '-',
+        mitraName: t.mitra?.full_name || '-',
+      })));
+    } catch (error) {
+      console.error('Failed to load dashboard:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex-1 flex flex-col md:ml-72 relative z-0 h-full">
@@ -53,7 +74,7 @@ function Dashboard() {
               </div>
               <div>
                 <p className="font-label-md text-label-md text-on-surface-variant mb-1">Total Transaksi</p>
-                <p className="font-display-lg text-display-lg text-on-background tracking-tight">{totalTransactions}</p>
+                <p className="font-display-lg text-display-lg text-on-background tracking-tight">{loading ? '-' : stats.totalTransactions}</p>
               </div>
             </div>
 
@@ -66,7 +87,7 @@ function Dashboard() {
               </div>
               <div>
                 <p className="font-label-md text-label-md text-on-surface-variant mb-1">Total Item</p>
-                <p className="font-display-lg text-display-lg text-on-background tracking-tight">{totalQty}</p>
+                <p className="font-display-lg text-display-lg text-on-background tracking-tight">{loading ? '-' : stats.totalItems}</p>
               </div>
             </div>
 
@@ -79,7 +100,7 @@ function Dashboard() {
               </div>
               <div>
                 <p className="font-label-md text-label-md text-on-surface-variant mb-1">Total Penjualan</p>
-                <p className="font-display-lg text-display-lg text-on-background tracking-tight">Rp {totalSales.toLocaleString('id-ID')}</p>
+                <p className="font-display-lg text-display-lg text-on-background tracking-tight">Rp {loading ? '-' : stats.totalSales.toLocaleString('id-ID')}</p>
               </div>
             </div>
 
@@ -92,7 +113,7 @@ function Dashboard() {
               </div>
               <div>
                 <p className="font-label-md text-label-md text-on-surface-variant mb-1">Mitra Aktif</p>
-                <p className="font-display-lg text-display-lg text-on-background tracking-tight">{totalMitra}</p>
+                <p className="font-display-lg text-display-lg text-on-background tracking-tight">{loading ? '-' : stats.activeMitra}</p>
               </div>
             </div>
           </div>

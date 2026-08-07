@@ -1,20 +1,44 @@
-import { useState } from 'react';
-
-const initialTransactions = [
-  { id: 1, date: '2025-08-07', mitraName: 'Toko Makmur', productName: 'Nasi Kuning', qty: 5, total: 90000, paymentMethod: 'Tunai', status: 'Selesai' },
-  { id: 2, date: '2025-08-07', mitraName: 'Grosir Jaya', productName: 'Mie Instan Goreng', qty: 10, total: 45000, paymentMethod: 'QRIS', status: 'Selesai' },
-  { id: 3, date: '2025-08-06', mitraName: 'Toko Harapan', productName: 'Es Teh Manis', qty: 8, total: 40000, paymentMethod: 'Tunai', status: 'Selesai' },
-  { id: 4, date: '2025-08-06', mitraName: 'Toko Makmur', productName: 'Kopi Susu Gula Aren', qty: 3, total: 36000, paymentMethod: 'Transfer', status: 'Selesai' },
-  { id: 5, date: '2025-08-05', mitraName: 'Grosir Jaya', productName: 'Kerupuk', qty: 20, total: 70000, paymentMethod: 'Tunai', status: 'Selesai' },
-];
-
-const mitraList = ['Semua Mitra', 'Toko Makmur', 'Grosir Jaya', 'Toko Harapan'];
+import { useState, useEffect } from 'react';
+import { transactionService, mitraService } from '../lib/services';
 
 function SalesRecap() {
-  const [transactions, setTransactions] = useState(initialTransactions);
+  const [transactions, setTransactions] = useState([]);
+  const [mitraList, setMitraList] = useState(['Semua Mitra']);
+  const [loading, setLoading] = useState(true);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedMitra, setSelectedMitra] = useState('Semua Mitra');
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [txData, mitraData] = await Promise.all([
+          transactionService.getHistory(),
+          mitraService.getAll(),
+        ]);
+
+        const mapped = txData.map((tx) => ({
+          id: tx.id,
+          date: tx.created_at ? new Date(tx.created_at).toISOString().split('T')[0] : '',
+          mitraName: tx.mitra?.full_name || '-',
+          productName: tx.items?.[0]?.product?.nama_produk || '-',
+          qty: tx.items?.reduce((sum, item) => sum + item.quantity, 0) || 0,
+          total: tx.total || 0,
+          paymentMethod: tx.metode_pembayaran || '-',
+          status: tx.status || '-',
+        }));
+
+        setTransactions(mapped);
+        setMitraList(['Semua Mitra', ...mitraData.map((m) => m.full_name)]);
+      } catch (error) {
+        console.error('Failed to load sales recap data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   const filteredTransactions = transactions.filter((t) => {
     const matchesDate = (!startDate || t.date >= startDate) && (!endDate || t.date <= endDate);
@@ -32,6 +56,21 @@ function SalesRecap() {
   const handleExportExcel = () => {
     alert('Fitur Export Excel akan segera tersedia. Data dapat diekspor ke format Excel.');
   };
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex flex-col md:ml-72 relative z-0 h-full">
+        <main className="flex-1 overflow-y-auto pb-24 md:pb-8">
+          <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 flex items-center justify-center h-96">
+            <div className="flex flex-col items-center gap-3">
+              <span className="material-symbols-outlined text-6xl text-primary animate-pulse">progress_activity</span>
+              <p className="font-body-md text-body-md text-on-surface-variant">Memuat data penjualan...</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col md:ml-72 relative z-0 h-full">
@@ -162,7 +201,7 @@ function SalesRecap() {
                   value={selectedMitra}
                   onChange={(e) => setSelectedMitra(e.target.value)}
                 >
-                  {mitraList.map(m => (
+                  {mitraList.map((m) => (
                     <option key={m} value={m}>{m}</option>
                   ))}
                 </select>

@@ -1,10 +1,28 @@
 import { useState } from 'react';
+import { authService } from '../lib/services';
 
 function Login({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState('kasir');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const user = await authService.login(email, password, role);
+      onLogin(user.role, user);
+    } catch (err) {
+      setError(err.message || 'Login gagal. Periksa kembali kredensial Anda.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
@@ -34,8 +52,8 @@ function Login({ onLogin }) {
             <p className="font-body-md text-body-md text-on-surface-variant">Masuk ke akun Lapak Berkah Anda</p>
           </div>
 
-           {/* Login Form */}
-          <form className="w-full space-y-4" onSubmit={(e) => { e.preventDefault(); onLogin(role); }}>
+          {/* Login Form */}
+          <form className="w-full space-y-4" onSubmit={handleSubmit}>
             {/* Email Input */}
             <div className="relative">
               <label className="sr-only" htmlFor="email">Alamat Email</label>
@@ -110,12 +128,24 @@ function Login({ onLogin }) {
 
             {/* Login Button */}
             <button
-              className="w-full h-12 bg-primary text-on-primary rounded-lg font-label-md text-label-md shadow-sm hover:bg-primary-fixed-variant transition-colors active:scale-95 flex items-center justify-center gap-2 mt-4"
+              className="w-full h-12 bg-primary text-on-primary rounded-lg font-label-md text-label-md shadow-sm hover:bg-primary-fixed-variant transition-colors active:scale-95 flex items-center justify-center gap-2 mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
               type="submit"
+              disabled={loading}
             >
-              <span>Masuk</span>
-              <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              {loading ? (
+                <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-on-primary"></span>
+              ) : (
+                <>
+                  <span>Masuk</span>
+                  <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                </>
+              )}
             </button>
+            {error && (
+              <div className="mt-3 p-3 bg-error-container/15 border border-error-container/30 rounded-lg">
+                <p className="font-body-sm text-body-sm text-error text-center">{error}</p>
+              </div>
+            )}
           </form>
 
           {/* Role Redirection Info */}

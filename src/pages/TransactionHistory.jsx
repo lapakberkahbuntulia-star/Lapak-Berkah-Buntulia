@@ -1,28 +1,65 @@
-import { useState } from 'react';
-
-const initialHistory = [
-  { id: 101, transactionId: 'TX-001', date: '2025-08-07 10:30', mitraName: 'Toko Makmur', items: 3, total: 69000, paymentMethod: 'Tunai', status: 'Selesai', paid: 100000, change: 31000 },
-  { id: 102, transactionId: 'TX-002', date: '2025-08-07 11:15', mitraName: 'Grosir Jaya', items: 2, total: 45000, paymentMethod: 'QRIS', status: 'Selesai', paid: 45000, change: 0 },
-  { id: 103, transactionId: 'TX-003', date: '2025-08-06 15:45', mitraName: 'Toko Harapan', items: 5, total: 120000, paymentMethod: 'Tunai', status: 'Selesai', paid: 200000, change: 80000 },
-];
+import { useState, useEffect } from 'react';
+import { transactionService } from '../lib/services';
 
 function TransactionHistory() {
-  const [history, setHistory] = useState(initialHistory);
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedPayment, setSelectedPayment] = useState('Semua');
 
+  useEffect(() => {
+    loadTransactions();
+  }, []);
+
+  const loadTransactions = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await transactionService.getHistory();
+
+      const mapped = data.map((tx) => {
+        const txId = tx.transaction_id || `TX-${String(tx.id).padStart(3, '0')}`;
+        const rawDate = tx.created_at || '';
+        const formattedDate = rawDate
+          ? rawDate.replace('T', ' ').replace(/\.\d+Z$/, '').substring(0, 16)
+          : '';
+        const totalQty = tx.items?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
+
+        return {
+          id: tx.id,
+          transactionId: txId,
+          date: formattedDate,
+          mitraName: tx.mitra?.full_name || 'Tidak Diketahui',
+          items: totalQty,
+          total: tx.total || 0,
+          paymentMethod: tx.metode_pembayaran || '-',
+          status: tx.status || '-',
+          paid: tx.paid || 0,
+          change: tx.change || 0,
+        };
+      });
+
+      setHistory(mapped);
+    } catch (err) {
+      setError(err.message || 'Gagal memuat riwayat transaksi');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredHistory = history.filter((h) => {
     const matchesSearch = h.transactionId.toLowerCase().includes(searchQuery.toLowerCase()) ||
       h.mitraName.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesDate = (!startDate || h.date >= startDate) && (!endDate || h.date <= endDate);
+    const matchesDate = (!startDate || h.date >= startDate) && (!endDate || h.date <= endDate + ' 23:59');
     const matchesPayment = selectedPayment === 'Semua' || h.paymentMethod === selectedPayment;
     return matchesSearch && matchesDate && matchesPayment;
   });
 
   const totalTransactions = filteredHistory.length;
-  const totalOmzet = filteredHistory.reduce((sum, h) => sum + h.total, 0);
+  const totalOmzet = filteredHistory.reduce((sum, h) => sum + (h.total || 0), 0);
 
   const printReceipt = (transaction) => {
     const receiptWindow = window.open('', '_blank', 'width=320,height=600');
@@ -42,7 +79,9 @@ function TransactionHistory() {
           <p style="margin: 0 0 12px 0; font-size: 12px; color: #424750;">Struk Pembelian</p>
           <p style="margin: 0 0 4px 0; font-size: 12px;">No. Transaksi: #${transaction.transactionId}</p>
           <p style="margin: 0 0 4px 0; font-size: 12px;">Tanggal: ${transaction.date}</p>
-          <p style="margin: 0 0 12px 0; font-size: 12px;">Metode: ${transaction.paymentMethod}</p>
+          <p style="margin: 0 0 4px 0; font-size: 12px;">Mitra: ${transaction.mitraName}</p>
+          <p style="margin: 0 0 4px 0; font-size: 12px;">Metode: ${transaction.paymentMethod}</p>
+          <p style="margin: 0 0 12px 0; font-size: 12px;">Status: ${transaction.status}</p>
           <table>
             <thead>
               <tr>
@@ -53,7 +92,7 @@ function TransactionHistory() {
             </thead>
             <tbody>
               <tr>
-                <td style="padding: 4px 0; font-size: 12px;">Produk contoh A</td>
+                <td style="padding: 4px 0; font-size: 12px;">Total Item</td>
                 <td style="padding: 4px 0; font-size: 12px; text-align: center;">${transaction.items}</td>
                 <td style="padding: 4px 0; font-size: 12px; text-align: right;">Rp ${transaction.total.toLocaleString('id-ID')}</td>
               </tr>
@@ -80,6 +119,46 @@ function TransactionHistory() {
     receiptWindow.document.close();
     receiptWindow.print();
   };
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex flex-col md:ml-72 relative z-0 h-full">
+        <main className="flex-1 overflow-y-auto pb-24 md:pb-8">
+          <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <span className="material-symbols-outlined text-6xl text-outline animate-pulse">receipt_long</span>
+                <p className="font-body-md text-body-md text-on-surface-variant mt-4">Memuat riwayat transaksi...</p>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 flex flex-col md:ml-72 relative z-0 h-full">
+        <main className="flex-1 overflow-y-auto pb-24 md:pb-8">
+          <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <span className="material-symbols-outlined text-6xl text-error">error</span>
+                <p className="font-body-md text-body-md text-on-surface-variant mt-4">{error}</p>
+                <button
+                  onClick={loadTransactions}
+                  className="mt-4 px-4 py-2 rounded-xl bg-primary text-on-primary font-body-md text-body-md hover:bg-primary/90 transition-colors"
+                >
+                  Coba Lagi
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col md:ml-72 relative z-0 h-full">
