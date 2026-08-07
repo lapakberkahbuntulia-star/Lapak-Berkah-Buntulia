@@ -188,8 +188,6 @@ function StockManagement() {
     return matchesMitra && matchesDate;
   });
 
-  const totalIn = stockMovements.filter((m) => m.type === 'in').reduce((sum, m) => sum + m.quantity, 0);
-  const totalOut = stockMovements.filter((m) => m.type === 'out').reduce((sum, m) => sum + m.quantity, 0);
   const mitraNames = ['Semua', ...new Set(pendingValidations.map((v) => v.mitraName))];
 
   if (loading) {
