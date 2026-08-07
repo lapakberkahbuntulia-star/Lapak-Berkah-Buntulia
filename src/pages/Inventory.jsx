@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { productService } from '../lib/services';
 
 function Inventory() {
@@ -32,19 +32,21 @@ function Inventory() {
     return { label: 'Tersedia', class: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
   };
 
-  const categories = ['Semua', ...new Set(products.map(p => p.category?.name).filter(Boolean))];
+  const categories = useMemo(() => ['Semua', ...new Set(products.map(p => p.category?.name).filter(Boolean))], [products]);
 
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.nama_produk.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.barcode_id?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'Semua' || product.category?.name === selectedCategory;
-    const matchesStatus = selectedStatus === 'Semua' ||
-      (selectedStatus === 'Habis' && product.stock === 0) ||
-      (selectedStatus === 'Stok Rendah' && product.stock > 0 && product.stock <= 10) ||
-      (selectedStatus === 'Tersedia' && product.stock > 10);
-    return matchesSearch && matchesCategory && matchesStatus;
-  });
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      const matchesSearch = product.nama_produk.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.barcode_id?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === 'Semua' || product.category?.name === selectedCategory;
+      const matchesStatus = selectedStatus === 'Semua' ||
+        (selectedStatus === 'Habis' && product.stock === 0) ||
+        (selectedStatus === 'Stok Rendah' && product.stock > 0 && product.stock <= 10) ||
+        (selectedStatus === 'Tersedia' && product.stock > 10);
+      return matchesSearch && matchesCategory && matchesStatus;
+    });
+  }, [products, searchQuery, selectedCategory, selectedStatus]);
 
   const totalProducts = products.length;
   const totalStock = products.reduce((sum, p) => sum + p.stock, 0);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { productService, categoryService, productTypeService, mitraService } from '../lib/services';
 
 function ProductManagement() {
@@ -66,17 +66,19 @@ function ProductManagement() {
   };
 
   const totalProducts = products.length;
-  const activeCategories = categories.filter(c => c !== 'Semua').length;
+  const activeCategories = categories.filter(c => c.name && c.name !== 'Semua').length;
   const lowStock = products.filter(p => p.stock > 0 && p.stock <= 10).length;
   const outOfStock = products.filter(p => p.stock === 0).length;
 
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.nama_produk.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (product.barcode_id && product.barcode_id.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesCategory = selectedCategory === 'Semua' || product.category?.name === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      const matchesSearch = product.nama_produk.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (product.barcode_id && product.barcode_id.toLowerCase().includes(searchQuery.toLowerCase()));
+      const matchesCategory = selectedCategory === 'Semua' || product.category?.name === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [products, searchQuery, selectedCategory]);
 
   const getStatusBadge = (product) => {
     if (product.stock === 0) {

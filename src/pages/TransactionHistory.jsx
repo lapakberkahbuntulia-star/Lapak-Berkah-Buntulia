@@ -122,7 +122,7 @@ function TransactionHistory() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex flex-col md:ml-72 relative z-0 h-full">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-full">
         <main className="flex-1 overflow-y-auto pb-24 md:pb-8">
           <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
             <div className="flex items-center justify-center h-64">
@@ -139,7 +139,7 @@ function TransactionHistory() {
 
   if (error) {
     return (
-      <div className="flex-1 flex flex-col md:ml-72 relative z-0 h-full">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-full">
         <main className="flex-1 overflow-y-auto pb-24 md:pb-8">
           <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
             <div className="flex items-center justify-center h-64">
@@ -161,7 +161,7 @@ function TransactionHistory() {
   }
 
   return (
-    <div className="flex-1 flex flex-col md:ml-72 relative z-0 h-full">
+    <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-full">
       <main className="flex-1 overflow-y-auto pb-24 md:pb-8">
         <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
           {/* Page Header */}

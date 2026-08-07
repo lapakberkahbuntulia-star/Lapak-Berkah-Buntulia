@@ -150,7 +150,7 @@ function Dashboard() {
                     </tr>
                   </thead>
                   <tbody className="text-sm divide-y divide-slate-100 text-slate-700">
-                    {todayTransactions.remove ? null : todayTransactions.map((transaction, idx) => (
+                    {todayTransactions.map((transaction, idx) => (
                       <tr
                         key={transaction.id}
                         className={`hover:bg-slate-50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-slate-50/50' : ''}`}

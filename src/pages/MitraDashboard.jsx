@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { mitraService, productService, pendingStockValidationService } from '../lib/services';
 
 function Toast({ message, type = 'success', onClose }) {
@@ -136,11 +136,17 @@ function MitraDashboard({ role }) {
   const totalTransaction = mitraList.reduce((sum, m) => sum + (m.totalTransaction || 0), 0);
   const totalOmzet = mitraList.reduce((sum, m) => sum + (m.totalOmzet || 0), 0);
 
-  const filteredMitra = mitraList.filter((mitra) =>
-    mitra.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    mitra.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    mitra.phone.includes(searchQuery)
-  );
+  const filteredMitra = useMemo(() => {
+    return mitraList.filter((mitra) =>
+      mitra.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      mitra.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      mitra.phone.includes(searchQuery)
+    );
+  }, [mitraList, searchQuery]);
+
+  const todayStock = useMemo(() => {
+    return stockInputs.filter((s) => s.date === stockDate);
+  }, [stockInputs, stockDate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -231,7 +237,7 @@ function MitraDashboard({ role }) {
 
   if (loading) {
     return (
-      <div className="flex-1 flex flex-col md:ml-72 relative z-0 h-full">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-full">
         <main className="flex-1 overflow-y-auto pb-24 md:pb-8">
           <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
             <div className="flex items-center justify-center h-64">
@@ -247,7 +253,7 @@ function MitraDashboard({ role }) {
   }
 
   return (
-    <div className="flex-1 flex flex-col md:ml-72 relative z-0 h-full">
+    <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-full">
       <main className="flex-1 overflow-y-auto pb-24 md:pb-8">
         <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
           {/* Page Header */}
