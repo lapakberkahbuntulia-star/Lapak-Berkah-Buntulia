@@ -20,6 +20,12 @@ function StockManagement() {
   const [valEndDate, setValEndDate] = useState('');
   const [valMitra, setValMitra] = useState('Semua');
   const [formData, setFormData] = useState({ type: 'in', productId: '', quantity: '', note: '' });
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -121,8 +127,10 @@ function StockManagement() {
       updateProductStock(Number(formData.productId), Number(formData.quantity), formData.type);
       setFormData({ type: 'in', productId: '', quantity: '', note: '' });
       setShowForm(false);
+      showToast('Transaksi stok berhasil disimpan!', 'success');
     } catch (error) {
       console.error('Failed to create stock movement:', error);
+      showToast('Gagal menyimpan transaksi stok', 'error');
     }
   };
 
@@ -160,8 +168,10 @@ function StockManagement() {
       ]);
       updateProductStock(validation.productId, validation.quantity, 'in');
       setPendingValidations((prev) => prev.filter((v) => v.id !== validationId));
+      showToast('Stok berhasil divalidasi!', 'success');
     } catch (error) {
       console.error('Failed to validate stock:', error);
+      showToast('Gagal memvalidasi stok', 'error');
     }
   };
 
@@ -582,6 +592,12 @@ function StockManagement() {
           </div>
         </div>
       </main>
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-xl shadow-lg flex items-center gap-3 ${toast.type === 'success' ? 'bg-tertiary-fixed text-on-tertiary-fixed' : 'bg-error-container text-on-error-container'}`}>
+          <span className="material-symbols-outlined">{toast.type === 'success' ? 'check_circle' : 'error'}</span>
+          <span className="font-label-md text-label-md">{toast.message}</span>
+        </div>
+      )}
     </div>
   );
 }

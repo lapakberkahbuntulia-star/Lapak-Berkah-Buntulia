@@ -103,7 +103,7 @@ function MitraDashboard({ role }) {
           mitraId: s.mitra_id,
           productId: s.product_id,
           date: s.date,
-          stock: s.stock,
+          quantity: s.quantity,
           note: s.note || '',
           status: s.status,
         }));
@@ -200,7 +200,7 @@ function MitraDashboard({ role }) {
         mitra_id: Number(selectedMitra),
         product_id: Number(stockFormData.productId),
         date: stockDate,
-        stock: Number(stockFormData.stock),
+        quantity: Number(stockFormData.stock),
         note: stockFormData.note,
         status: 'pending',
       });
@@ -212,7 +212,7 @@ function MitraDashboard({ role }) {
           mitraId: newStock.mitra_id,
           productId: newStock.product_id,
           date: newStock.date,
-          stock: newStock.stock,
+          quantity: newStock.quantity,
           note: newStock.note || '',
           status: newStock.status,
         },
@@ -450,7 +450,7 @@ function MitraDashboard({ role }) {
                               <span className="font-body-sm text-body-sm text-on-surface">{product?.name || '-'}</span>
                             </td>
                             <td className="px-6 py-4 text-right">
-                              <span className="font-numeric-data text-numeric-data text-on-background">{stock.stock} {product?.unit || ''}</span>
+                              <span className="font-numeric-data text-numeric-data text-on-background">{stock.quantity} {product?.unit || ''}</span>
                             </td>
                             <td className="px-6 py-4">
                               <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-label-md text-label-sm border ${stock.status === 'validated' ? 'bg-tertiary-fixed/15 text-tertiary-container border-tertiary-fixed/30' : 'bg-[#fdf2d5] text-[#7a590c] border-[#ebd083]'}`}>

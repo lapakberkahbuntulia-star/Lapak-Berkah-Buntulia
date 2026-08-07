@@ -396,8 +396,17 @@ function ProductManagement() {
       description: '',
       barcode_id: '',
     });
-    setShowForm(false);
     setEditingProduct(null);
+  };
+
+  const toggleForm = () => {
+    if (showForm) {
+      setShowForm(false);
+      setEditingProduct(null);
+    } else {
+      resetForm();
+      setShowForm(true);
+    }
   };
 
   return (
@@ -418,7 +427,7 @@ function ProductManagement() {
                 </p>
               </div>
               <button
-                onClick={resetForm}
+                onClick={toggleForm}
                 className="h-12 px-6 bg-primary hover:bg-primary-fixed-variant text-on-primary rounded-xl flex items-center gap-2 transition-all duration-200 font-label-md text-label-md shadow-sm hover:shadow-md active:scale-95"
               >
                 <span className="material-symbols-outlined">add</span>
@@ -433,7 +442,7 @@ function ProductManagement() {
                 <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Kelola katalog produk</p>
               </div>
               <button
-                onClick={resetForm}
+                onClick={toggleForm}
                 className="h-10 w-10 bg-primary hover:bg-primary-fixed-variant text-on-primary rounded-full flex items-center justify-center transition-all duration-200 shadow-sm active:scale-95"
               >
                 <span className="material-symbols-outlined">{showForm ? 'close' : 'add'}</span>
@@ -795,7 +804,7 @@ function ProductManagement() {
                     </button>
                     <button
                       type="button"
-                      onClick={resetForm}
+                      onClick={() => { setShowForm(false); setEditingProduct(null); }}
                       className="h-12 px-8 bg-surface border border-outline-variant text-on-surface-variant font-label-md text-label-md rounded-xl hover:bg-surface-container transition-all duration-200"
                     >
                       Batal
