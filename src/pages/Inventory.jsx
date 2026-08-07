@@ -25,11 +25,11 @@ function Inventory() {
 
   const getStatusBadge = (product) => {
     if (product.stock === 0) {
-      return { label: 'Habis', class: 'bg-error-container/15 text-error border-error-container/30' };
+      return { label: 'Habis', class: 'bg-red-50 text-red-700 border-red-200' };
     } else if (product.stock <= 10) {
-      return { label: 'Stok Rendah', class: 'bg-[#fdf2d5] text-[#7a590c] border-[#ebd083]' };
+      return { label: 'Stok Rendah', class: 'bg-amber-50 text-amber-700 border-amber-200' };
     }
-    return { label: 'Tersedia', class: 'bg-tertiary-fixed/15 text-tertiary-container border-tertiary-fixed/30' };
+    return { label: 'Tersedia', class: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
   };
 
   const categories = ['Semua', ...new Set(products.map(p => p.category?.name).filter(Boolean))];
@@ -52,14 +52,16 @@ function Inventory() {
   const outOfStock = products.filter(p => p.stock === 0).length;
 
   return (
-    <div className="flex-1 flex flex-col md:ml-72 relative z-0 h-full">
+    /* Perbaikan: Menghilangkan md:ml-72 dan menggunakan flex-1 min-w-0 agar tata letak menyesuaikan sidebar secara otomatis */
+    <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50 h-full">
       <main className="flex-1 overflow-y-auto pb-24 md:pb-8">
-        <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
-          {/* Page Header */}
+        <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6 w-full">
+          
+          {/* Page Header Desktop */}
           <header className="hidden md:flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h2 className="font-display-lg text-display-lg text-on-background tracking-tight">Inventory</h2>
-              <p className="font-body-md text-body-md text-on-surface-variant mt-1">
+              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Inventory</h2>
+              <p className="text-sm text-slate-500 mt-1">
                 Pantau stok dan status inventaris
               </p>
             </div>
@@ -68,81 +70,81 @@ function Inventory() {
           {/* Mobile Header */}
           <div className="md:hidden flex items-center justify-between">
             <div>
-              <h2 className="font-display-lg text-display-lg text-on-background tracking-tight">Inventory</h2>
-              <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Pantau stok inventaris</p>
+              <h2 className="text-xl font-bold text-slate-900 tracking-tight">Inventory</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Pantau stok inventaris</p>
             </div>
           </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
           ) : (
             <>
               {/* Statistics Cards */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200">
+                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200">
                   <div className="flex justify-between items-start mb-3">
-                    <div className="w-11 h-11 rounded-xl bg-primary-fixed flex items-center justify-center text-on-primary-fixed">
+                    <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
                       <span className="material-symbols-outlined">inventory_2</span>
                     </div>
-                    <span className="font-label-sm text-label-sm text-on-surface-variant bg-surface-container-high px-2 py-1 rounded-full">Total</span>
+                    <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full font-medium">Total</span>
                   </div>
                   <div>
-                    <p className="font-label-md text-label-md text-on-surface-variant mb-1">Total Produk</p>
-                    <p className="font-display-lg text-display-lg text-on-background tracking-tight">{totalProducts}</p>
+                    <p className="text-xs font-medium text-slate-500 mb-1">Total Produk</p>
+                    <p className="text-2xl font-bold text-slate-900 tracking-tight">{totalProducts}</p>
                   </div>
                 </div>
 
-                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200">
+                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200">
                   <div className="flex justify-between items-start mb-3">
-                    <div className="w-11 h-11 rounded-xl bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed">
+                    <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
                       <span className="material-symbols-outlined">shopping_cart</span>
                     </div>
-                    <span className="font-label-sm text-label-sm text-on-surface-variant bg-surface-container-high px-2 py-1 rounded-full">Qty</span>
+                    <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full font-medium">Qty</span>
                   </div>
                   <div>
-                    <p className="font-label-md text-label-md text-on-surface-variant mb-1">Total Stok</p>
-                    <p className="font-display-lg text-display-lg text-on-background tracking-tight">{totalStock}</p>
+                    <p className="text-xs font-medium text-slate-500 mb-1">Total Stok</p>
+                    <p className="text-2xl font-bold text-slate-900 tracking-tight">{totalStock}</p>
                   </div>
                 </div>
 
-                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200">
+                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200">
                   <div className="flex justify-between items-start mb-3">
-                    <div className="w-11 h-11 rounded-xl bg-[#fdf2d5] flex items-center justify-center text-[#7a590c]">
+                    <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center text-amber-700">
                       <span className="material-symbols-outlined">warning</span>
                     </div>
-                    <span className="font-label-sm text-label-sm text-[#7a590c] bg-[#fdf2d5]/50 px-2 py-1 rounded-full">Perhatian</span>
+                    <span className="text-xs text-amber-700 bg-amber-100 px-2 py-1 rounded-full font-medium">Perhatian</span>
                   </div>
                   <div>
-                    <p className="font-label-md text-label-md text-on-surface-variant mb-1">Stok Menipis</p>
-                    <p className="font-display-lg text-display-lg text-on-background tracking-tight">{lowStock}</p>
+                    <p className="text-xs font-medium text-slate-500 mb-1">Stok Menipis</p>
+                    <p className="text-2xl font-bold text-slate-900 tracking-tight">{lowStock}</p>
                   </div>
                 </div>
 
-                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200">
+                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200">
                   <div className="flex justify-between items-start mb-3">
-                    <div className="w-11 h-11 rounded-xl bg-error-container/30 flex items-center justify-center text-error">
+                    <div className="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center text-red-600">
                       <span className="material-symbols-outlined">remove_circle</span>
                     </div>
-                    <span className="font-label-sm text-label-sm text-error bg-error-container/20 px-2 py-1 rounded-full">Kritis</span>
+                    <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded-full font-medium">Kritis</span>
                   </div>
                   <div>
-                    <p className="font-label-md text-label-md text-on-surface-variant mb-1">Stok Habis</p>
-                    <p className="font-display-lg text-display-lg text-on-background tracking-tight">{outOfStock}</p>
+                    <p className="text-xs font-medium text-slate-500 mb-1">Stok Habis</p>
+                    <p className="text-2xl font-bold text-slate-900 tracking-tight">{outOfStock}</p>
                   </div>
                 </div>
               </div>
 
               {/* Filters */}
-              <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
                 <div className="flex flex-col md:flex-row gap-4">
                   <div className="flex-1">
-                    <label className="block font-label-md text-label-md text-on-surface font-medium mb-2">Cari Produk</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Cari Produk</label>
                     <div className="relative">
-                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
                       <input
-                        className="w-full h-12 pl-10 pr-4 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-body-md text-body-md transition-all placeholder:text-outline/70"
+                        className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-200 bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none text-sm transition-all placeholder:text-slate-400"
                         placeholder="Nama, SKU, atau Barcode ID..."
                         type="text"
                         value={searchQuery}
@@ -151,9 +153,9 @@ function Inventory() {
                     </div>
                   </div>
                   <div className="w-full md:w-48">
-                    <label className="block font-label-md text-label-md text-on-surface font-medium mb-2">Kategori</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Kategori</label>
                     <select
-                      className="w-full h-12 px-4 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-body-md text-body-md appearance-none"
+                      className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none text-sm"
                       value={selectedCategory}
                       onChange={(e) => setSelectedCategory(e.target.value)}
                     >
@@ -163,9 +165,9 @@ function Inventory() {
                     </select>
                   </div>
                   <div className="w-full md:w-48">
-                    <label className="block font-label-md text-label-md text-on-surface font-medium mb-2">Status</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Status</label>
                     <select
-                      className="w-full h-12 px-4 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-body-md text-body-md appearance-none"
+                      className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none text-sm"
                       value={selectedStatus}
                       onChange={(e) => setSelectedStatus(e.target.value)}
                     >
@@ -179,84 +181,80 @@ function Inventory() {
               </div>
 
               {/* Inventory Table */}
-              <div className="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-outline-variant bg-surface">
-                  <h3 className="font-headline-sm text-headline-sm text-on-background">Daftar Inventaris</h3>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Menampilkan {filteredProducts.length} dari {products.length} produk</p>
+              <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-slate-200 bg-white">
+                  <h3 className="text-lg font-bold text-slate-900">Daftar Inventaris</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">Menampilkan {filteredProducts.length} dari {products.length} produk</p>
                 </div>
 
                 {filteredProducts.length === 0 ? (
                   <div className="p-12 text-center">
-                    <span className="material-symbols-outlined text-6xl text-outline mb-3">inventory_2</span>
-                    <p className="font-body-md text-body-md text-on-surface-variant">Tidak ada produk yang ditemukan</p>
+                    <span className="material-symbols-outlined text-6xl text-slate-300 mb-3">inventory_2</span>
+                    <p className="text-sm text-slate-500">Tidak ada produk yang ditemukan</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="bg-surface-container-low border-b border-outline-variant">
-                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Produk</th>
-                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">SKU</th>
-                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Kategori</th>
-                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Jenis</th>
-                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Mitra</th>
-                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-right">Stok</th>
-                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-center">Status</th>
-                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Barcode</th>
+                        <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase tracking-wider">
+                          <th className="px-6 py-4 font-semibold text-left">Produk</th>
+                          <th className="px-6 py-4 font-semibold text-left">SKU</th>
+                          <th className="px-6 py-4 font-semibold text-left">Kategori</th>
+                          <th className="px-6 py-4 font-semibold text-left">Jenis</th>
+                          <th className="px-6 py-4 font-semibold text-left">Mitra</th>
+                          <th className="px-6 py-4 font-semibold text-right">Stok</th>
+                          <th className="px-6 py-4 font-semibold text-center">Status</th>
+                          <th className="px-6 py-4 font-semibold text-left">Barcode</th>
                         </tr>
                       </thead>
-                      <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
+                      <tbody className="text-sm divide-y divide-slate-100 text-slate-700">
                         {filteredProducts.map((product, idx) => {
                           const status = getStatusBadge(product);
                           return (
                             <tr
                               key={product.id}
-                              className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}
+                              className={`hover:bg-slate-50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-slate-50/50' : ''}`}
                             >
                               <td className="px-6 py-4">
                                 <div className="flex items-center gap-4">
-                                  <div className="w-12 h-12 rounded-xl bg-surface-container overflow-hidden border border-outline-variant flex-shrink-0 shadow-sm">
+                                  <div className="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden border border-slate-200 flex-shrink-0 shadow-sm">
                                     {product.photo ? (
                                       <img src={product.photo} alt={product.nama_produk} className="w-full h-full object-cover" />
                                     ) : (
-                                      <div className="w-full h-full flex items-center justify-center text-outline">
-                                        <span className="material-symbols-outlined text-2xl">image</span>
+                                      <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                        <span className="material-symbols-outlined text-xl">image</span>
                                       </div>
                                     )}
                                   </div>
                                   <div>
-                                    <div className="font-semibold text-on-surface text-base">{product.nama_produk}</div>
-                                    <div className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Rp {product.selling_price.toLocaleString('id-ID')}</div>
+                                    <div className="font-semibold text-slate-900 text-base">{product.nama_produk}</div>
+                                    <div className="text-xs text-slate-500 mt-0.5">Rp {product.selling_price.toLocaleString('id-ID')}</div>
                                   </div>
                                 </div>
                               </td>
                               <td className="px-6 py-4">
-                                <span className="font-mono text-sm bg-surface-container px-2 py-1 rounded-md text-on-surface-variant">{product.sku}</span>
+                                <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded-md text-slate-600">{product.sku}</span>
                               </td>
                               <td className="px-6 py-4">
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-sm text-label-sm bg-surface-container text-on-surface-variant border border-outline-variant">
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
                                   {product.category?.name}
                                 </span>
                               </td>
                               <td className="px-6 py-4">
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-sm text-label-sm bg-surface-container text-on-surface-variant border border-outline-variant">
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
                                   {product.type?.name}
                                 </span>
                               </td>
-                              <td className="px-6 py-4">
-                                <span className="font-body-sm text-body-sm text-on-surface">{product.mitra?.full_name}</span>
-                              </td>
-                              <td className="px-6 py-4 text-right">
-                                <span className="font-numeric-data text-numeric-data text-on-background">{product.stock} {product.unit}</span>
-                              </td>
+                              <td className="px-6 py-4 text-slate-600">{product.mitra?.full_name}</td>
+                              <td className="px-6 py-4 text-right font-medium text-slate-900">{product.stock} {product.unit}</td>
                               <td className="px-6 py-4 text-center">
-                                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-label-md text-label-sm border ${status.class}`}>
+                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${status.class}`}>
                                   <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                                   {status.label}
                                 </span>
                               </td>
                               <td className="px-6 py-4">
-                                <span className="font-mono text-sm bg-surface-container px-2 py-1 rounded-md text-on-surface-variant">{product.barcode_id}</span>
+                                <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded-md text-slate-600">{product.barcode_id}</span>
                               </td>
                             </tr>
                           );
