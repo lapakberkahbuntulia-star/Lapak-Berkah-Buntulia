@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lapak Berkah Buntulia - POS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "background": "#f7f9fb",
+                      "error-container": "#ffdad6",
+                      "surface-variant": "#e0e3e5",
+                      "inverse-primary": "#a3c9ff",
+                      "on-error": "#ffffff",
+                      "surface-container-low": "#f2f4f6",
+                      "outline-variant": "#c2c6d1",
+                      "inverse-surface": "#2d3133",
+                      "on-primary-fixed-variant": "#004882",
+                      "tertiary-fixed": "#6bfe9c",
+                      "tertiary": "#003c1b",
+                      "on-surface": "#191c1e",
+                      "surface-tint": "#27609d",
+                      "on-surface-variant": "#424750",
+                      "error": "#ba1a1a",
+                      "on-error-container": "#93000a",
+                      "on-background": "#191c1e",
+                      "on-tertiary-container": "#39d377",
+                      "tertiary-container": "#00562a",
+                      "on-primary-fixed": "#001c38",
+                      "on-secondary": "#ffffff",
+                      "secondary-fixed": "#ffd9e0",
+                      "surface-container-high": "#e6e8ea",
+                      "on-primary-container": "#8abcff",
+                      "on-tertiary": "#ffffff",
+                      "surface-dim": "#d8dadc",
+                      "on-secondary-container": "#7b4050",
+                      "primary": "#003461",
+                      "tertiary-fixed-dim": "#4ae183",
+                      "on-tertiary-fixed-variant": "#005228",
+                      "surface": "#f7f9fb",
+                      "surface-bright": "#f7f9fb",
+                      "primary-container": "#004b87",
+                      "primary-fixed": "#d3e4ff",
+                      "secondary-container": "#ffb1c3",
+                      "on-secondary-fixed-variant": "#6e3545",
+                      "secondary": "#894c5c",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-container": "#eceef0",
+                      "inverse-on-surface": "#eff1f3",
+                      "on-primary": "#ffffff",
+                      "primary-fixed-dim": "#a3c9ff",
+                      "surface-container-highest": "#e0e3e5",
+                      "secondary-fixed-dim": "#ffb1c3",
+                      "on-tertiary-fixed": "#00210c",
+                      "on-secondary-fixed": "#380a1a",
+                      "outline": "#727781"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "container-margin": "16px",
+                      "base": "8px",
+                      "sm": "12px",
+                      "touch-target-min": "48px",
+                      "xl": "32px",
+                      "md": "16px",
+                      "lg": "24px",
+                      "xs": "4px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-sm": [
+                              "Hanken Grotesk"
+                      ],
+                      "label-sm": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-md-mobile": [
+                              "Hanken Grotesk"
+                      ],
+                      "body-lg": [
+                              "Hanken Grotesk"
+                      ],
+                      "numeric-data": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "display-lg": [
+                              "Hanken Grotesk"
+                      ],
+                      "label-md": [
+                              "Hanken Grotesk"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-sm": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-md-mobile": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "numeric-data": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        body { font-family: 'Hanken Grotesk', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c2c6d1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #727781;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background h-screen overflow-hidden flex">
+<!-- NavigationDrawer (Left Sidebar) -->
+<nav class="fixed inset-y-0 left-0 z-40 hidden md:flex flex-col h-full w-72 rounded-r-xl bg-surface-container-low dark:bg-inverse-surface border-r border-outline-variant dark:border-outline shadow-lg">
+<div class="p-6 flex flex-col items-center gap-4 border-b border-outline-variant">
+<img alt="Lapak Berkah Logo" class="w-24 h-24 object-contain rounded-xl bg-white shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCev2CfdxZetZHRGlgDLtoVXHOqB0d4Y8gAPdowPvPSSIlNCE3NngVst5dezFq1rv4GODuPsIvb4a3rZyTytiMGJnDY8i1T2gkAeZ3uzfvV9X6BvCbEuHzqCVV-BjhEn9MK1Q_sSB4dIxW4EoQOEOzyHhlkwmSnXa9OmTe7GlIteJkCTnbRgVeDjOo2Q-z1Y4UNFjY_VfTvtOAyrgheYNoaLpWKQzZxrg9Kfku8S84NLmZ1Q4Ya7gRT5CYvsDx6pryLu3c"/>
+<h1 class="font-headline-md text-headline-md text-primary dark:text-secondary-fixed-dim font-bold text-center">Lapak Berkah Buntulia</h1>
+</div>
+<div class="flex-1 overflow-y-auto py-4">
+<a class="bg-secondary-container text-on-secondary-container rounded-full mx-2 my-1 px-4 py-3 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined" data-icon="point_of_sale" data-weight="fill">point_of_sale</span>
+<span class="font-label-md text-label-md">POS Cashier</span>
+</a>
+<a class="text-on-surface-variant flex items-center gap-3 mx-2 my-1 px-4 py-3 hover:bg-surface-container-highest rounded-full transition-all scale-98 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-label-md text-label-md">Inventory</span>
+</a>
+<a class="text-on-surface-variant flex items-center gap-3 mx-2 my-1 px-4 py-3 hover:bg-surface-container-highest rounded-full transition-all scale-98 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="handshake">handshake</span>
+<span class="font-label-md text-label-md">Mitra Dashboard</span>
+</a>
+<a class="text-on-surface-variant flex items-center gap-3 mx-2 my-1 px-4 py-3 hover:bg-surface-container-highest rounded-full transition-all scale-98 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-label-md text-label-md">History</span>
+</a>
+<a class="text-on-surface-variant flex items-center gap-3 mx-2 my-1 px-4 py-3 hover:bg-surface-container-highest rounded-full transition-all scale-98 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="inventory">inventory</span>
+<span class="font-label-md text-label-md">Product Management</span>
+</a>
+<a class="text-on-surface-variant flex items-center gap-3 mx-2 my-1 px-4 py-3 hover:bg-surface-container-highest rounded-full transition-all scale-98 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-label-md text-label-md">Financial Reports</span>
+</a>
+</div>
+<div class="p-4 border-t border-outline-variant">
+<div class="flex items-center gap-3 px-4 py-2">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold font-headline-sm">AD</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Admin Kasir</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Shift Pagi</span>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 ml-72 flex flex-col h-full bg-background relative overflow-hidden">
+<!-- Header (Search & Actions) -->
+<header class="h-20 bg-surface border-b border-outline-variant flex items-center justify-between px-lg z-10 shrink-0">
+<div class="flex items-center gap-4 flex-1 max-w-2xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full h-12 pl-12 pr-4 bg-surface-container-lowest border-2 border-outline-variant rounded-xl focus:border-primary focus:ring-0 font-body-md text-body-md transition-colors placeholder:text-outline" placeholder="Cari produk (Nama atau SKU)..." type="text"/>
+</div>
+<button class="h-12 px-6 bg-secondary-container hover:bg-secondary-fixed text-on-secondary-container rounded-xl flex items-center gap-2 transition-colors font-label-md text-label-md shrink-0">
+<span class="material-symbols-outlined" data-icon="barcode_scanner">barcode_scanner</span>
+                    Scan Barcode
+                </button>
+</div>
+<div class="flex items-center gap-4">
+<div class="text-right">
+<div class="font-label-sm text-label-sm text-on-surface-variant">Tanggal Aktif</div>
+<div class="font-label-md text-label-md text-on-surface">15 Okt 2023, 08:30</div>
+</div>
+</div>
+</header>
+<!-- Filter Tabs -->
+<div class="px-lg py-4 flex gap-3 overflow-x-auto shrink-0 hide-scrollbar border-b border-outline-variant bg-surface">
+<button class="h-10 px-5 rounded-full bg-primary text-on-primary font-label-md text-label-md whitespace-nowrap transition-colors">Semua Kategori</button>
+<button class="h-10 px-5 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant hover:bg-surface-container-high font-label-md text-label-md whitespace-nowrap transition-colors">Sembako</button>
+<button class="h-10 px-5 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant hover:bg-surface-container-high font-label-md text-label-md whitespace-nowrap transition-colors">Minuman</button>
+<button class="h-10 px-5 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant hover:bg-surface-container-high font-label-md text-label-md whitespace-nowrap transition-colors">Snack</button>
+<button class="h-10 px-5 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant hover:bg-surface-container-high font-label-md text-label-md whitespace-nowrap transition-colors">Bumbu Dapur</button>
+</div>
+<!-- Product Grid -->
+<div class="flex-1 overflow-y-auto p-lg mr-[350px]">
+<div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-20">
+<!-- Product Card (In Stock) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex flex-col gap-3 hover:shadow-md transition-shadow cursor-pointer relative overflow-hidden group">
+<div class="aspect-square w-full rounded-lg bg-surface-container overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A brightly lit photo of a 1kg bag of premium white rice. The packaging is modern with subtle branding. Shot in a clean, minimalist studio setting with high-key lighting to emphasize the pristine white grains." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9S0lXMpRCIso-L8CBlj_U0MUQvoGBrQKhOVgsA54pAt-PbsyTJM5gPW1TDbWseVKIKBbDhf4ZBtI9wMQ3FSzouSGDMY3xbXtIyxirFJxSlk0YSDW7OUkpsvxjNQLl2kWrsF3Q_nFdCLy1SZReZR-SRm3wBB_5OpY9hjjEWFHzgwtfw9gjAbWHi0YbuDlNjGtlO_-LjzIh24qq9oobBsLzLD9oM_y5o3An1VRKRe8fWYF5RiZ30xX89A"/>
+<div class="absolute top-2 right-2 bg-[#d1f4e0] text-[#0d592a] px-2 py-1 rounded-md font-label-sm text-label-sm border border-[#93d8b5]">Stok: 45</div>
+</div>
+<div class="flex flex-col gap-1">
+<h3 class="font-headline-sm text-headline-sm text-on-surface line-clamp-2 leading-tight">Beras Premium 1Kg</h3>
+<p class="font-numeric-data text-numeric-data text-primary">Rp 14.500</p>
+</div>
+</div>
+<!-- Product Card (Low Stock) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex flex-col gap-3 hover:shadow-md transition-shadow cursor-pointer relative overflow-hidden group">
+<div class="aspect-square w-full rounded-lg bg-surface-container overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A studio shot of a 1 liter bottle of vegetable cooking oil. The golden liquid catches the bright, clean studio light. Minimalist background, high contrast, professional e-commerce style photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAy_dC_R3oRxJ1d0ReP2F5QktKPUd4al-jRFlh_0wQDF5chjbpIErEr9nIyhA_Pak9a2yQqI_V_35NFG_290FDhpcyTxNSv5JBNTx01cGw0SQz98-vHdeijubwm-9cpLLsEVJ-5y1fe19ELkvf8a-Ze0RTkv1a4f7-yK5geAC8q0yx9_JtPC0wk8fWx9NOCBUxQ9rFCz0mwqFdPOaCh0bDJi3PGTTQoQMDveIbCK8762GcRQVbUuz-nkQ"/>
+<div class="absolute top-2 right-2 bg-[#fdf2d5] text-[#7a590c] px-2 py-1 rounded-md font-label-sm text-label-sm border border-[#ebd083]">Sisa 5</div>
+</div>
+<div class="flex flex-col gap-1">
+<h3 class="font-headline-sm text-headline-sm text-on-surface line-clamp-2 leading-tight">Minyak Goreng 1L</h3>
+<p class="font-numeric-data text-numeric-data text-primary">Rp 16.000</p>
+</div>
+</div>
+<!-- Product Card (Out of Stock) -->
+<div class="bg-surface-container-lowest border-2 border-error-container rounded-xl p-4 flex flex-col gap-3 relative overflow-hidden opacity-75">
+<div class="absolute inset-0 bg-error/5 z-10 pointer-events-none"></div>
+<div class="aspect-square w-full rounded-lg bg-surface-container overflow-hidden relative grayscale">
+<img class="w-full h-full object-cover" data-alt="A 500g bag of refined white sugar. The packaging is clear with a subtle blue trim. Shot in a bright, modern studio environment with soft shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD45ZfKiOkzCqbc-spfBj-jJwJbWtVxit5ZTkS7gWepe3UrNb1wJVvMnTQqpxYY0-ZaECpGJypxNBWPJcM-NjIkiT99Gbt8kTM09FpleP3YFBpXhOzZQ0ffJVKBjqq2pToEqGI4tGDaiaPIfVWCKuz6X6cMk8NMuVlm9c31YKH5ivXc2IouBfmjKOAsA70ObFR8T5IiVgAcFYtrJHRDfvLySUxMw_I5Aw7HJPd9C1taAui0kx5wEqLipA"/>
+<div class="absolute top-2 right-2 bg-error-container text-on-error-container px-2 py-1 rounded-md font-label-sm text-label-sm font-bold border border-error/20">Habis</div>
+</div>
+<div class="flex flex-col gap-1">
+<h3 class="font-headline-sm text-headline-sm text-on-surface line-clamp-2 leading-tight">Gula Pasir 500g</h3>
+<p class="font-numeric-data text-numeric-data text-on-surface-variant line-through">Rp 8.000</p>
+</div>
+<!-- System Warning Overlay -->
+<div class="absolute bottom-0 left-0 w-full bg-error text-on-error py-1.5 px-2 text-center font-label-sm text-label-sm flex items-center justify-center gap-1 z-20">
+<span class="material-symbols-outlined text-[16px]">warning</span>
+                        Stok Kosong
+                    </div>
+</div>
+<!-- Product Card (In Stock) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex flex-col gap-3 hover:shadow-md transition-shadow cursor-pointer relative overflow-hidden group">
+<div class="aspect-square w-full rounded-lg bg-surface-container overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A pack of instant fried noodles. Bright yellow and red packaging. High quality, well-lit studio photography against a clean white background, emphasizing the product colors." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5qejlFpuAvF4M0PzqD6tNHnw6z1CjHJelomAYXJWHwCJIMsFaVz4LizVtCJDepveg23kZ1jtsSfCsIZgoL2YHjVkruEf4beb4auqiUQP4BTdIOrcNdPRnhKI3moA-cNa28RClHLo_B-Tr-3AyluWfaAgHALbMmEp6Z9LhFjN18Nfwzl4UblrTmIp1EGoD5YzlVxYofuUezaaJjaQZgJxKGKhGEgPHN77eU21_AVhSJNoszydXrUXxJg"/>
+<div class="absolute top-2 right-2 bg-[#d1f4e0] text-[#0d592a] px-2 py-1 rounded-md font-label-sm text-label-sm border border-[#93d8b5]">Stok: 120</div>
+</div>
+<div class="flex flex-col gap-1">
+<h3 class="font-headline-sm text-headline-sm text-on-surface line-clamp-2 leading-tight">Mie Instan Goreng</h3>
+<p class="font-numeric-data text-numeric-data text-primary">Rp 3.000</p>
+</div>
+</div>
+<!-- Product Card (In Stock) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex flex-col gap-3 hover:shadow-md transition-shadow cursor-pointer relative overflow-hidden group">
+<div class="aspect-square w-full rounded-lg bg-surface-container overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A 250ml carton of UHT milk. The carton design is clean and fresh, featuring green pastures. E-commerce product shot with high-key lighting on a minimalist background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBE_TgX6dU09YE_ejm-rY1i1uZgfVoBKai_Mcqh_eObBkWYkJ9vlvLEhzR9L0eIRxdgVFCsXzX8i6alv81Nm7JZmYy-wFiZjceZf3h0EtMmtvkVqWRzbUzrGaNQSKKox1PpDb8pWapwZh1el6BJYVhKwoDoXfib2bPXIENjILDqMOzMttAn97H-Qbn_MWTCSHTPswap9e-wD-XNGzYq8mX8Wdm0z4n8XH7CLGhi_ikJn-tgMjSfz5ZZ3A"/>
+<div class="absolute top-2 right-2 bg-[#d1f4e0] text-[#0d592a] px-2 py-1 rounded-md font-label-sm text-label-sm border border-[#93d8b5]">Stok: 24</div>
+</div>
+<div class="flex flex-col gap-1">
+<h3 class="font-headline-sm text-headline-sm text-on-surface line-clamp-2 leading-tight">Susu UHT 250ml</h3>
+<p class="font-numeric-data text-numeric-data text-primary">Rp 5.500</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Right Sidebar (Cart/Order Summary) -->
+<aside class="fixed right-0 top-0 h-full w-[350px] bg-surface-container-lowest border-l border-outline-variant shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] flex flex-col z-30">
+<!-- Cart Header -->
+<div class="p-6 border-b border-outline-variant flex items-center justify-between bg-surface">
+<h2 class="font-headline-md text-headline-md text-on-surface">Pesanan Aktif</h2>
+<button class="text-error hover:bg-error-container p-2 rounded-full transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">delete_sweep</span>
+</button>
+</div>
+<!-- Cart Items -->
+<div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+<!-- Cart Item -->
+<div class="flex gap-3 p-3 bg-surface rounded-xl border border-outline-variant">
+<img class="w-16 h-16 rounded-lg object-cover bg-surface-container" data-alt="Thumbnail of 1kg bag of premium white rice. Studio lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAtvNAgrX0eykf9Izr6fZpcq58kdfQxPSeGJlr5tkp6hXcb9vT3W6mIG__glh8iIk9Q3CXpioiR7La1FYCZedinnkuKC4frCbLexWzOYOobSKPTU7UYalKIrhNutqiBXEewX5ErZl7poYx3d3r_xVoJbQqqFLvGKVIbIxe7vL8P3T4r2a-kkh2sE0XyDuSbQ6JPGOFOoOIcQXa5Ut-VRmSfkfUSaX-Hyi7CfgvHpwpBxQVUKAL5nwO_3Q"/>
+<div class="flex-1 flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<h4 class="font-label-md text-label-md text-on-surface line-clamp-2 leading-tight pr-2">Beras Premium 1Kg</h4>
+<span class="font-numeric-data text-numeric-data text-primary whitespace-nowrap">Rp 29.000</span>
+</div>
+<div class="flex items-center justify-between mt-2">
+<div class="flex items-center bg-surface-container-highest rounded-lg h-8">
+<button class="w-8 h-8 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">remove</span>
+</button>
+<span class="font-numeric-data text-label-md w-8 text-center">2</span>
+<button class="w-8 h-8 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Cart Item -->
+<div class="flex gap-3 p-3 bg-surface rounded-xl border border-outline-variant">
+<img class="w-16 h-16 rounded-lg object-cover bg-surface-container" data-alt="Thumbnail of 1 liter cooking oil bottle. Studio lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBOVUkw9kw6iibmMaTzjj6S2Xc2SqS0Jt3IbkrA9Z4Cl4rP6qBKFq1kBuA945-B2DLbEqpZ5ooWR2-rYfXsQDkWP6nmA5fc1PVjPKV7IeBaro2jD-NhZEW-vJIEiSTgDyCd_PMQxBJBVNpBiUYGmFHK9GJ0n1KFN-phVp86FFWxQZIJ1-UW62Z2EAVc5EF09XVOSbfEEFGkNYbhbgNR4MQGMZbmguKTn7GOP0_1ViTQxRV00II2Sbf9FQ"/>
+<div class="flex-1 flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<h4 class="font-label-md text-label-md text-on-surface line-clamp-2 leading-tight pr-2">Minyak Goreng 1L</h4>
+<span class="font-numeric-data text-numeric-data text-primary whitespace-nowrap">Rp 16.000</span>
+</div>
+<div class="flex items-center justify-between mt-2">
+<div class="flex items-center bg-surface-container-highest rounded-lg h-8">
+<button class="w-8 h-8 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">remove</span>
+</button>
+<span class="font-numeric-data text-label-md w-8 text-center">1</span>
+<button class="w-8 h-8 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Cart Footer / Checkout -->
+<div class="border-t border-outline-variant bg-surface p-6 flex flex-col gap-4">
+<div class="flex justify-between items-center text-on-surface-variant font-body-md text-body-md">
+<span>Subtotal (3 item)</span>
+<span class="font-numeric-data">Rp 45.000</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant font-body-md text-body-md">
+<span>Diskon</span>
+<span class="font-numeric-data text-error">- Rp 0</span>
+</div>
+<div class="h-px w-full bg-outline-variant/50"></div>
+<div class="flex justify-between items-center">
+<span class="font-headline-sm text-headline-sm text-on-surface">Total</span>
+<span class="font-display-lg text-display-lg text-primary">Rp 45.000</span>
+</div>
+<button class="w-full h-[60px] bg-secondary-container hover:bg-[#f4a7b9] text-on-secondary-container font-headline-md-mobile text-headline-md-mobile rounded-xl mt-2 transition-colors flex items-center justify-center gap-2 shadow-sm active:scale-98">
+<span class="material-symbols-outlined">point_of_sale</span>
+                Bayar Sekarang
+            </button>
+<div class="grid grid-cols-2 gap-3 mt-1">
+<button class="h-[48px] bg-surface-container-lowest border border-primary text-primary font-label-md text-label-md rounded-lg hover:bg-primary-fixed-dim/10 transition-colors">Simpan Bill</button>
+<button class="h-[48px] bg-surface-container-lowest border border-outline-variant text-on-surface-variant font-label-md text-label-md rounded-lg hover:bg-surface-container transition-colors">Pelanggan</button>
+</div>
+</div>
+</aside>
+</body></html>

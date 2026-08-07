@@ -1,0 +1,30 @@
+Rencana Perbaikan Bertahap:
+
+Update Product Management — tambah field: Kategori (Perishable/Non-Perishable), Jenis, Nama Mitra, Harga Mitra, Harga Jual, Barcode ID
+Ubah POS Cashier → Dashboard — menampilkan ringkasan transaksi hari ini, stok terjual, grafik performa
+Update Mitra Dashboard — form input stok harian dengan tanggal, produk, jumlah stok
+Buat Halaman Rekap Penjualan — filter tanggal/mitra, tabel ringkasan, export PDF berita acara
+
+Mau saya lanjutkan fitur lain, seperti Cetak Struk, Riwayat Transaksi, atau Input Nominal Otomatis untuk uang kembalian?
+
+Saran fitur berikutnya yang paling berguna untuk alur kasir dan mitra:
+
+Role-based login
+Admin/Owner → akses semua menu
+Kasir → cuma POS, Riwayat, Inventory
+Mitra → cuma Mitra Dashboard
+Sesuai petunjuk di login/code.html:158
+
+Stok Masuk/Keluar
+Catat stok masuk dari mitra
+Catat stok keluar/rusak/cacat
+Update otomatis ke Inventory
+
+Manajemen Pelanggan/Hutang
+Data pelanggan
+Transaksi hutang
+Tracking piutang
+
+Notifikasi stok menipis
+Alert otomatis di Dashboard/Inventory
+Bisa diset ambang batas stok

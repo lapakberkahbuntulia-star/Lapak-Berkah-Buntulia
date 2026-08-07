@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Halaman Kasir - Lapak Berkah Buntulia</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Hanken Grotesk -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-container": "#8abcff",
+                        "inverse-surface": "#2d3133",
+                        "outline-variant": "#c2c6d1",
+                        "surface": "#f7f9fb",
+                        "background": "#f7f9fb",
+                        "error-container": "#ffdad6",
+                        "secondary": "#894c5c",
+                        "error": "#ba1a1a",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-secondary-container": "#7b4050",
+                        "secondary-fixed-dim": "#ffb1c3",
+                        "on-tertiary-fixed-variant": "#005228",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-tertiary-fixed": "#00210c",
+                        "tertiary-fixed": "#6bfe9c",
+                        "primary-container": "#004b87",
+                        "secondary-container": "#ffb1c3",
+                        "on-surface": "#191c1e",
+                        "on-primary-fixed": "#001c38",
+                        "tertiary-container": "#00562a",
+                        "surface-variant": "#e0e3e5",
+                        "on-surface-variant": "#424750",
+                        "surface-dim": "#d8dadc",
+                        "on-secondary-fixed-variant": "#6e3545",
+                        "secondary-fixed": "#ffd9e0",
+                        "on-tertiary-container": "#39d377",
+                        "on-secondary": "#ffffff",
+                        "surface-bright": "#f7f9fb",
+                        "on-background": "#191c1e",
+                        "surface-container": "#eceef0",
+                        "primary-fixed-dim": "#a3c9ff",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#d3e4ff",
+                        "tertiary": "#003c1b",
+                        "inverse-on-surface": "#eff1f3",
+                        "surface-container-low": "#f2f4f6",
+                        "inverse-primary": "#a3c9ff",
+                        "primary": "#003461",
+                        "outline": "#727781",
+                        "surface-container-high": "#e6e8ea",
+                        "surface-tint": "#27609d",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed-variant": "#004882",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed": "#380a1a",
+                        "tertiary-fixed-dim": "#4ae183"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "touch-target-min": "48px",
+                        "container-margin": "16px",
+                        "lg": "24px",
+                        "xl": "32px",
+                        "sm": "12px",
+                        "base": "8px",
+                        "md": "16px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "headline-md-mobile": ["Hanken Grotesk"],
+                        "label-md": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "numeric-data": ["Hanken Grotesk"],
+                        "headline-sm": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "label-sm": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "headline-md-mobile": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "numeric-data": ["16px", { "lineHeight": "24px", "fontWeight": "700" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Specific overrides for Material Symbols */
+        .material-symbols-outlined {
+          font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        /* Utility for safe area padding on mobile */
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+        
+        /* Hide scrollbar for clean horizontal scrolls */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col md:flex-row overflow-hidden selection:bg-secondary-container selection:text-on-secondary-container">
+<!-- Navigation Drawer (Desktop) -->
+<nav class="fixed inset-y-0 left-0 z-40 hidden md:flex flex-col bg-surface-container-low dark:bg-inverse-surface h-full w-72 rounded-r-xl border-r border-outline-variant dark:border-outline shadow-lg">
+<div class="px-6 py-6 border-b border-outline-variant/30 flex items-center gap-4">
+<span class="material-symbols-outlined text-primary text-3xl filled" data-icon="storefront">storefront</span>
+<h1 class="font-headline-md text-headline-md text-primary dark:text-secondary-fixed-dim">Lapak Berkah Buntulia</h1>
+</div>
+<div class="flex-1 overflow-y-auto py-4 flex flex-col gap-1 hide-scrollbar">
+<a class="bg-secondary-container text-on-secondary-container rounded-full mx-2 my-1 px-4 py-3 flex items-center gap-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined filled" data-icon="point_of_sale">point_of_sale</span>
+<span class="font-label-md text-label-md">POS Cashier</span>
+</a>
+<a class="text-on-surface-variant flex items-center gap-3 mx-2 my-1 px-4 py-3 hover:bg-surface-container-highest rounded-full transition-all hover:bg-surface-container-high dark:hover:bg-surface-variant scale-98 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-label-md text-label-md">Inventory</span>
+</a>
+<a class="text-on-surface-variant flex items-center gap-3 mx-2 my-1 px-4 py-3 hover:bg-surface-container-highest rounded-full transition-all hover:bg-surface-container-high dark:hover:bg-surface-variant scale-98 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="handshake">handshake</span>
+<span class="font-label-md text-label-md">Mitra Dashboard</span>
+</a>
+<a class="text-on-surface-variant flex items-center gap-3 mx-2 my-1 px-4 py-3 hover:bg-surface-container-highest rounded-full transition-all hover:bg-surface-container-high dark:hover:bg-surface-variant scale-98 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-label-md text-label-md">History</span>
+</a>
+<a class="text-on-surface-variant flex items-center gap-3 mx-2 my-1 px-4 py-3 hover:bg-surface-container-highest rounded-full transition-all hover:bg-surface-container-high dark:hover:bg-surface-variant scale-98 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="inventory">inventory</span>
+<span class="font-label-md text-label-md">Product Management</span>
+</a>
+<a class="text-on-surface-variant flex items-center gap-3 mx-2 my-1 px-4 py-3 hover:bg-surface-container-highest rounded-full transition-all hover:bg-surface-container-high dark:hover:bg-surface-variant scale-98 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-label-md text-label-md">Financial Reports</span>
+</a>
+</div>
+<div class="px-4 py-4 border-t border-outline-variant/30">
+<div class="flex items-center gap-3 p-2">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold">
+                     AD
+                 </div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Admin User</span>
+<span class="text-xs text-on-surface-variant">Kasir Shift Pagi</span>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-screen md:ml-72 relative">
+<!-- TopAppBar (Mobile & Desktop overrides) -->
+<header class="bg-primary dark:bg-primary-container flex justify-between items-center h-16 px-4 w-full z-50 shadow-sm docked full-width top-0 text-on-primary dark:text-on-primary-container transition-colors duration-200">
+<div class="flex items-center gap-4">
+<button class="md:hidden p-2 rounded-full hover:bg-primary-fixed-dim/20 transition-colors">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md-mobile font-bold text-secondary-fixed">Halaman Kasir</h1>
+</div>
+<!-- Global Actions -->
+<div class="flex items-center gap-2">
+<button aria-label="Notifications" class="p-2 rounded-full hover:bg-primary-fixed-dim/20 transition-colors hidden md:flex">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold md:hidden">
+<span class="material-symbols-outlined text-sm" data-icon="person">person</span>
+</div>
+</div>
+</header>
+<!-- Main POS Layout: Left Grid, Right Cart (on Desktop) -->
+<div class="flex-1 flex flex-col md:flex-row overflow-hidden bg-surface-container-lowest">
+<!-- Products Section -->
+<div class="flex-1 flex flex-col w-full h-full border-r border-outline-variant/30 bg-background relative">
+<!-- Search & Scan Bar -->
+<div class="p-4 bg-surface shadow-sm z-10 flex flex-col sm:flex-row gap-3">
+<div class="relative flex-1">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full h-touch-target-min pl-10 pr-4 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-md text-body-md" placeholder="Cari produk, SKU, atau kategori..." type="text"/>
+</div>
+<button class="h-touch-target-min px-6 rounded-xl bg-surface-container flex items-center justify-center gap-2 border border-outline text-on-surface hover:bg-surface-container-highest transition-colors flex-shrink-0">
+<span class="material-symbols-outlined" data-icon="barcode_scanner">barcode_scanner</span>
+<span class="font-label-md text-label-md">Scan Barcode</span>
+</button>
+</div>
+<!-- Categories (Horizontal Scroll) -->
+<div class="px-4 py-3 bg-surface-container-lowest border-b border-outline-variant/20 flex gap-2 overflow-x-auto hide-scrollbar shrink-0">
+<button class="px-4 py-2 rounded-full bg-primary text-on-primary font-label-md text-label-md whitespace-nowrap shrink-0">Semua</button>
+<button class="px-4 py-2 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant hover:bg-surface-container-highest font-label-md text-label-md whitespace-nowrap shrink-0 transition-colors">Sembako</button>
+<button class="px-4 py-2 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant hover:bg-surface-container-highest font-label-md text-label-md whitespace-nowrap shrink-0 transition-colors">Minuman</button>
+<button class="px-4 py-2 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant hover:bg-surface-container-highest font-label-md text-label-md whitespace-nowrap shrink-0 transition-colors">Snack</button>
+<button class="px-4 py-2 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant hover:bg-surface-container-highest font-label-md text-label-md whitespace-nowrap shrink-0 transition-colors">Rokok</button>
+</div>
+<!-- Product Grid Area -->
+<div class="flex-1 overflow-y-auto p-4 pb-32 md:pb-4">
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+<!-- Product Card 1 -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden flex flex-col hover:shadow-md transition-shadow cursor-pointer group">
+<div class="aspect-square bg-surface-container-highest relative overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A professional product shot of a sack of premium white rice on a clean minimal background, bright even lighting, high resolution, modern retail aesthetic, neutral color palette" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJPOa74C_DdWejSY9lbOXDq9qAoLqTvJu3zNJWPjp6IDtsuN5-ZHtG-DoKxpCbTiS-Z_5C6WwjDs2LSi-hKeS94ONCFePKpXO-2HKg0l0cYCJZJXEL7oazd7N435wKUb9j_Q8Jqh81ijUZerkg0Fq8VrBOJCPH3G69hChmJDYY5yYg2sE5gPdMtbhRe6-f5aA1v1tV_vyca-6RerRNFwSqOiQEdpOt1ynLKJWlHrtiNvgXq7K4-jEevQ"/>
+<div class="absolute top-2 right-2 bg-tertiary-container text-on-tertiary-container px-2 py-1 rounded-md font-label-sm text-label-sm flex items-center gap-1 shadow-sm">
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed"></span> Stok: 45
+                                </div>
+</div>
+<div class="p-3 flex flex-col flex-1">
+<h3 class="font-label-md text-label-md text-on-surface line-clamp-2 mb-1">Beras Premium Cap Tawon 5kg</h3>
+<p class="font-numeric-data text-numeric-data text-primary mt-auto">Rp 65.000</p>
+<button class="mt-3 w-full h-10 rounded-lg bg-surface-container border border-outline-variant text-primary hover:bg-primary hover:text-on-primary transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="add_shopping_cart">add_shopping_cart</span>
+<span class="font-label-md text-label-md">Tambah</span>
+</button>
+</div>
+</div>
+<!-- Product Card 2 (Empty Stock) -->
+<div class="bg-surface-container-lowest rounded-xl border border-error/50 overflow-hidden flex flex-col opacity-80 cursor-not-allowed group relative">
+<div class="aspect-square bg-surface-container-highest relative overflow-hidden">
+<img class="w-full h-full object-cover grayscale" data-alt="A professional product shot of a bottle of cooking oil on a clean minimal background, bright even lighting, high resolution, modern retail aesthetic, neutral color palette" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZFCZdZ7pVhl89Rgz3XrFz_lFn4MlIQ9NuAAnn9yu92vIHghRjx8pKR_ClxhqDJhg_Rec6axZXdcTJJ4FNPjhXiFwggzVh8nmxaYIry8LMNLSirRyWj3md13AXpVMz31bkIM25kwADu9aflYp5WQz9j49lXsEI2FkDvczTQat95D-TVrnIKTTxolElzkxF9nToLUHuHsjo0Qt3JI3dAWpruoEJ4poNOVNvy6_zhdcqH90Qdu7Ni98aKQ"/>
+<div class="absolute top-2 right-2 bg-error text-on-error px-2 py-1 rounded-md font-label-sm text-label-sm flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[12px]" data-icon="warning">warning</span> Stok: 0
+                                </div>
+<div class="absolute inset-0 bg-surface/40 flex items-center justify-center">
+<span class="bg-error-container text-on-error-container px-3 py-1 rounded-full font-label-sm text-label-sm border border-error/20 backdrop-blur-sm shadow-sm">Kosong</span>
+</div>
+</div>
+<div class="p-3 flex flex-col flex-1">
+<h3 class="font-label-md text-label-md text-on-surface line-clamp-2 mb-1">Minyak Goreng Bimoli 2L</h3>
+<p class="font-numeric-data text-numeric-data text-on-surface-variant mt-auto">Rp 38.000</p>
+<button class="mt-3 w-full h-10 rounded-lg bg-surface-container-highest text-on-surface-variant opacity-50 cursor-not-allowed flex items-center justify-center gap-1" disabled="">
+<span class="material-symbols-outlined text-sm" data-icon="block">block</span>
+</button>
+</div>
+</div>
+<!-- Product Card 3 -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden flex flex-col hover:shadow-md transition-shadow cursor-pointer group">
+<div class="aspect-square bg-surface-container-highest relative overflow-hidden">
+<div class="w-full h-full flex items-center justify-center bg-surface-container-low text-outline">
+<span class="material-symbols-outlined text-4xl" data-icon="image">image</span>
+</div>
+<div class="absolute top-2 right-2 bg-[#fff8e1] text-[#795548] border border-[#ffecb3] px-2 py-1 rounded-md font-label-sm text-label-sm flex items-center gap-1 shadow-sm">
+<span class="w-2 h-2 rounded-full bg-[#ffc107]"></span> Stok: 5
+                                </div>
+</div>
+<div class="p-3 flex flex-col flex-1">
+<h3 class="font-label-md text-label-md text-on-surface line-clamp-2 mb-1">Gula Pasir Gulaku 1kg</h3>
+<p class="font-numeric-data text-numeric-data text-primary mt-auto">Rp 16.500</p>
+<button class="mt-3 w-full h-10 rounded-lg bg-surface-container border border-outline-variant text-primary hover:bg-primary hover:text-on-primary transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="add_shopping_cart">add_shopping_cart</span>
+<span class="font-label-md text-label-md">Tambah</span>
+</button>
+</div>
+</div>
+<!-- Product Card 4 -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden flex flex-col hover:shadow-md transition-shadow cursor-pointer group">
+<div class="aspect-square bg-surface-container-highest relative overflow-hidden">
+<div class="w-full h-full flex items-center justify-center bg-surface-container-low text-outline">
+<span class="material-symbols-outlined text-4xl" data-icon="image">image</span>
+</div>
+<div class="absolute top-2 right-2 bg-tertiary-container text-on-tertiary-container px-2 py-1 rounded-md font-label-sm text-label-sm flex items-center gap-1 shadow-sm">
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed"></span> Stok: 120
+                                </div>
+</div>
+<div class="p-3 flex flex-col flex-1">
+<h3 class="font-label-md text-label-md text-on-surface line-clamp-2 mb-1">Indomie Goreng Original</h3>
+<p class="font-numeric-data text-numeric-data text-primary mt-auto">Rp 3.000</p>
+<button class="mt-3 w-full h-10 rounded-lg bg-surface-container border border-outline-variant text-primary hover:bg-primary hover:text-on-primary transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="add_shopping_cart">add_shopping_cart</span>
+<span class="font-label-md text-label-md">Tambah</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Warning Message Container (Contextual) -->
+<div class="mt-6 bg-error-container/30 border border-error-container rounded-xl p-4 flex gap-3 items-start max-w-2xl mx-auto">
+<span class="material-symbols-outlined text-error mt-0.5" data-icon="info">info</span>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface font-bold">Peringatan Sistem</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm mt-1">Beberapa item populer seperti <span class="font-bold">Minyak Goreng Bimoli 2L</span> memiliki status <span class="text-error font-bold">Stok Produk Kosong Hari Ini</span>. Pastikan untuk menginformasikan kepada pelanggan jika diminta.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Cart / Checkout Sidebar (Desktop Right Side / Mobile Bottom Sheet concept - simplified here as a fixed block on mobile if active) -->
+<div class="w-full md:w-[360px] lg:w-[400px] h-full bg-surface-container-lowest flex flex-col shrink-0 shadow-[-4px_0_15px_-5px_rgba(0,0,0,0.1)] z-20 hidden md:flex border-l border-outline-variant/30">
+<!-- Cart Header -->
+<div class="p-4 border-b border-outline-variant/30 bg-surface flex justify-between items-center">
+<h2 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="shopping_cart">shopping_cart</span>
+                        Pesanan Saat Ini
+                    </h2>
+<span class="bg-primary-container text-on-primary-container px-2 py-0.5 rounded-full text-xs font-bold">3 Item</span>
+</div>
+<!-- Cart Items List -->
+<div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4 hide-scrollbar">
+<!-- Cart Item 1 -->
+<div class="flex gap-3 bg-surface-container-low p-3 rounded-xl border border-outline-variant/50">
+<div class="w-16 h-16 bg-surface-container-highest rounded-lg flex-shrink-0 border border-outline-variant/20">
+<!-- Image placeholder -->
+</div>
+<div class="flex-1 flex flex-col justify-between">
+<div class="flex justify-between items-start gap-2">
+<h4 class="font-label-md text-label-md text-on-surface line-clamp-2 leading-tight">Beras Premium Cap Tawon 5kg</h4>
+<button class="text-on-surface-variant hover:text-error p-1 -mr-1 -mt-1"><span class="material-symbols-outlined text-[18px]" data-icon="delete">delete</span></button>
+</div>
+<div class="flex justify-between items-center mt-2">
+<p class="font-numeric-data text-numeric-data text-primary text-sm">Rp 65.000</p>
+<div class="flex items-center gap-2 bg-surface rounded-lg border border-outline-variant/50 h-8">
+<button class="w-8 h-full flex items-center justify-center text-on-surface hover:bg-surface-container-highest rounded-l-lg">-</button>
+<span class="font-numeric-data text-numeric-data w-6 text-center text-sm">1</span>
+<button class="w-8 h-full flex items-center justify-center text-on-surface hover:bg-surface-container-highest rounded-r-lg">+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Cart Item 2 -->
+<div class="flex gap-3 bg-surface-container-low p-3 rounded-xl border border-outline-variant/50">
+<div class="w-16 h-16 bg-surface-container-highest rounded-lg flex-shrink-0 border border-outline-variant/20">
+<!-- Image placeholder -->
+</div>
+<div class="flex-1 flex flex-col justify-between">
+<div class="flex justify-between items-start gap-2">
+<h4 class="font-label-md text-label-md text-on-surface line-clamp-2 leading-tight">Indomie Goreng Original</h4>
+<button class="text-on-surface-variant hover:text-error p-1 -mr-1 -mt-1"><span class="material-symbols-outlined text-[18px]" data-icon="delete">delete</span></button>
+</div>
+<div class="flex justify-between items-center mt-2">
+<p class="font-numeric-data text-numeric-data text-primary text-sm">Rp 15.000</p>
+<div class="flex items-center gap-2 bg-surface rounded-lg border border-outline-variant/50 h-8">
+<button class="w-8 h-full flex items-center justify-center text-on-surface hover:bg-surface-container-highest rounded-l-lg">-</button>
+<span class="font-numeric-data text-numeric-data w-6 text-center text-sm">5</span>
+<button class="w-8 h-full flex items-center justify-center text-on-surface hover:bg-surface-container-highest rounded-r-lg">+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Cart Summary & Checkout -->
+<div class="p-4 border-t border-outline-variant/30 bg-surface-container-lowest">
+<div class="flex justify-between items-center mb-2">
+<span class="font-body-md text-body-md text-on-surface-variant">Subtotal</span>
+<span class="font-numeric-data text-numeric-data text-on-surface">Rp 80.000</span>
+</div>
+<div class="flex justify-between items-center mb-4">
+<span class="font-body-md text-body-md text-on-surface-variant">Pajak (0%)</span>
+<span class="font-numeric-data text-numeric-data text-on-surface">Rp 0</span>
+</div>
+<div class="flex justify-between items-center mb-6 pt-3 border-t border-outline-variant/20">
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold">Total</span>
+<span class="font-display-lg text-display-lg text-primary">Rp 80.000</span>
+</div>
+<div class="grid grid-cols-2 gap-3 mb-3">
+<button class="h-touch-target-min rounded-xl bg-surface border border-primary text-primary font-label-md text-label-md hover:bg-primary-container hover:text-on-primary-container transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="pause">pause</span> Tahan
+                        </button>
+<button class="h-touch-target-min rounded-xl bg-surface border border-error text-error font-label-md text-label-md hover:bg-error-container hover:text-on-error-container transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="close">close</span> Batal
+                        </button>
+</div>
+<button class="w-full h-14 rounded-xl bg-[#F4A7B9] hover:bg-[#e091a4] text-white font-headline-sm text-headline-sm shadow-[0_4px_14px_0_rgba(244,167,185,0.39)] transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+                        Checkout
+                    </button>
+</div>
+</div>
+<!-- Mobile FAB for Scanning (Only visible on mobile) -->
+<button class="md:hidden fixed bottom-24 right-4 w-14 h-14 bg-secondary text-on-secondary rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.15)] flex items-center justify-center z-40 active:scale-90 transition-transform">
+<span class="material-symbols-outlined filled" data-icon="barcode_scanner">barcode_scanner</span>
+</button>
+<!-- Mobile Cart Summary Banner (Only visible on mobile) -->
+<div class="md:hidden fixed bottom-20 left-0 w-full bg-surface-container-lowest border-t border-outline-variant p-3 flex justify-between items-center shadow-[0_-4px_15px_-5px_rgba(0,0,0,0.1)] z-40 pb-safe">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Total (3 item)</span>
+<span class="font-numeric-data text-numeric-data text-primary font-bold text-lg">Rp 80.000</span>
+</div>
+<button class="h-10 px-6 rounded-lg bg-[#F4A7B9] text-white font-label-md text-label-md shadow-sm">
+                    Checkout
+                </button>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex md:hidden justify-around items-center px-2 pb-safe h-20 bg-surface dark:bg-surface-container-lowest text-primary dark:text-primary-fixed-dim rounded-t-xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-5 py-1.5 active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined filled" data-icon="barcode_scanner">barcode_scanner</span>
+<span class="font-label-sm text-label-sm mt-1">POS</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container px-4 py-1.5 rounded-xl active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="widgets">widgets</span>
+<span class="font-label-sm text-label-sm mt-1">Stock</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container px-4 py-1.5 rounded-xl active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-label-sm text-label-sm mt-1">Mitra</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container px-4 py-1.5 rounded-xl active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-label-sm text-label-sm mt-1">History</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container px-4 py-1.5 rounded-xl active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="admin_panel_settings">admin_panel_settings</span>
+<span class="font-label-sm text-label-sm mt-1">Admin</span>
+</a>
+</nav>
+</body></html>

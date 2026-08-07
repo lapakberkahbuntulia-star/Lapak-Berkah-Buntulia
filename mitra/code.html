@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lapak Berkah - Mitra Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-container": "#8abcff",
+                        "inverse-surface": "#2d3133",
+                        "outline-variant": "#c2c6d1",
+                        "surface": "#f7f9fb",
+                        "background": "#f7f9fb",
+                        "error-container": "#ffdad6",
+                        "secondary": "#894c5c",
+                        "error": "#ba1a1a",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-secondary-container": "#7b4050",
+                        "secondary-fixed-dim": "#ffb1c3",
+                        "on-tertiary-fixed-variant": "#005228",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-tertiary-fixed": "#00210c",
+                        "tertiary-fixed": "#6bfe9c",
+                        "primary-container": "#004b87",
+                        "secondary-container": "#ffb1c3",
+                        "on-surface": "#191c1e",
+                        "on-primary-fixed": "#001c38",
+                        "tertiary-container": "#00562a",
+                        "surface-variant": "#e0e3e5",
+                        "on-surface-variant": "#424750",
+                        "surface-dim": "#d8dadc",
+                        "on-secondary-fixed-variant": "#6e3545",
+                        "secondary-fixed": "#ffd9e0",
+                        "on-tertiary-container": "#39d377",
+                        "on-secondary": "#ffffff",
+                        "surface-bright": "#f7f9fb",
+                        "on-background": "#191c1e",
+                        "surface-container": "#eceef0",
+                        "primary-fixed-dim": "#a3c9ff",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#d3e4ff",
+                        "tertiary": "#003c1b",
+                        "inverse-on-surface": "#eff1f3",
+                        "surface-container-low": "#f2f4f6",
+                        "inverse-primary": "#a3c9ff",
+                        "primary": "#003461",
+                        "outline": "#727781",
+                        "surface-container-high": "#e6e8ea",
+                        "surface-tint": "#27609d",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed-variant": "#004882",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed": "#380a1a",
+                        "tertiary-fixed-dim": "#4ae183"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "touch-target-min": "48px",
+                        "container-margin": "16px",
+                        "lg": "24px",
+                        "xl": "32px",
+                        "sm": "12px",
+                        "base": "8px",
+                        "md": "16px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "headline-md-mobile": ["Hanken Grotesk"],
+                        "label-md": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "numeric-data": ["Hanken Grotesk"],
+                        "headline-sm": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "label-sm": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "headline-md-mobile": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "numeric-data": ["16px", { "lineHeight": "24px", "fontWeight": "700" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Hanken Grotesk', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased flex h-screen overflow-hidden">
+<!-- NavigationDrawer (Web) -->
+<nav class="bg-surface-container-low text-primary h-full w-72 rounded-r-xl border-r border-outline-variant shadow-lg fixed inset-y-0 left-0 z-40 hidden md:flex flex-col">
+<div class="p-lg">
+<h2 class="font-headline-md text-headline-md text-primary">Lapak Berkah Buntulia</h2>
+</div>
+<ul class="flex flex-col gap-base mt-md">
+<li>
+<a class="text-on-surface-variant flex items-center gap-3 mx-2 my-1 px-4 py-3 hover:bg-surface-container-highest rounded-full transition-all hover:bg-surface-container-high scale-98 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">point_of_sale</span>
+<span class="font-label-md text-label-md">POS Cashier</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant flex items-center gap-3 mx-2 my-1 px-4 py-3 hover:bg-surface-container-highest rounded-full transition-all hover:bg-surface-container-high scale-98 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span class="font-label-md text-label-md">Inventory</span>
+</a>
+</li>
+<li>
+<a class="bg-secondary-container text-on-secondary-container rounded-full mx-2 my-1 px-4 py-3 flex items-center gap-3 scale-98 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">handshake</span>
+<span class="font-label-md text-label-md">Mitra Dashboard</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant flex items-center gap-3 mx-2 my-1 px-4 py-3 hover:bg-surface-container-highest rounded-full transition-all hover:bg-surface-container-high scale-98 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">history</span>
+<span class="font-label-md text-label-md">History</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant flex items-center gap-3 mx-2 my-1 px-4 py-3 hover:bg-surface-container-highest rounded-full transition-all hover:bg-surface-container-high scale-98 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">inventory</span>
+<span class="font-label-md text-label-md">Product Management</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant flex items-center gap-3 mx-2 my-1 px-4 py-3 hover:bg-surface-container-highest rounded-full transition-all hover:bg-surface-container-high scale-98 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">payments</span>
+<span class="font-label-md text-label-md">Financial Reports</span>
+</a>
+</li>
+</ul>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col md:ml-72 relative z-0 h-full">
+<!-- TopAppBar (Mobile) -->
+<header class="bg-primary text-on-primary shadow-sm flex justify-between items-center h-16 px-4 w-full z-50 docked full-width top-0 md:hidden">
+<button class="text-on-primary/70 hover:bg-primary-fixed-dim/20 transition-colors duration-200 p-2 rounded-full">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md-mobile font-bold text-secondary-fixed">Lapak Berkah</h1>
+<div class="w-8 h-8 bg-surface-container rounded-full flex items-center justify-center overflow-hidden">
+<span class="material-symbols-outlined text-on-surface-variant">person</span>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 overflow-y-auto p-container-margin md:p-lg pb-24 md:pb-lg">
+<div class="max-w-5xl mx-auto space-y-lg">
+<header class="mb-xl hidden md:block">
+<h2 class="font-display-lg text-display-lg text-on-background">Mitra Dashboard</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Manage daily stock and monitor sales performance.</p>
+</header>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-lg">
+<!-- Section 1: Input Stok Pagi -->
+<section class="lg:col-span-5 bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-sm h-fit">
+<h3 class="font-headline-sm text-headline-sm text-on-background mb-md flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">inventory</span>
+                            Input Stok Pagi
+                        </h3>
+<form class="space-y-md">
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-xs" for="date">Tanggal</label>
+<div class="relative">
+<input class="w-full h-touch-target-min rounded-lg border border-outline bg-transparent px-md py-sm font-body-md text-body-md text-on-background focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" id="date" type="date" value="2023-10-27"/>
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-xs" for="product">Produk</label>
+<div class="relative">
+<select class="w-full h-touch-target-min rounded-lg border border-outline bg-transparent px-md py-sm font-body-md text-body-md text-on-background focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors appearance-none" id="product">
+<option disabled="" selected="" value="">Pilih Produk</option>
+<option value="p1">Kopi Susu Gula Aren</option>
+<option value="p2">Teh Manis Dingin</option>
+<option value="p3">Roti Bakar Coklat</option>
+</select>
+<span class="material-symbols-outlined absolute right-md top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">arrow_drop_down</span>
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-xs" for="quantity">Jumlah Stok</label>
+<input class="w-full h-touch-target-min rounded-lg border border-outline bg-transparent px-md py-sm font-numeric-data text-numeric-data text-on-background focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" id="quantity" min="0" placeholder="0" type="number"/>
+</div>
+<button class="w-full h-touch-target-min bg-secondary-fixed-dim text-on-secondary-container font-label-md text-label-md rounded-lg flex items-center justify-center gap-2 hover:bg-secondary-container transition-colors active:scale-95 shadow-sm mt-lg" type="button">
+<span class="material-symbols-outlined">save</span>
+                                Simpan Stok
+                            </button>
+</form>
+</section>
+<!-- Section 2: Monitoring Penjualan -->
+<section class="lg:col-span-7 space-y-md">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
+<!-- Summary Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-sm flex flex-col justify-between">
+<div class="flex justify-between items-start mb-sm">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed">
+<span class="material-symbols-outlined">shopping_cart</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container-high px-2 py-1 rounded-full">Hari Ini</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant">Total Terjual</p>
+<p class="font-display-lg text-display-lg text-on-background">142 <span class="font-body-md text-body-md text-outline">item</span></p>
+</div>
+</div>
+<!-- Summary Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-sm flex flex-col justify-between">
+<div class="flex justify-between items-start mb-sm">
+<div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed">
+<span class="material-symbols-outlined">inventory_2</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container-high px-2 py-1 rounded-full">Live</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant">Sisa Stok Keseluruhan</p>
+<p class="font-display-lg text-display-lg text-on-background">58 <span class="font-body-md text-body-md text-outline">item</span></p>
+</div>
+</div>
+</div>
+<!-- Real-time Stock List -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden flex flex-col h-[350px]">
+<div class="p-md border-b border-outline-variant flex justify-between items-center bg-surface-bright">
+<h3 class="font-headline-sm text-headline-sm text-on-background">Status Stok Real-time</h3>
+<button class="text-primary hover:bg-primary-fixed-dim/20 p-2 rounded-full transition-colors flex items-center">
+<span class="material-symbols-outlined">refresh</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low sticky top-0 z-10">
+<tr>
+<th class="p-md font-label-md text-label-md text-on-surface-variant border-b border-outline-variant">Produk</th>
+<th class="p-md font-label-md text-label-md text-on-surface-variant border-b border-outline-variant text-right">Terjual</th>
+<th class="p-md font-label-md text-label-md text-on-surface-variant border-b border-outline-variant text-right">Sisa</th>
+<th class="p-md font-label-md text-label-md text-on-surface-variant border-b border-outline-variant text-center">Status</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md">
+<tr class="border-b border-outline-variant hover:bg-surface-container-lowest transition-colors">
+<td class="p-md text-on-background">Kopi Susu Gula Aren</td>
+<td class="p-md text-right font-numeric-data text-numeric-data text-on-surface-variant">45</td>
+<td class="p-md text-right font-numeric-data text-numeric-data text-on-background">15</td>
+<td class="p-md text-center">
+<span class="inline-block px-2 py-1 bg-tertiary-fixed text-on-tertiary-fixed rounded-full font-label-sm text-label-sm">In Stock</span>
+</td>
+</tr>
+<tr class="border-b border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low transition-colors">
+<td class="p-md text-on-background">Teh Manis Dingin</td>
+<td class="p-md text-right font-numeric-data text-numeric-data text-on-surface-variant">60</td>
+<td class="p-md text-right font-numeric-data text-numeric-data text-on-background">5</td>
+<td class="p-md text-center">
+<span class="inline-block px-2 py-1 bg-error-container text-on-error-container rounded-full font-label-sm text-label-sm">Low Stock</span>
+</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-lowest transition-colors">
+<td class="p-md text-on-background">Roti Bakar Coklat</td>
+<td class="p-md text-right font-numeric-data text-numeric-data text-on-surface-variant">37</td>
+<td class="p-md text-right font-numeric-data text-numeric-data text-on-background">38</td>
+<td class="p-md text-center">
+<span class="inline-block px-2 py-1 bg-tertiary-fixed text-on-tertiary-fixed rounded-full font-label-sm text-label-sm">In Stock</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+</div>
+<!-- BottomNavBar (Mobile) -->
+<nav class="bg-surface text-primary border-t border-outline-variant shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] fixed bottom-0 left-0 w-full z-50 flex md:hidden justify-around items-center px-2 pb-safe h-20 docked full-width bottom-0 rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container active:scale-90 transition-all w-16 h-16 rounded-xl" href="#">
+<span class="material-symbols-outlined mb-1">barcode_scanner</span>
+<span class="font-label-sm text-label-sm">POS</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container active:scale-90 transition-all w-16 h-16 rounded-xl" href="#">
+<span class="material-symbols-outlined mb-1">widgets</span>
+<span class="font-label-sm text-label-sm">Stock</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-5 py-1.5 active:scale-90 transition-all h-[52px]" href="#">
+<span class="material-symbols-outlined mb-1 text-secondary-fixed">group</span>
+<span class="font-label-sm text-label-sm">Mitra</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container active:scale-90 transition-all w-16 h-16 rounded-xl" href="#">
+<span class="material-symbols-outlined mb-1">receipt_long</span>
+<span class="font-label-sm text-label-sm">History</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container active:scale-90 transition-all w-16 h-16 rounded-xl" href="#">
+<span class="material-symbols-outlined mb-1">admin_panel_settings</span>
+<span class="font-label-sm text-label-sm">Admin</span>
+</a>
+</nav>
+<script>
+        // Set today's date automatically in the input
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const dateInput = document.getElementById('date');
+            if(dateInput) {
+                const today = new Date().toISOString().split('T')[0];
+                dateInput.value = today;
+            }
+        });
+    </script>
+</body></html>

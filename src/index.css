@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@theme {
+  --color-on-primary-container: #8abcff;
+  --color-inverse-surface: #2d3133;
+  --color-outline-variant: #c2c6d1;
+  --color-surface: #f7f9fb;
+  --color-background: #f7f9fb;
+  --color-error-container: #ffdad6;
+  --color-secondary: #894c5c;
+  --color-error: #ba1a1a;
+  --color-on-tertiary: #ffffff;
+  --color-on-primary: #ffffff;
+  --color-on-secondary-container: #7b4050;
+  --color-secondary-fixed-dim: #ffb1c3;
+  --color-on-tertiary-fixed-variant: #005228;
+  --color-surface-container-highest: #e0e3e5;
+  --color-on-tertiary-fixed: #00210c;
+  --color-tertiary-fixed: #6bfe9c;
+  --color-primary-container: #004b87;
+  --color-secondary-container: #ffb1c3;
+  --color-on-surface: #191c1e;
+  --color-on-primary-fixed: #001c38;
+  --color-tertiary-container: #00562a;
+  --color-surface-variant: #e0e3e5;
+  --color-on-surface-variant: #424750;
+  --color-surface-dim: #d8dadc;
+  --color-on-secondary-fixed-variant: #6e3545;
+  --color-secondary-fixed: #ffd9e0;
+  --color-on-tertiary-container: #39d377;
+  --color-on-secondary: #ffffff;
+  --color-surface-bright: #f7f9fb;
+  --color-on-background: #191c1e;
+  --color-surface-container: #eceef0;
+  --color-primary-fixed-dim: #a3c9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-primary-fixed: #d3e4ff;
+  --color-tertiary: #003c1b;
+  --color-inverse-on-surface: #eff1f3;
+  --color-surface-container-low: #f2f4f6;
+  --color-inverse-primary: #a3c9ff;
+  --color-primary: #003461;
+  --color-outline: #727781;
+  --color-surface-container-high: #e6e8ea;
+  --color-surface-tint: #27609d;
+  --color-on-error: #ffffff;
+  --color-on-primary-fixed-variant: #004882;
+  --color-on-error-container: #93000a;
+  --color-on-secondary-fixed: #380a1a;
+  --color-tertiary-fixed-dim: #4ae183;
+
+  --font-headline-md: "Hanken Grotesk", sans-serif;
+  --font-label-md: "Hanken Grotesk", sans-serif;
+  --font-body-md: "Hanken Grotesk", sans-serif;
+  --font-body-lg: "Hanken Grotesk", sans-serif;
+  --font-display-lg: "Hanken Grotesk", sans-serif;
+  --font-numeric-data: "Hanken Grotesk", sans-serif;
+  --font-headline-sm: "Hanken Grotesk", sans-serif;
+  --font-label-sm: "Hanken Grotesk", sans-serif;
+  --font-headline-md-mobile: "Hanken Grotesk", sans-serif;
+
+  --text-headline-md-mobile: 20px;
+  --text-label-md: 14px;
+  --text-body-md: 16px;
+  --text-body-lg: 18px;
+  --text-display-lg: 32px;
+  --text-numeric-data: 16px;
+  --text-headline-sm: 20px;
+  --text-headline-md: 24px;
+  --text-label-sm: 12px;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-body-md);
+  }
+  body {
+    @apply bg-background text-on-background font-body-md min-h-screen;
+    margin: 0;
+  }
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
