@@ -116,6 +116,8 @@ function MitraDashboard({ role }) {
           quantity: s.quantity,
           note: s.note || '',
           status: s.status,
+          mitraName: s.mitra?.full_name || '-',
+          productName: s.product?.nama_produk || '-',
         }));
 
         const mappedTx = (txData || []).map((tx) => ({
@@ -356,6 +358,17 @@ function MitraDashboard({ role }) {
     setEditMitraName(mitra.fullName);
   };
 
+  const handleValidateStock = async (stockId) => {
+    try {
+      await pendingStockValidationService.validate(stockId);
+      setStockInputs((prev) => prev.map((s) => (s.id === stockId ? { ...s, status: 'validated' } : s)));
+      setToast({ message: 'Stok berhasil divalidasi!', type: 'success' });
+    } catch (error) {
+      console.error('Failed to validate stock:', error);
+      setToast({ message: 'Gagal memvalidasi stok', type: 'error' });
+    }
+  };
+
   const handleUpdateMitra = async () => {
     if (!editingMitra || !editMitraName.trim()) return;
     try {
@@ -591,56 +604,73 @@ function MitraDashboard({ role }) {
                    </div>
 
                    <div className="overflow-x-auto">
-                     <table className="w-full text-left border-collapse">
-                       <thead>
-                         <tr className="bg-surface-container-low border-b border-outline-variant">
-                           <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Tanggal</th>
-                           <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Mitra</th>
-                           <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Produk</th>
-                           <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-right">Stok</th>
-                           <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-center">Status</th>
-                           <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Catatan</th>
-                         </tr>
-                       </thead>
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-surface-container-low border-b border-outline-variant">
+                            <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Tanggal</th>
+                            <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Mitra</th>
+                            <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Produk</th>
+                            <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-right">Stok</th>
+                            <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-center">Status</th>
+                            <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Catatan</th>
+                            {!isMitra && (
+                              <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-center">Aksi</th>
+                            )}
+                          </tr>
+                        </thead>
                        <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
-                        {todayStock.length === 0 ? (
-                          <tr>
-                            <td colSpan={6} className="px-6 py-12 text-center">
+                         {todayStock.length === 0 ? (
+                           <tr>
+                             <td colSpan={isMitra ? 6 : 7} className="px-6 py-12 text-center">
                               <span className="material-symbols-outlined text-6xl text-outline mb-3">inventory_2</span>
                               <p className="font-body-md text-body-md text-on-surface-variant">Tidak ada data stok untuk tanggal ini</p>
                             </td>
                           </tr>
                         ) : (
-                          todayStock.map((stock, idx) => {
-                            const mitra = mitraList.find((m) => m.id === stock.mitraId);
-                            const product = products.find((p) => p.id === stock.productId);
-                            if (!isMitra && selectedMitra && stock.mitraId !== Number(selectedMitra)) return null;
-                            return (
-                              <tr key={stock.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
-                                <td className="px-6 py-4">
-                                  <span className="font-body-sm text-body-sm text-on-surface">{stock.date}</span>
-                                </td>
-                                <td className="px-6 py-4">
-                                  <span className="font-body-sm text-body-sm text-on-surface">{mitra?.fullName || '-'}</span>
-                                </td>
-                                <td className="px-6 py-4">
-                                  <span className="font-body-sm text-body-sm text-on-surface">{product?.name || '-'}</span>
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                  <span className="font-numeric-data text-numeric-data text-on-background">{stock.quantity} {product?.unit || ''}</span>
-                                </td>
-                                <td className="px-6 py-4">
-                                  <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-label-md text-label-sm border ${stock.status === 'validated' ? 'bg-tertiary-fixed/15 text-tertiary-container border-tertiary-fixed/30' : 'bg-[#fdf2d5] text-[#7a590c] border-[#ebd083]'}`}>
-                                    <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                                    {stock.status === 'validated' ? 'Tervalidasi' : 'Menunggu'}
-                                  </span>
-                                </td>
-                                <td className="px-6 py-4">
-                                  <span className="font-body-sm text-body-sm text-on-surface-variant">{stock.note || '-'}</span>
-                                </td>
-                              </tr>
-                            );
-                          })
+                           todayStock.map((stock, idx) => {
+                             const product = products.find((p) => p.id === stock.productId);
+                             if (!isMitra && selectedMitra && stock.mitraId !== Number(selectedMitra)) return null;
+                             return (
+                               <tr key={stock.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
+                                 <td className="px-6 py-4">
+                                   <span className="font-body-sm text-body-sm text-on-surface">{stock.date}</span>
+                                 </td>
+                                 <td className="px-6 py-4">
+                                   <span className="font-body-sm text-body-sm text-on-surface">{stock.mitraName}</span>
+                                 </td>
+                                 <td className="px-6 py-4">
+                                   <span className="font-body-sm text-body-sm text-on-surface">{stock.productName}</span>
+                                 </td>
+                                 <td className="px-6 py-4 text-right">
+                                   <span className="font-numeric-data text-numeric-data text-on-background">{stock.quantity} {product?.unit || ''}</span>
+                                 </td>
+                                 <td className="px-6 py-4">
+                                   <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-label-md text-label-sm border ${stock.status === 'validated' ? 'bg-tertiary-fixed/15 text-tertiary-container border-tertiary-fixed/30' : 'bg-[#fdf2d5] text-[#7a590c] border-[#ebd083]'}`}>
+                                     <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                                     {stock.status === 'validated' ? 'Tervalidasi' : 'Menunggu'}
+                                   </span>
+                                 </td>
+                                 <td className="px-6 py-4">
+                                   <span className="font-body-sm text-body-sm text-on-surface-variant">{stock.note || '-'}</span>
+                                 </td>
+                                 {!isMitra && (
+                                   <td className="px-6 py-4 text-center">
+                                     {stock.status === 'pending' ? (
+                                       <button
+                                         onClick={() => handleValidateStock(stock.id)}
+                                         className="h-9 px-4 bg-tertiary-fixed/20 hover:bg-tertiary-fixed text-tertiary-container rounded-lg font-label-md text-label-md transition-colors flex items-center gap-2 mx-auto"
+                                       >
+                                         <span className="material-symbols-outlined text-[18px]">check</span>
+                                         Validasi
+                                       </button>
+                                     ) : (
+                                       <span className="font-body-sm text-body-sm text-on-surface-variant">-</span>
+                                     )}
+                                   </td>
+                                 )}
+                               </tr>
+                             );
+                           })
                         )}
                       </tbody>
                     </table>
@@ -925,15 +955,15 @@ function MitraDashboard({ role }) {
                           <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Mitra</th>
                         </tr>
                       </thead>
-                      <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
-                        {products
-                          .filter((p) => {
-                            if (isMitra) {
-                              return p.mitraId === mitraIdNum;
-                            }
-                            return productFilter === 'Semua' || p.mitraId === Number(productFilter);
-                          })
-                          .map((product, idx) => (
+                        <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
+                          {products
+                            .filter((p) => {
+                              if (isMitra) {
+                                return true;
+                              }
+                              return productFilter === 'Semua' || p.mitraId === Number(productFilter);
+                            })
+                            .map((product, idx) => (
                             <tr key={product.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
                               <td className="px-6 py-4">
                                 <span className="font-body-sm text-body-sm text-on-surface">{product.name}</span>
