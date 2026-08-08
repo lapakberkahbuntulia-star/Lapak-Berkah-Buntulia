@@ -74,7 +74,7 @@ function MitraDashboard({ role, user }) {
   });
 
   const loggedInMitraId = useMemo(() => {
-    if (!isMitra || !user?.email || !mitraList.length) return null;
+    if (!isMitra || !user?.email) return null;
     const currentMitra = mitraList.find((m) => m.email === user.email);
     return currentMitra ? String(currentMitra.id) : null;
   }, [isMitra, user?.email, mitraList]);
@@ -84,7 +84,19 @@ function MitraDashboard({ role, user }) {
       setSelectedMitra(loggedInMitraId);
     }
   }, [isMitra, loggedInMitraId]);
-  const [productFilter, setProductFilter] = useState(isMitra ? '1' : 'Semua');
+
+  const visibleProductIds = useMemo(() => {
+    if (isMitra) {
+      if (!loggedInMitraId) return new Set();
+      return new Set(products.filter((p) => p.mitraId === loggedInMitraId).map((p) => p.id));
+    }
+    const activeFilter = activeTab === 'stock' ? selectedMitra : productFilter;
+    if (!activeFilter || activeFilter === 'Semua') return new Set();
+    return new Set(products.filter((p) => p.mitraId === activeFilter).map((p) => p.id));
+  }, [isMitra, loggedInMitraId, activeTab, selectedMitra, productFilter, products]);
+
+  console.log('[MitraDashboard] filter debug:', { isMitra, loggedInMitraId, productFilter, visibleProductIdsSize: visibleProductIds.size, productsCount: products.length });
+  const [productFilter, setProductFilter] = useState(isMitra ? 'Semua' : 'Semua');
   const [activeTab, setActiveTab] = useState('stock');
   const [profitMonth, setProfitMonth] = useState(new Date().toISOString().slice(0, 7));
   const [profitStartDate, setProfitStartDate] = useState('');
@@ -585,7 +597,7 @@ function MitraDashboard({ role, user }) {
                           <label className="block font-label-sm text-label-sm text-on-surface font-medium">Mitra</label>
                           {isMitra ? (
                             <div className="w-full h-10 px-3 rounded-lg border border-outline bg-surface-container-low font-body-md text-body-md flex items-center text-on-surface-variant">
-                              {mitraList.find((m) => m.id === Number(selectedMitra))?.fullName || '-'}
+                               {mitraList.find((m) => m.id === selectedMitra)?.fullName || '-'}
                             </div>
                           ) : (
                             <select
@@ -610,11 +622,11 @@ function MitraDashboard({ role, user }) {
                              required
                            >
                              <option value="">Pilih Produk</option>
-                             {products
-                               .filter((p) => isMitra ? p.mitraId === loggedInMitraId : true)
-                               .map((p) => (
-                               <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
-                             ))}
+                              {products
+                                .filter((p) => visibleProductIds.size === 0 || visibleProductIds.has(p.id))
+                                .map((p) => (
+                                <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
+                              ))}
                            </select>
                          </div>
                         <div className="space-y-2">
@@ -1034,12 +1046,7 @@ function MitraDashboard({ role, user }) {
                       </thead>
                          <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
                             {products
-                              .filter((p) => {
-                                if (isMitra) {
-                                  return p.mitraId === loggedInMitraId;
-                                }
-                                return productFilter === 'Semua' || p.mitraId === productFilter;
-                              })
+                              .filter((p) => visibleProductIds.size === 0 || visibleProductIds.has(p.id))
                               .map((product, idx) => (
                             <tr key={product.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
                               <td className="px-6 py-4">
