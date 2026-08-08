@@ -40,8 +40,8 @@ function StatCard({ icon, label, value, subtitle, trend, trendUp, colorClass = '
   );
 }
 
-function MitraDashboard({ role }) {
-  console.log('[MitraDashboard] component rendered, role:', role);
+function MitraDashboard({ role, user }) {
+  console.log('[MitraDashboard] component rendered, role:', role, 'user:', user);
   const isMitra = role === 'mitra';
   const getLocalDate = (value) => {
     const d = value instanceof Date ? value : new Date(value);
@@ -72,6 +72,18 @@ function MitraDashboard({ role }) {
     photo: '',
     status: 'Aktif',
   });
+
+  const loggedInMitraId = useMemo(() => {
+    if (!isMitra || !user?.email || !mitraList.length) return null;
+    const currentMitra = mitraList.find((m) => m.email === user.email);
+    return currentMitra ? String(currentMitra.id) : null;
+  }, [isMitra, user?.email, mitraList]);
+
+  useEffect(() => {
+    if (isMitra && loggedInMitraId) {
+      setSelectedMitra(loggedInMitraId);
+    }
+  }, [isMitra, loggedInMitraId]);
   const [productFilter, setProductFilter] = useState(isMitra ? '1' : 'Semua');
   const [activeTab, setActiveTab] = useState('stock');
   const [profitMonth, setProfitMonth] = useState(new Date().toISOString().slice(0, 7));
@@ -167,15 +179,6 @@ function MitraDashboard({ role }) {
   useEffect(() => {
     loadData();
   }, []);
-
-  useEffect(() => {
-    if (isMitra) {
-      const currentMitra = mitraList.find((m) => m.status === 'Aktif');
-      if (currentMitra) {
-        setSelectedMitra(String(currentMitra.id));
-      }
-    }
-  }, [isMitra, mitraList]);
 
   const totalMitra = mitraList.length;
   const activeMitra = mitraList.filter((m) => m.status === 'Aktif').length;
@@ -598,20 +601,22 @@ function MitraDashboard({ role }) {
                             </select>
                           )}
                         </div>
-                        <div className="space-y-2">
-                          <label className="block font-label-sm text-label-sm text-on-surface font-medium">Produk</label>
-                          <select
-                            className="w-full h-10 px-3 rounded-lg border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-body-md text-body-md"
-                            value={stockFormData.productId}
-                            onChange={(e) => setStockFormData({ ...stockFormData, productId: e.target.value })}
-                            required
-                          >
-                            <option value="">Pilih Produk</option>
-                            {products.map((p) => (
-                              <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
-                            ))}
-                          </select>
-                        </div>
+                         <div className="space-y-2">
+                           <label className="block font-label-sm text-label-sm text-on-surface font-medium">Produk</label>
+                           <select
+                             className="w-full h-10 px-3 rounded-lg border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-body-md text-body-md"
+                             value={stockFormData.productId}
+                             onChange={(e) => setStockFormData({ ...stockFormData, productId: e.target.value })}
+                             required
+                           >
+                             <option value="">Pilih Produk</option>
+                             {products
+                               .filter((p) => isMitra ? p.mitraId === loggedInMitraId : true)
+                               .map((p) => (
+                               <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
+                             ))}
+                           </select>
+                         </div>
                         <div className="space-y-2">
                           <label className="block font-label-sm text-label-sm text-on-surface font-medium">Stok</label>
                           <input
@@ -1027,15 +1032,15 @@ function MitraDashboard({ role }) {
                           <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Mitra</th>
                         </tr>
                       </thead>
-                        <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
-                           {products
-                             .filter((p) => {
-                               if (isMitra) {
-                                 return true;
-                               }
-                               return productFilter === 'Semua' || p.mitraId === productFilter;
-                             })
-                             .map((product, idx) => (
+                         <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
+                            {products
+                              .filter((p) => {
+                                if (isMitra) {
+                                  return p.mitraId === loggedInMitraId;
+                                }
+                                return productFilter === 'Semua' || p.mitraId === productFilter;
+                              })
+                              .map((product, idx) => (
                             <tr key={product.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
                               <td className="px-6 py-4">
                                 <span className="font-body-sm text-body-sm text-on-surface">{product.name}</span>

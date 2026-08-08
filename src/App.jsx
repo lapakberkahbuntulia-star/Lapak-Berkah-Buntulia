@@ -102,7 +102,7 @@ function App() {
           {page === 'financial' && <FinancialReports />}
           {page === 'dashboard' && <Dashboard />}
           {page === 'sales-recap' && <SalesRecap />}
-          {page === 'mitra' && <MitraDashboard role={role} />}
+          {page === 'mitra' && <MitraDashboard role={role} user={user} />}
           {page === 'inventory' && <Inventory />}
           {page === 'transaction-history' && <TransactionHistory />}
           {page === 'stock-management' && <StockManagement />}
