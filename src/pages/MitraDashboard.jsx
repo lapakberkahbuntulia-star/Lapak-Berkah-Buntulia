@@ -116,8 +116,8 @@ function MitraDashboard({ role }) {
           quantity: s.quantity,
           note: s.note || '',
           status: s.status,
-          mitraName: s.mitra?.full_name || '-',
-          productName: s.product?.nama_produk || '-',
+          mitraName: (mitraData || []).find((m) => m.id === s.mitra_id)?.full_name || (s.mitra?.full_name) || '-',
+          productName: (productData || []).find((p) => p.id === s.product_id)?.nama_produk || (s.product?.nama_produk) || '-',
         }));
 
         const mappedTx = (txData || []).map((tx) => ({
@@ -361,7 +361,7 @@ function MitraDashboard({ role }) {
   const handleValidateStock = async (stockId) => {
     try {
       await pendingStockValidationService.validate(stockId);
-      setStockInputs((prev) => prev.map((s) => (s.id === stockId ? { ...s, status: 'validated' } : s)));
+      setStockInputs((prev) => prev.filter((s) => s.id !== stockId));
       setToast({ message: 'Stok berhasil divalidasi!', type: 'success' });
     } catch (error) {
       console.error('Failed to validate stock:', error);
