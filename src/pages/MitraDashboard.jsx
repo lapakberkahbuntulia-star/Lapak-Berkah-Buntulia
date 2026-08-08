@@ -98,17 +98,19 @@ function MitraDashboard({ role, user }) {
     return new Set(products.filter((p) => p.mitraId === activeFilter).map((p) => p.id));
   }, [isMitra, loggedInMitraId, activeTab, selectedMitra, productFilter, products]);
 
-  console.log('[MitraDashboard] filter debug:', { 
-    isMitra, 
-    userEmail: user?.email, 
-    loggedInMitraId, 
-    productFilter, 
-    selectedMitra, 
-    visibleProductIdsSize: visibleProductIds.size, 
+  const debugInfo = {
+    isMitra,
+    userEmail: user?.email,
+    loggedInMitraId,
+    productFilter,
+    selectedMitra,
     productsCount: products.length,
-    sampleProductIds: products.slice(0, 3).map(p => ({ id: p.id, mitraId: p.mitraId })),
-    mitraListEmails: mitraList.slice(0, 3).map(m => ({ id: m.id, email: m.email }))
-  });
+    sampleProductMitraIds: products.slice(0, 5).map(p => ({ id: p.id, mitraId: p.mitraId, type: typeof p.mitraId })),
+    mitraListCount: mitraList.length,
+    mitraListEmails: mitraList.slice(0, 3).map(m => ({ id: m.id, email: m.email })),
+  };
+
+  console.log('[MitraDashboard] filter debug:', debugInfo);
   const [profitMonth, setProfitMonth] = useState(new Date().toISOString().slice(0, 7));
   const [profitStartDate, setProfitStartDate] = useState('');
   const [profitEndDate, setProfitEndDate] = useState('');
