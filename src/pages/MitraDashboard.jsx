@@ -370,19 +370,23 @@ function MitraDashboard({ role }) {
     try {
       await pendingStockValidationService.validate(stockId);
 
-      await stockMovementService.create({
+      const payload = {
         type: 'in',
         product_id: stock.productId,
-        quantity: stock.quantity,
+        quantity: Number(stock.quantity),
         date: stock.date,
-        note: stock.note,
-        mitra_id: stock.mitraId,
-      });
+        note: stock.note || '',
+        mitra_id: stock.mitraId || null,
+      };
+
+      console.log('Validating stock payload:', payload);
+
+      await stockMovementService.create(payload);
 
       setStockInputs((prev) => prev.filter((s) => s.id !== stockId));
 
       if (product) {
-        const updatedStock = (product.stock || 0) + stock.quantity;
+        const updatedStock = (product.stock || 0) + Number(stock.quantity);
         await productService.update(product.id, { stock: updatedStock });
         setProducts((prev) =>
           prev.map((p) => (p.id === product.id ? { ...p, stock: updatedStock } : p)),
@@ -392,7 +396,8 @@ function MitraDashboard({ role }) {
       setToast({ message: 'Stok berhasil divalidasi!', type: 'success' });
     } catch (error) {
       console.error('Failed to validate stock:', error);
-      setToast({ message: 'Gagal memvalidasi stok', type: 'error' });
+      const detail = error?.message || JSON.stringify(error);
+      setToast({ message: 'Gagal memvalidasi stok: ' + detail, type: 'error' });
     }
   };
 
