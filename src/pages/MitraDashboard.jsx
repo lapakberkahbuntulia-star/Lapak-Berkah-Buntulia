@@ -41,6 +41,7 @@ function StatCard({ icon, label, value, subtitle, trend, trendUp, colorClass = '
 }
 
 function MitraDashboard({ role }) {
+  console.log('[MitraDashboard] component rendered, role:', role);
   const isMitra = role === 'mitra';
   const [mitraList, setMitraList] = useState([]);
   const [products, setProducts] = useState([]);

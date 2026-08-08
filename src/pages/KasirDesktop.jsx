@@ -134,7 +134,13 @@ function KasirDesktop() {
                 disabled={product.stock === 0}
               >
                 <div className="aspect-square w-full rounded-lg bg-surface-container overflow-hidden relative">
-                  <img className="w-full h-full object-cover" data-alt={product.name} src={product.photo} />
+                  {product.photo ? (
+                    <img className="w-full h-full object-cover" data-alt={product.name} src={product.photo} />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="material-symbols-outlined text-4xl text-outline">image</span>
+                    </div>
+                  )}
                   <div
                     className={`absolute top-2 right-2 px-2 py-1 rounded-md font-label-sm text-label-sm border ${
                       product.stock === 0

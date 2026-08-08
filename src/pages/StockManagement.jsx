@@ -86,7 +86,7 @@ function StockManagement() {
     loadData();
   }, []);
 
-  const updateProductStock = (productId, quantity, type) => {
+  const updateProductStock = async (productId, quantity, type) => {
     setProductsList((prev) =>
       prev.map((p) => {
         if (p.id !== productId) return p;
@@ -94,6 +94,17 @@ function StockManagement() {
         return { ...p, stock: Math.max(0, p.stock + delta) };
       }),
     );
+
+    try {
+      const product = productsList.find((p) => p.id === productId);
+      if (!product) return;
+      const delta = type === 'in' ? quantity : -quantity;
+      const updatedStock = Math.max(0, (product.stock || 0) + delta);
+      await productService.update(productId, { stock: updatedStock });
+    } catch (error) {
+      console.error('Failed to update product stock in database:', error);
+      showToast('Gagal memperbarui stok produk di database', 'error');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -123,7 +134,7 @@ function StockManagement() {
         },
         ...prev,
       ]);
-      updateProductStock(Number(formData.productId), Number(formData.quantity), formData.type);
+      await updateProductStock(Number(formData.productId), Number(formData.quantity), formData.type);
       setFormData({ type: 'in', productId: '', quantity: '', note: '' });
       setShowForm(false);
       showToast('Transaksi stok berhasil disimpan!', 'success');
@@ -164,7 +175,7 @@ function StockManagement() {
         },
         ...prev,
       ]);
-      updateProductStock(validation.productId, validation.quantity, 'in');
+      await updateProductStock(validation.productId, validation.quantity, 'in');
       setPendingValidations((prev) => prev.filter((v) => v.id !== validationId));
       showToast('Stok berhasil divalidasi!', 'success');
     } catch (error) {
