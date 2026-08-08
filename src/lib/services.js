@@ -27,6 +27,19 @@ export const authService = {
   },
 };
 
+export const userService = {
+  async create(user) {
+    const { data, error } = await supabase
+      .from('users')
+      .insert([user])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+};
+
 export const productService = {
   async getAll() {
     const { data, error } = await supabase

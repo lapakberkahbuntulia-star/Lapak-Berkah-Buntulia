@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { mitraService, productService, pendingStockValidationService, transactionService } from '../lib/services';
+import { mitraService, productService, pendingStockValidationService, transactionService, userService } from '../lib/services';
 
 function Toast({ message, type = 'success', onClose }) {
   useEffect(() => {
@@ -236,7 +236,12 @@ function MitraDashboard({ role }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const emailValue = formData.email || `mitra-${Date.now()}@local`;
+      let emailValue = formData.email || `mitra-${Date.now()}@local`;
+      const existingEmails = new Set(mitraList.map((m) => m.email));
+      if (existingEmails.has(emailValue)) {
+        emailValue = `mitra-${Date.now()}@local`;
+      }
+
       const newMitra = await mitraService.create({
         full_name: formData.fullName,
         address: formData.address,
@@ -247,6 +252,14 @@ function MitraDashboard({ role }) {
         status: formData.status,
         total_transaction: 0,
         total_omzet: 0,
+      });
+
+      const defaultPassword = 'mitra123';
+      await userService.create({
+        nama: newMitra.full_name,
+        email: newMitra.email,
+        password: defaultPassword,
+        role: 'mitra',
       });
 
       setMitraList([
@@ -266,7 +279,10 @@ function MitraDashboard({ role }) {
       ]);
       setFormData({ fullName: '', address: '', phone: '', email: '', gender: 'Laki-laki', photo: '' });
       setShowForm(false);
-      setToast({ message: 'Mitra berhasil ditambahkan!', type: 'success' });
+      setToast({
+        message: `Mitra berhasil ditambahkan! Akun login: ${newMitra.email} / ${defaultPassword}`,
+        type: 'success',
+      });
     } catch (error) {
       console.error('Failed to create mitra:', error);
       setToast({ message: 'Gagal menambahkan mitra: ' + (error?.message || ''), type: 'error' });
@@ -572,8 +588,21 @@ function MitraDashboard({ role }) {
                         </select>
                       </div>
                     )}
-                  </div>
-                      <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
+                   </div>
+
+                   <div className="overflow-x-auto">
+                     <table className="w-full text-left border-collapse">
+                       <thead>
+                         <tr className="bg-surface-container-low border-b border-outline-variant">
+                           <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Tanggal</th>
+                           <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Mitra</th>
+                           <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Produk</th>
+                           <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-right">Stok</th>
+                           <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-center">Status</th>
+                           <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Catatan</th>
+                         </tr>
+                       </thead>
+                       <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
                         {todayStock.length === 0 ? (
                           <tr>
                             <td colSpan={6} className="px-6 py-12 text-center">
@@ -818,25 +847,27 @@ function MitraDashboard({ role }) {
                                 )}
                               </td>
                               <td className="px-6 py-4 text-center">
-                                {editingMitra === mitra.id ? (
-                                  <div className="flex items-center justify-center gap-2">
-                                    <button
-                                      onClick={handleUpdateMitra}
-                                      className="h-8 w-8 rounded-lg bg-tertiary-fixed/20 text-tertiary-container hover:bg-tertiary-fixed hover:text-on-tertiary-fixed flex items-center justify-center transition-all"
-                                      title="Simpan"
-                                    >
-                                      <span className="material-symbols-outlined text-[18px]">check</span>
-                                    </button>
-                                    <button
-                                      onClick={() => { setEditingMitra(null); setEditMitraName(''); }}
-                                      className="h-8 w-8 rounded-lg bg-surface-container text-on-surface-variant hover:bg-error hover:text-on-error flex items-center justify-center transition-all"
-                                      title="Batal"
-                                    >
-                                      <span className="material-symbols-outlined text-[18px]">close</span>
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center justify-center gap-2">
+                                 {editingMitra === mitra.id ? (
+                                   <div className="flex items-center justify-center gap-2">
+                                     <button
+                                       onMouseDown={(e) => e.preventDefault()}
+                                       onClick={handleUpdateMitra}
+                                       className="h-8 w-8 rounded-lg bg-tertiary-fixed/20 text-tertiary-container hover:bg-tertiary-fixed hover:text-on-tertiary-fixed flex items-center justify-center transition-all"
+                                       title="Simpan"
+                                     >
+                                       <span className="material-symbols-outlined text-[18px]">check</span>
+                                     </button>
+                                     <button
+                                       onMouseDown={(e) => e.preventDefault()}
+                                       onClick={() => { setEditingMitra(null); setEditMitraName(''); }}
+                                       className="h-8 w-8 rounded-lg bg-surface-container text-on-surface-variant hover:bg-error hover:text-on-error flex items-center justify-center transition-all"
+                                       title="Batal"
+                                     >
+                                       <span className="material-symbols-outlined text-[18px]">close</span>
+                                     </button>
+                                   </div>
+                                 ) : (
+                                   <div className="flex items-center justify-center gap-2">
                                     <button
                                       onClick={() => handleEditMitra(mitra)}
                                       className="h-8 w-8 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-on-primary flex items-center justify-center transition-all"
