@@ -211,12 +211,12 @@ function MitraDashboard({ role, user }) {
   const totalTransaction = mitraList.reduce((sum, m) => sum + (m.totalTransaction || 0), 0);
   const totalOmzet = mitraList.reduce((sum, m) => sum + (m.totalOmzet || 0), 0);
 
-   const today = getLocalDate(new Date());
-   const mitraIdNum = selectedMitra;
+  const today = getLocalDate(new Date());
+  const mitraIdNum = selectedMitra;
 
   const todayTransactions = transactions.filter((tx) => {
     if (!isMitra) return tx.date === today;
-    return tx.date === today && tx.mitraId === mitraIdNum;
+    return tx.date === today && String(tx.mitraId) === mitraIdNum;
   });
 
   const todayOmzet = todayTransactions.reduce((sum, tx) => sum + tx.total, 0);
@@ -227,6 +227,18 @@ function MitraDashboard({ role, user }) {
     products.forEach((p) => map.set(p.id, p));
     return map;
   }, [products]);
+
+  const todayStock = stockHistory.filter((s) => s.date === stockDate);
+  const filteredTodayStock = useMemo(() => {
+    if (isMitra) {
+      if (!loggedInMitraId) return [];
+      return todayStock.filter((s) => String(s.mitraId) === loggedInMitraId);
+    }
+    if (selectedMitra) {
+      return todayStock.filter((s) => String(s.mitraId) === selectedMitra);
+    }
+    return todayStock;
+  }, [isMitra, loggedInMitraId, selectedMitra, todayStock]);
 
   const filteredMitra = mitraList.filter((mitra) =>
     mitra.fullName.toLowerCase().includes(mitraSearch.toLowerCase()) ||
@@ -496,8 +508,6 @@ function MitraDashboard({ role, user }) {
     }
   };
 
-  const todayStock = stockHistory.filter((s) => s.date === stockDate);
-
   if (loading) {
     return (
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-full">
@@ -723,19 +733,18 @@ function MitraDashboard({ role, user }) {
                              )}
                            </tr>
                          </thead>
-                        <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
-                          {todayStock.length === 0 ? (
-                            <tr>
-                              <td colSpan={isMitra ? 7 : 8} className="px-6 py-12 text-center">
-                               <span className="material-symbols-outlined text-6xl text-outline mb-3">inventory_2</span>
-                               <p className="font-body-md text-body-md text-on-surface-variant">Tidak ada data stok untuk tanggal ini</p>
-                             </td>
-                           </tr>
-                         ) : (
-                            todayStock.map((stock, idx) => {
-                              const product = products.find((p) => p.id === stock.productId);
-                               if (!isMitra && selectedMitra && stock.mitraId !== selectedMitra) return null;
-                              return (
+                         <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
+                           {filteredTodayStock.length === 0 ? (
+                             <tr>
+                               <td colSpan={isMitra ? 7 : 8} className="px-6 py-12 text-center">
+                                <span className="material-symbols-outlined text-6xl text-outline mb-3">inventory_2</span>
+                                <p className="font-body-md text-body-md text-on-surface-variant">Tidak ada data stok untuk tanggal ini</p>
+                              </td>
+                            </tr>
+                          ) : (
+                              filteredTodayStock.map((stock, idx) => {
+                                const product = products.find((p) => p.id === stock.productId);
+                               return (
                                  <tr key={stock.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
                                    <td className="px-6 py-4">
                                      <span className="font-body-sm text-body-sm text-on-surface">{stock.date || (stock.created_at ? stock.created_at.split('T')[0] : '-')}</span>
