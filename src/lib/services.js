@@ -57,7 +57,7 @@ export const productService = {
       console.error('[productService.getAll] error:', error);
       throw error;
     }
-    console.log('[productService.getAll] result count:', data?.length || 0);
+    console.log('[productService.getAll] result count:', data?.length || 0, 'products:', data?.map(p => ({ id: p.id, nama_produk: p.nama_produk, stock: p.stock })));
     return data || [];
   },
 

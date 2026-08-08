@@ -364,12 +364,14 @@ function MitraDashboard({ role }) {
   const handleValidateStock = async (stockId) => {
     console.log('[MitraDashboard] handleValidateStock called with stockId:', stockId);
     const stock = stockInputs.find((s) => s.id === stockId);
+    console.log('[MitraDashboard] stock found:', stock);
     if (!stock) {
       setToast({ message: 'Data stok tidak ditemukan', type: 'error' });
       return;
     }
 
     const product = products.find((p) => p.id === stock.productId);
+    console.log('[MitraDashboard] product lookup:', { stockProductId: stock.productId, productIdType: typeof stock.productId, productsCount: products.length, productIds: products.map(p => p.id), product });
     if (!product) {
       setToast({ message: 'Produk tidak ditemukan untuk stok ini', type: 'error' });
       return;
@@ -393,8 +395,9 @@ function MitraDashboard({ role }) {
 
       if (product) {
         const updatedStock = (product.stock || 0) + Number(stock.quantity);
-        console.log('[MitraDashboard] updating product stock:', { productId: product.id, oldStock: product.stock, quantity: stock.quantity, newStock: updatedStock });
-        await productService.update(product.id, { stock: updatedStock });
+        console.log('[MitraDashboard] updating product stock:', { productId: product.id, productName: product.name, oldStock: product.stock, quantity: stock.quantity, newStock: updatedStock });
+        const updateResult = await productService.update(product.id, { stock: updatedStock });
+        console.log('[MitraDashboard] productService.update result:', updateResult);
         setProducts((prev) =>
           prev.map((p) => (p.id === product.id ? { ...p, stock: updatedStock } : p)),
         );
