@@ -91,11 +91,11 @@ function MitraDashboard({ role, user }) {
   const visibleProductIds = useMemo(() => {
     if (isMitra) {
       if (!loggedInMitraId) return new Set();
-      return new Set(products.filter((p) => p.mitraId === loggedInMitraId).map((p) => p.id));
+      return new Set(products.filter((p) => String(p.mitraId) === loggedInMitraId || !p.mitraId).map((p) => p.id));
     }
     const activeFilter = activeTab === 'stock' ? selectedMitra : productFilter;
     if (!activeFilter || activeFilter === 'Semua') return new Set();
-    return new Set(products.filter((p) => p.mitraId === activeFilter).map((p) => p.id));
+    return new Set(products.filter((p) => String(p.mitraId) === activeFilter).map((p) => p.id));
   }, [isMitra, loggedInMitraId, activeTab, selectedMitra, productFilter, products]);
 
   const debugInfo = {
