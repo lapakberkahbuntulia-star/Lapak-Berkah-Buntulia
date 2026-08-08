@@ -96,6 +96,20 @@ function ProductManagement() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const duplicateSku = products.find((p) => p.sku === formData.sku && p.id !== editingProduct?.id);
+    const duplicateBarcode = formData.barcode_id && products.find((p) => p.barcode_id === formData.barcode_id && p.id !== editingProduct?.id);
+
+    if (duplicateSku) {
+      showToast('SKU sudah digunakan oleh produk lain', 'error');
+      return;
+    }
+
+    if (duplicateBarcode) {
+      showToast('Barcode ID sudah digunakan oleh produk lain', 'error');
+      return;
+    }
+
     try {
       if (editingProduct) {
         await productService.update(editingProduct.id, {
@@ -149,7 +163,8 @@ function ProductManagement() {
       await loadData();
     } catch (error) {
       console.error('Failed to save product:', error);
-      showToast('Gagal menyimpan produk', 'error');
+      const detail = [error?.message, error?.details, error?.hint, error?.code].filter(Boolean).join(' | ') || 'Terjadi kesalahan saat menyimpan produk';
+      showToast('Gagal menyimpan produk: ' + detail, 'error');
     }
   };
 
