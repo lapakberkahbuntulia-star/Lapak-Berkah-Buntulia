@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { productService, transactionService, transactionItemService } from '../lib/services';
+import { productService, transactionService, transactionItemService, stockMovementService } from '../lib/services';
 
 function createEmptyTransaction(id) {
   return {
@@ -35,6 +35,7 @@ function KasirDesktop() {
           category: p.category ? { name: p.category.name } : null,
           type: p.type ? { name: p.type.name } : null,
           mitra: p.mitra ? { full_name: p.mitra.full_name } : null,
+          mitraId: p.mitra_id,
           mitraPrice: p.mitra_price,
           sellingPrice: p.selling_price,
           stock: p.stock,
@@ -172,7 +173,7 @@ function KasirDesktop() {
   );
 }
 
-function KasirDesktopCart() {
+function KasirDesktopCart({ user }) {
   const [transactions, setTransactions] = useState(initialTransactions);
   const [activeTransactionId, setActiveTransactionId] = useState(initialTransactions[0].id);
   const [paymentAmount, setPaymentAmount] = useState('');
@@ -221,6 +222,7 @@ function KasirDesktopCart() {
                 barcodeId: product.barcodeId,
                 sellingPrice: product.sellingPrice,
                 unit: product.unit,
+                mitraId: product.mitraId,
                 qty: 1,
               },
             ];
@@ -261,27 +263,48 @@ function KasirDesktopCart() {
     }
 
     try {
+      const mitraId = activeTransaction.items.find((item) => item.mitraId)?.mitraId || null;
       const transactionData = {
+        user_id: user?.id || null,
+        mitra_id: mitraId,
         total,
         paid: paymentMethod === 'Tunai' ? paid : total,
         change: paymentMethod === 'Tunai' ? Math.max(0, paid - total) : 0,
-        payment_method: paymentMethod,
+        metode_pembayaran: paymentMethod,
+        status: 'Selesai',
       };
 
+      console.log('[KasirDesktopCart] creating transaction:', transactionData);
       const createdTransaction = await transactionService.create(transactionData);
 
       const items = activeTransaction.items.map((item) => ({
         transaction_id: createdTransaction.id,
         product_id: item.productId,
-        qty: item.qty,
-        price: item.sellingPrice,
-        nama_produk: item.name,
-        sku: item.sku,
-        barcode_id: item.barcodeId,
-        unit: item.unit,
+        quantity: item.qty,
+        harga_satuan: item.sellingPrice,
+        subtotal: item.sellingPrice * item.qty,
       }));
 
+      console.log('[KasirDesktopCart] creating transaction items:', items);
       await transactionItemService.createBatch(items);
+
+      for (const item of activeTransaction.items) {
+        try {
+          await stockMovementService.create({
+            type: 'out',
+            product_id: item.productId,
+            quantity: item.qty,
+            note: `Transaksi #${createdTransaction.id.toString().slice(-2)}`,
+            mitra_id: item.mitraId || null,
+          });
+
+          await productService.update(item.productId, {
+            stock: Math.max(0, (products.find((p) => p.id === item.productId)?.stock || 0) - item.qty),
+          });
+        } catch (stockError) {
+          console.error('[KasirDesktopCart] Failed to update stock for product:', item.productId, stockError);
+        }
+      }
 
       const completed = {
         ...activeTransaction,
@@ -297,8 +320,10 @@ function KasirDesktopCart() {
       setTransactions((prev) => prev.filter((t) => t.id !== activeTransactionId));
       const remaining = transactions.filter((t) => t.id !== activeTransactionId);
       setActiveTransactionId(remaining[0]?.id || null);
-    } catch {
-      setToast({ message: 'Gagal memproses pembayaran', type: 'error' });
+      setTimeout(() => printReceipt(completed), 300);
+    } catch (error) {
+      console.error('[KasirDesktopCart] Failed to checkout:', error);
+      setToast({ message: 'Gagal memproses pembayaran: ' + (error?.message || ''), type: 'error' });
     }
   };
 

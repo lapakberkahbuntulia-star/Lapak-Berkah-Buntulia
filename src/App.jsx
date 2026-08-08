@@ -110,7 +110,7 @@ function App() {
           {page === 'pos' && <KasirHP />}
           {page === 'pos-desktop' && <KasirDesktop />}
         </main>
-        {page === 'pos-desktop' && <KasirDesktopCart />}
+        {page === 'pos-desktop' && <KasirDesktopCart user={user} />}
         <BottomNav activePage={page} onNavigate={navigateTo} onLogout={handleLogout} role={role} />
       </div>
     </div>
