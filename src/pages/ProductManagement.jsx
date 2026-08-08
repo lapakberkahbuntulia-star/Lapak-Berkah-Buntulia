@@ -740,26 +740,52 @@ function ProductManagement() {
                       </div>
                     </div>
 
-                    {/* Barcode ID */}
-                    <div className="space-y-2">
-                      <label className="block font-label-md text-label-md text-on-surface font-medium" htmlFor="barcode">
-                        Barcode ID
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-outline">
-                          <span className="material-symbols-outlined text-[20px]">barcode</span>
-                        </div>
-                        <input
-                          className="w-full h-12 pl-12 pr-4 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md text-on-background placeholder:text-outline/70"
-                          id="barcode"
-                          type="text"
-                          placeholder="Scan atau masukkan barcode"
-                          value={formData.barcode_id}
-                          onChange={(e) => setFormData({ ...formData, barcode_id: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                     {/* Barcode ID */}
+                     <div className="space-y-2">
+                       <label className="block font-label-md text-label-md text-on-surface font-medium" htmlFor="barcode">
+                         Barcode ID
+                       </label>
+                       <div className="relative">
+                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-outline">
+                           <span className="material-symbols-outlined text-[20px]">barcode</span>
+                         </div>
+                         <input
+                           className="w-full h-12 pl-12 pr-4 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md text-on-background placeholder:text-outline/70"
+                           id="barcode"
+                           type="text"
+                           placeholder="Scan atau masukkan barcode"
+                           value={formData.barcode_id}
+                           onChange={(e) => setFormData({ ...formData, barcode_id: e.target.value })}
+                         />
+                       </div>
+                     </div>
+
+                     {/* Foto Produk */}
+                     <div className="space-y-2">
+                       <label className="block font-label-md text-label-md text-on-surface font-medium" htmlFor="photo">
+                         Foto Produk
+                       </label>
+                       <div className="flex items-center gap-4">
+                         <div className="w-20 h-20 rounded-lg bg-surface-container border border-outline-variant overflow-hidden flex items-center justify-center">
+                           {formData.photo ? (
+                             <img src={formData.photo} alt="Preview" className="w-full h-full object-cover" />
+                           ) : (
+                             <span className="material-symbols-outlined text-outline text-3xl">image</span>
+                           )}
+                         </div>
+                         <div className="flex-1">
+                           <input
+                             id="photo"
+                             type="file"
+                             accept="image/*"
+                             onChange={handlePhotoChange}
+                             className="block w-full text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-on-primary hover:file:bg-primary-fixed-variant"
+                           />
+                           <p className="text-xs text-on-surface-variant mt-1">Format: JPG, PNG. Maksimal 2MB.</p>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
 
                   {/* Submit Button */}
                   <div className="flex justify-end gap-3 pt-4 border-t border-outline-variant/50">
