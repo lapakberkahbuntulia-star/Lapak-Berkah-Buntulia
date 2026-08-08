@@ -104,11 +104,10 @@ function StockManagement() {
     try {
       const newMovement = await stockMovementService.create({
         type: formData.type,
-        product_id: Number(formData.productId),
+        product_id: String(formData.productId),
         quantity: Number(formData.quantity),
-        date: new Date().toISOString().split('T')[0],
         note: formData.note,
-        mitra_id: formData.type === 'in' ? product.mitraId : null,
+        mitra_id: formData.type === 'in' ? String(product.mitraId) : null,
       });
 
       setStockMovements((prev) => [
@@ -146,11 +145,10 @@ function StockManagement() {
 
       const newMovement = await stockMovementService.create({
         type: 'in',
-        product_id: validation.productId,
+        product_id: String(validation.productId),
         quantity: validation.quantity,
-        date: validation.date,
         note: validation.note,
-        mitra_id: validation.mitraId,
+        mitra_id: validation.mitraId ? String(validation.mitraId) : null,
       });
 
       setStockMovements((prev) => [

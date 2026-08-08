@@ -362,24 +362,27 @@ function MitraDashboard({ role }) {
 
   const handleValidateStock = async (stockId) => {
     const stock = stockInputs.find((s) => s.id === stockId);
-    if (!stock) return;
+    if (!stock) {
+      setToast({ message: 'Data stok tidak ditemukan', type: 'error' });
+      return;
+    }
 
     const product = products.find((p) => p.id === stock.productId);
-    if (!product) return;
+    if (!product) {
+      setToast({ message: 'Produk tidak ditemukan untuk stok ini', type: 'error' });
+      return;
+    }
 
     try {
       await pendingStockValidationService.validate(stockId);
 
       const payload = {
         type: 'in',
-        product_id: stock.productId,
+        product_id: String(stock.productId),
         quantity: Number(stock.quantity),
-        date: stock.date,
         note: stock.note || '',
-        mitra_id: stock.mitraId || null,
+        mitra_id: stock.mitraId ? String(stock.mitraId) : null,
       };
-
-      console.log('Validating stock payload:', payload);
 
       await stockMovementService.create(payload);
 
@@ -396,7 +399,7 @@ function MitraDashboard({ role }) {
       setToast({ message: 'Stok berhasil divalidasi!', type: 'success' });
     } catch (error) {
       console.error('Failed to validate stock:', error);
-      const detail = error?.message || JSON.stringify(error);
+      const detail = [error?.message, error?.details, error?.hint, error?.code].filter(Boolean).join(' | ') || JSON.stringify(error);
       setToast({ message: 'Gagal memvalidasi stok: ' + detail, type: 'error' });
     }
   };
