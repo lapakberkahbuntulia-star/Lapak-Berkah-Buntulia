@@ -108,6 +108,7 @@ function MitraDashboard({ role, user }) {
     sampleProductMitraIds: products.slice(0, 5).map(p => ({ id: p.id, mitraId: p.mitraId, type: typeof p.mitraId })),
     mitraListCount: mitraList.length,
     mitraListEmails: mitraList.slice(0, 3).map(m => ({ id: m.id, email: m.email })),
+    visibleProductIds: Array.from(visibleProductIds).slice(0, 5),
   };
 
   console.log('[MitraDashboard] filter debug:', debugInfo);
