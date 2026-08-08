@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { mitraService, productService, pendingStockValidationService, transactionService, userService } from '../lib/services';
+import { mitraService, productService, pendingStockValidationService, stockMovementService, transactionService, userService } from '../lib/services';
 
 function Toast({ message, type = 'success', onClose }) {
   useEffect(() => {
