@@ -98,7 +98,17 @@ function MitraDashboard({ role, user }) {
     return new Set(products.filter((p) => p.mitraId === activeFilter).map((p) => p.id));
   }, [isMitra, loggedInMitraId, activeTab, selectedMitra, productFilter, products]);
 
-  console.log('[MitraDashboard] filter debug:', { isMitra, loggedInMitraId, productFilter, visibleProductIdsSize: visibleProductIds.size, productsCount: products.length });
+  console.log('[MitraDashboard] filter debug:', { 
+    isMitra, 
+    userEmail: user?.email, 
+    loggedInMitraId, 
+    productFilter, 
+    selectedMitra, 
+    visibleProductIdsSize: visibleProductIds.size, 
+    productsCount: products.length,
+    sampleProductIds: products.slice(0, 3).map(p => ({ id: p.id, mitraId: p.mitraId })),
+    mitraListEmails: mitraList.slice(0, 3).map(m => ({ id: m.id, email: m.email }))
+  });
   const [profitMonth, setProfitMonth] = useState(new Date().toISOString().slice(0, 7));
   const [profitStartDate, setProfitStartDate] = useState('');
   const [profitEndDate, setProfitEndDate] = useState('');
@@ -624,7 +634,12 @@ function MitraDashboard({ role, user }) {
                            >
                              <option value="">Pilih Produk</option>
                               {products
-                                .filter((p) => visibleProductIds.size === 0 || visibleProductIds.has(p.id))
+                                .filter((p) => {
+                                  if (isMitra) {
+                                    return visibleProductIds.has(p.id);
+                                  }
+                                  return visibleProductIds.size === 0 || visibleProductIds.has(p.id);
+                                })
                                 .map((p) => (
                                 <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
                               ))}
@@ -1047,7 +1062,12 @@ function MitraDashboard({ role, user }) {
                       </thead>
                          <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
                             {products
-                              .filter((p) => visibleProductIds.size === 0 || visibleProductIds.has(p.id))
+                              .filter((p) => {
+                                if (isMitra) {
+                                  return visibleProductIds.has(p.id);
+                                }
+                                return visibleProductIds.size === 0 || visibleProductIds.has(p.id);
+                              })
                               .map((product, idx) => (
                             <tr key={product.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
                               <td className="px-6 py-4">
