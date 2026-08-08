@@ -43,6 +43,13 @@ function StatCard({ icon, label, value, subtitle, trend, trendUp, colorClass = '
 function MitraDashboard({ role }) {
   console.log('[MitraDashboard] component rendered, role:', role);
   const isMitra = role === 'mitra';
+  const getLocalDate = (value) => {
+    const d = value instanceof Date ? value : new Date(value);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
   const [mitraList, setMitraList] = useState([]);
   const [products, setProducts] = useState([]);
   const [stockInputs, setStockInputs] = useState([]);
@@ -54,7 +61,7 @@ function MitraDashboard({ role }) {
   const [toast, setToast] = useState(null);
   const [showStockForm, setShowStockForm] = useState(false);
   const [selectedMitra, setSelectedMitra] = useState(isMitra ? '' : '');
-  const [stockDate, setStockDate] = useState(new Date().toISOString().split('T')[0]);
+  const [stockDate, setStockDate] = useState(() => getLocalDate(new Date()));
   const [stockFormData, setStockFormData] = useState({ productId: '', stock: '', note: '' });
   const [formData, setFormData] = useState({
     fullName: '',
@@ -138,7 +145,7 @@ function MitraDashboard({ role }) {
 
       const mappedTx = (txData || []).map((tx) => ({
         id: tx.id,
-        date: tx.created_at ? new Date(tx.created_at).toISOString().split('T')[0] : '',
+        date: tx.created_at ? getLocalDate(tx.created_at) : '',
         mitraId: tx.mitra_id,
         total: tx.total || 0,
         items: tx.items || [],
@@ -175,8 +182,8 @@ function MitraDashboard({ role }) {
   const totalTransaction = mitraList.reduce((sum, m) => sum + (m.totalTransaction || 0), 0);
   const totalOmzet = mitraList.reduce((sum, m) => sum + (m.totalOmzet || 0), 0);
 
-  const today = new Date().toISOString().split('T')[0];
-  const mitraIdNum = selectedMitra;
+   const today = getLocalDate(new Date());
+   const mitraIdNum = selectedMitra;
 
   const todayTransactions = transactions.filter((tx) => {
     if (!isMitra) return tx.date === today;
