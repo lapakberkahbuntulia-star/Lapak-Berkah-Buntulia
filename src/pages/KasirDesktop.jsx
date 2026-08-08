@@ -24,34 +24,48 @@ function KasirDesktop() {
   const [flash, setFlash] = useState(null);
   const barcodeRef = useRef(null);
 
+  const loadProducts = async () => {
+    try {
+      const data = await productService.getAll();
+      const mapped = data.map((p) => ({
+        id: p.id,
+        name: p.nama_produk,
+        sku: p.sku,
+        category: p.category ? { name: p.category.name } : null,
+        type: p.type ? { name: p.type.name } : null,
+        mitra: p.mitra ? { full_name: p.mitra.full_name } : null,
+        mitraId: p.mitra_id,
+        mitraPrice: p.mitra_price,
+        sellingPrice: p.selling_price,
+        stock: p.stock,
+        unit: p.unit,
+        photo: p.photo,
+        barcodeId: p.barcode_id,
+        description: p.description,
+      }));
+      setProducts(mapped);
+    } catch (err) {
+      console.error('Failed to load products:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        const data = await productService.getAll();
-        const mapped = data.map((p) => ({
-          id: p.id,
-          name: p.nama_produk,
-          sku: p.sku,
-          category: p.category ? { name: p.category.name } : null,
-          type: p.type ? { name: p.type.name } : null,
-          mitra: p.mitra ? { full_name: p.mitra.full_name } : null,
-          mitraId: p.mitra_id,
-          mitraPrice: p.mitra_price,
-          sellingPrice: p.selling_price,
-          stock: p.stock,
-          unit: p.unit,
-          photo: p.photo,
-          barcodeId: p.barcode_id,
-          description: p.description,
-        }));
-        setProducts(mapped);
-      } catch (err) {
-        console.error('Failed to load products:', err);
-      } finally {
-        setLoading(false);
+    loadProducts();
+  }, []);
+
+  useEffect(() => {
+    const handler = async (e) => {
+      const updatedProducts = e.detail?.products;
+      if (Array.isArray(updatedProducts)) {
+        setProducts(updatedProducts);
+      } else {
+        await loadProducts();
       }
     };
-    loadProducts();
+    window.addEventListener('kasir:stock-updated', handler);
+    return () => window.removeEventListener('kasir:stock-updated', handler);
   }, []);
 
   const categories = ['Semua', ...new Set(products.map((p) => p.category?.name).filter(Boolean))];
@@ -223,6 +237,7 @@ function KasirDesktopCart({ user }) {
                 sellingPrice: product.sellingPrice,
                 unit: product.unit,
                 mitraId: product.mitraId,
+                currentStock: product.stock,
                 qty: 1,
               },
             ];
@@ -299,12 +314,31 @@ function KasirDesktopCart({ user }) {
           });
 
           await productService.update(item.productId, {
-            stock: Math.max(0, (products.find((p) => p.id === item.productId)?.stock || 0) - item.qty),
+            stock: Math.max(0, (item.currentStock || 0) - item.qty),
           });
         } catch (stockError) {
           console.error('[KasirDesktopCart] Failed to update stock for product:', item.productId, stockError);
         }
       }
+
+      const updatedProducts = await productService.getAll();
+      const mappedUpdatedProducts = updatedProducts.map((p) => ({
+        id: p.id,
+        name: p.nama_produk,
+        sku: p.sku,
+        category: p.category ? { name: p.category.name } : null,
+        type: p.type ? { name: p.type.name } : null,
+        mitra: p.mitra ? { full_name: p.mitra.full_name } : null,
+        mitraId: p.mitra_id,
+        mitraPrice: p.mitra_price,
+        sellingPrice: p.selling_price,
+        stock: p.stock,
+        unit: p.unit,
+        photo: p.photo,
+        barcodeId: p.barcode_id,
+        description: p.description,
+      }));
+      window.dispatchEvent(new CustomEvent('kasir:stock-updated', { detail: { products: mappedUpdatedProducts } }));
 
       const completed = {
         ...activeTransaction,
