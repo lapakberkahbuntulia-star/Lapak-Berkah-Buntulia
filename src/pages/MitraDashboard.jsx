@@ -51,7 +51,7 @@ function MitraDashboard({ role }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState(null);
   const [showStockForm, setShowStockForm] = useState(false);
-  const [selectedMitra, setSelectedMitra] = useState(isMitra ? '1' : '');
+  const [selectedMitra, setSelectedMitra] = useState(isMitra ? '' : '');
   const [stockDate, setStockDate] = useState(new Date().toISOString().split('T')[0]);
   const [stockFormData, setStockFormData] = useState({ productId: '', stock: '', note: '' });
   const [formData, setFormData] = useState({
@@ -317,6 +317,9 @@ function MitraDashboard({ role }) {
         status: isAdminInput ? 'validated' : 'pending',
       });
 
+      const mitra = mitraList.find((m) => m.id === selectedMitra);
+      const product = products.find((p) => p.id === stockFormData.productId);
+
       setStockInputs([
         ...stockInputs,
         {
@@ -327,18 +330,17 @@ function MitraDashboard({ role }) {
           quantity: newStock.quantity,
           note: newStock.note || '',
           status: newStock.status,
+          mitraName: mitra?.fullName || '-',
+          productName: product?.name || '-',
         },
       ]);
 
-      if (isAdminInput) {
-        const product = products.find((p) => p.id === Number(stockFormData.productId));
-        if (product) {
-          const updatedStock = product.stock + quantity;
-          await productService.update(product.id, { stock: updatedStock });
-          setProducts((prev) =>
-            prev.map((p) => (p.id === product.id ? { ...p, stock: updatedStock } : p)),
-          );
-        }
+      if (isAdminInput && product) {
+        const updatedStock = (product.stock || 0) + quantity;
+        await productService.update(product.id, { stock: updatedStock });
+        setProducts((prev) =>
+          prev.map((p) => (p.id === product.id ? { ...p, stock: updatedStock } : p)),
+        );
       }
 
       setStockFormData({ productId: '', stock: '', note: '' });
@@ -359,9 +361,34 @@ function MitraDashboard({ role }) {
   };
 
   const handleValidateStock = async (stockId) => {
+    const stock = stockInputs.find((s) => s.id === stockId);
+    if (!stock) return;
+
+    const product = products.find((p) => p.id === stock.productId);
+    if (!product) return;
+
     try {
       await pendingStockValidationService.validate(stockId);
+
+      await stockMovementService.create({
+        type: 'in',
+        product_id: stock.productId,
+        quantity: stock.quantity,
+        date: stock.date,
+        note: stock.note,
+        mitra_id: stock.mitraId,
+      });
+
       setStockInputs((prev) => prev.filter((s) => s.id !== stockId));
+
+      if (product) {
+        const updatedStock = (product.stock || 0) + stock.quantity;
+        await productService.update(product.id, { stock: updatedStock });
+        setProducts((prev) =>
+          prev.map((p) => (p.id === product.id ? { ...p, stock: updatedStock } : p)),
+        );
+      }
+
       setToast({ message: 'Stok berhasil divalidasi!', type: 'success' });
     } catch (error) {
       console.error('Failed to validate stock:', error);
