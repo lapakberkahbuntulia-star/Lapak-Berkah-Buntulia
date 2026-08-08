@@ -72,74 +72,74 @@ function MitraDashboard({ role }) {
   const [editMitraName, setEditMitraName] = useState('');
   const [mitraSearch, setMitraSearch] = useState('');
 
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [mitraData, productData, stockData, txData] = await Promise.all([
+        mitraService.getAll(),
+        productService.getAll(),
+        pendingStockValidationService.getAll(),
+        transactionService.getHistory(),
+      ]);
+
+      const mappedMitra = (mitraData || []).map((m) => ({
+        id: m.id,
+        fullName: m.full_name,
+        address: m.address,
+        phone: m.phone,
+        email: m.email,
+        gender: m.gender,
+        photo: m.photo,
+        status: m.status,
+        totalTransaction: m.total_transaction || 0,
+        totalOmzet: m.total_omzet || 0,
+      }));
+
+      const mappedProducts = (productData || []).map((p) => ({
+        id: p.id,
+        name: p.nama_produk,
+        sku: p.sku,
+        category: p.category?.name || '',
+        type: p.type?.name || '',
+        mitraName: p.mitra?.full_name || p.mitra_name || '-',
+        mitraId: p.mitra_id,
+        unit: p.unit || '',
+        mitraPrice: p.mitra_price || 0,
+      }));
+
+      const mappedStock = (stockData || []).map((s) => ({
+        id: s.id,
+        mitraId: s.mitra_id,
+        productId: s.product_id,
+        date: s.date,
+        quantity: s.quantity,
+        note: s.note || '',
+        status: s.status,
+        mitraName: (mitraData || []).find((m) => m.id === s.mitra_id)?.full_name || (s.mitra?.full_name) || '-',
+        productName: (productData || []).find((p) => p.id === s.product_id)?.nama_produk || (s.product?.nama_produk) || '-',
+      }));
+
+      const mappedTx = (txData || []).map((tx) => ({
+        id: tx.id,
+        date: tx.created_at ? new Date(tx.created_at).toISOString().split('T')[0] : '',
+        mitraId: tx.mitra_id,
+        total: tx.total || 0,
+        items: tx.items || [],
+      }));
+
+      setMitraList(mappedMitra);
+      setProducts(mappedProducts);
+      setStockInputs(mappedStock);
+      setTransactions(mappedTx);
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error);
+      setToast({ message: 'Gagal memuat data dashboard', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      try {
-        const [mitraData, productData, stockData, txData] = await Promise.all([
-          mitraService.getAll(),
-          productService.getAll(),
-          pendingStockValidationService.getAll(),
-          transactionService.getHistory(),
-        ]);
-
-        const mappedMitra = (mitraData || []).map((m) => ({
-          id: m.id,
-          fullName: m.full_name,
-          address: m.address,
-          phone: m.phone,
-          email: m.email,
-          gender: m.gender,
-          photo: m.photo,
-          status: m.status,
-          totalTransaction: m.total_transaction || 0,
-          totalOmzet: m.total_omzet || 0,
-        }));
-
-        const mappedProducts = (productData || []).map((p) => ({
-          id: p.id,
-          name: p.nama_produk,
-          sku: p.sku,
-          category: p.category?.name || '',
-          type: p.type?.name || '',
-          mitraName: p.mitra?.full_name || p.mitra_name || '-',
-          mitraId: p.mitra_id,
-          unit: p.unit || '',
-          mitraPrice: p.mitra_price || 0,
-        }));
-
-        const mappedStock = (stockData || []).map((s) => ({
-          id: s.id,
-          mitraId: s.mitra_id,
-          productId: s.product_id,
-          date: s.date,
-          quantity: s.quantity,
-          note: s.note || '',
-          status: s.status,
-          mitraName: (mitraData || []).find((m) => m.id === s.mitra_id)?.full_name || (s.mitra?.full_name) || '-',
-          productName: (productData || []).find((p) => p.id === s.product_id)?.nama_produk || (s.product?.nama_produk) || '-',
-        }));
-
-        const mappedTx = (txData || []).map((tx) => ({
-          id: tx.id,
-          date: tx.created_at ? new Date(tx.created_at).toISOString().split('T')[0] : '',
-          mitraId: tx.mitra_id,
-          total: tx.total || 0,
-          items: tx.items || [],
-        }));
-
-        setMitraList(mappedMitra);
-        setProducts(mappedProducts);
-        setStockInputs(mappedStock);
-        setTransactions(mappedTx);
-      } catch (error) {
-        console.error('Failed to load dashboard data:', error);
-        setToast({ message: 'Gagal memuat data dashboard', type: 'error' });
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadData();
   }, []);
 
@@ -343,6 +343,7 @@ function MitraDashboard({ role }) {
         );
       }
 
+      await loadData();
       setStockFormData({ productId: '', stock: '', note: '' });
       setShowStockForm(false);
       setToast({
@@ -399,6 +400,7 @@ function MitraDashboard({ role }) {
         );
       }
 
+      await loadData();
       setToast({ message: 'Stok berhasil divalidasi!', type: 'success' });
     } catch (error) {
       console.error('[MitraDashboard] Failed to validate stock:', error);

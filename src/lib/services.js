@@ -42,6 +42,7 @@ export const userService = {
 
 export const productService = {
   async getAll() {
+    console.log('[productService.getAll] fetching products');
     const { data, error } = await supabase
       .from('products')
       .select(`
@@ -52,22 +53,31 @@ export const productService = {
       `)
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error('[productService.getAll] error:', error);
+      throw error;
+    }
+    console.log('[productService.getAll] result count:', data?.length || 0);
     return data || [];
   },
 
   async create(product) {
+    console.log('[productService.create] payload:', product);
     const { data, error } = await supabase
       .from('products')
       .insert([product])
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[productService.create] error:', error);
+      throw error;
+    }
     return data;
   },
 
   async update(id, product) {
+    console.log('[productService.update] id:', id, 'payload:', product);
     const { data, error } = await supabase
       .from('products')
       .update(product)
@@ -75,7 +85,11 @@ export const productService = {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[productService.update] error:', error);
+      throw error;
+    }
+    console.log('[productService.update] result:', data);
     return data;
   },
 
