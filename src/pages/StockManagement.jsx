@@ -109,7 +109,7 @@ function StockManagement() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const product = productsList.find((p) => p.id === Number(formData.productId));
+    const product = productsList.find((p) => p.id === formData.productId);
     if (!product || !formData.quantity || Number(formData.quantity) <= 0) return;
 
     try {
@@ -134,7 +134,7 @@ function StockManagement() {
         },
         ...prev,
       ]);
-      await updateProductStock(Number(formData.productId), Number(formData.quantity), formData.type);
+      await updateProductStock(formData.productId, Number(formData.quantity), formData.type);
       setFormData({ type: 'in', productId: '', quantity: '', note: '' });
       setShowForm(false);
       showToast('Transaksi stok berhasil disimpan!', 'success');
