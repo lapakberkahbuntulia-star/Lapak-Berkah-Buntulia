@@ -73,6 +73,9 @@ function MitraDashboard({ role, user }) {
     status: 'Aktif',
   });
 
+  const [productFilter, setProductFilter] = useState(isMitra ? 'Semua' : 'Semua');
+  const [activeTab, setActiveTab] = useState('stock');
+
   const loggedInMitraId = useMemo(() => {
     if (!isMitra || !user?.email) return null;
     const currentMitra = mitraList.find((m) => m.email === user.email);
@@ -96,8 +99,6 @@ function MitraDashboard({ role, user }) {
   }, [isMitra, loggedInMitraId, activeTab, selectedMitra, productFilter, products]);
 
   console.log('[MitraDashboard] filter debug:', { isMitra, loggedInMitraId, productFilter, visibleProductIdsSize: visibleProductIds.size, productsCount: products.length });
-  const [productFilter, setProductFilter] = useState(isMitra ? 'Semua' : 'Semua');
-  const [activeTab, setActiveTab] = useState('stock');
   const [profitMonth, setProfitMonth] = useState(new Date().toISOString().slice(0, 7));
   const [profitStartDate, setProfitStartDate] = useState('');
   const [profitEndDate, setProfitEndDate] = useState('');
