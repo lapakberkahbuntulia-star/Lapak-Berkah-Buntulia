@@ -236,11 +236,12 @@ function MitraDashboard({ role }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const emailValue = formData.email || `mitra-${Date.now()}@local`;
       const newMitra = await mitraService.create({
         full_name: formData.fullName,
         address: formData.address,
         phone: formData.phone,
-        email: formData.email,
+        email: emailValue,
         gender: formData.gender,
         photo: formData.photo,
         status: formData.status,
@@ -268,7 +269,7 @@ function MitraDashboard({ role }) {
       setToast({ message: 'Mitra berhasil ditambahkan!', type: 'success' });
     } catch (error) {
       console.error('Failed to create mitra:', error);
-      setToast({ message: 'Gagal menambahkan mitra', type: 'error' });
+      setToast({ message: 'Gagal menambahkan mitra: ' + (error?.message || ''), type: 'error' });
     }
   };
 
@@ -286,14 +287,16 @@ function MitraDashboard({ role }) {
   const handleStockSubmit = async (e) => {
     e.preventDefault();
     if (!selectedMitra || !stockFormData.productId || !stockFormData.stock) return;
+    const quantity = Number(stockFormData.stock);
+    const isAdminInput = !isMitra;
     try {
       const newStock = await pendingStockValidationService.create({
         mitra_id: Number(selectedMitra),
         product_id: Number(stockFormData.productId),
         date: stockDate,
-        quantity: Number(stockFormData.stock),
+        quantity,
         note: stockFormData.note,
-        status: 'pending',
+        status: isAdminInput ? 'validated' : 'pending',
       });
 
       setStockInputs([
@@ -308,9 +311,24 @@ function MitraDashboard({ role }) {
           status: newStock.status,
         },
       ]);
+
+      if (isAdminInput) {
+        const product = products.find((p) => p.id === Number(stockFormData.productId));
+        if (product) {
+          const updatedStock = product.stock + quantity;
+          await productService.update(product.id, { stock: updatedStock });
+          setProducts((prev) =>
+            prev.map((p) => (p.id === product.id ? { ...p, stock: updatedStock } : p)),
+          );
+        }
+      }
+
       setStockFormData({ productId: '', stock: '', note: '' });
       setShowStockForm(false);
-      setToast({ message: 'Stok harian berhasil disimpan dan menunggu validasi admin!', type: 'success' });
+      setToast({
+        message: isAdminInput ? 'Stok harian berhasil disimpan dan divalidasi otomatis!' : 'Stok harian berhasil disimpan dan menunggu validasi admin!',
+        type: 'success',
+      });
     } catch (error) {
       console.error('Failed to create stock input:', error);
       setToast({ message: 'Gagal menyimpan stok harian', type: 'error' });
@@ -451,6 +469,83 @@ function MitraDashboard({ role }) {
               {activeTab === 'stock' && (
                 <div className="space-y-4">
                   <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                    <button
+                      onClick={() => setShowStockForm(!showStockForm)}
+                      className="h-10 px-4 bg-primary hover:bg-primary-fixed-variant text-on-primary rounded-lg flex items-center gap-2 transition-colors font-label-md text-label-md w-full sm:w-auto justify-center"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">{showStockForm ? 'close' : 'add'}</span>
+                      {showStockForm ? 'Batal' : 'Tambah Stok'}
+                    </button>
+                  </div>
+
+                  {showStockForm && (
+                    <form className="p-6 border border-outline-variant rounded-xl bg-surface-container-low mb-4 space-y-4" onSubmit={handleStockSubmit}>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="space-y-2">
+                          <label className="block font-label-sm text-label-sm text-on-surface font-medium">Mitra</label>
+                          {isMitra ? (
+                            <div className="w-full h-10 px-3 rounded-lg border border-outline bg-surface-container-low font-body-md text-body-md flex items-center text-on-surface-variant">
+                              {mitraList.find((m) => m.id === Number(selectedMitra))?.fullName || '-'}
+                            </div>
+                          ) : (
+                            <select
+                              className="w-full h-10 px-3 rounded-lg border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-body-md text-body-md"
+                              value={selectedMitra}
+                              onChange={(e) => setSelectedMitra(e.target.value)}
+                              required
+                            >
+                              <option value="">Pilih Mitra</option>
+                              {mitraList.filter((m) => m.status === 'Aktif').map((m) => (
+                                <option key={m.id} value={m.id}>{m.fullName}</option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block font-label-sm text-label-sm text-on-surface font-medium">Produk</label>
+                          <select
+                            className="w-full h-10 px-3 rounded-lg border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-body-md text-body-md"
+                            value={stockFormData.productId}
+                            onChange={(e) => setStockFormData({ ...stockFormData, productId: e.target.value })}
+                            required
+                          >
+                            <option value="">Pilih Produk</option>
+                            {products.map((p) => (
+                              <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block font-label-sm text-label-sm text-on-surface font-medium">Stok</label>
+                          <input
+                            className="w-full h-10 px-3 rounded-lg border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-body-md text-body-md"
+                            type="number"
+                            placeholder="0"
+                            value={stockFormData.stock}
+                            onChange={(e) => setStockFormData({ ...stockFormData, stock: e.target.value })}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block font-label-sm text-label-sm text-on-surface font-medium">Catatan</label>
+                          <input
+                            className="w-full h-10 px-3 rounded-lg border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-body-md text-body-md"
+                            type="text"
+                            placeholder="Opsional"
+                            value={stockFormData.note}
+                            onChange={(e) => setStockFormData({ ...stockFormData, note: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-end">
+                        <button type="submit" className="h-10 px-6 bg-secondary-fixed-dim hover:bg-secondary-container text-on-secondary-container rounded-lg font-label-md text-label-md transition-colors">
+                          Simpan Stok
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  <div className="flex flex-col sm:flex-row gap-4 mb-4">
                     <div className="flex-1">
                       <label className="block font-label-sm text-label-sm text-on-surface-variant mb-1">Filter Tanggal</label>
                       <input
@@ -478,19 +573,6 @@ function MitraDashboard({ role }) {
                       </div>
                     )}
                   </div>
-
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-surface-container-low border-b border-outline-variant">
-                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Tanggal</th>
-                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Mitra</th>
-                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Produk</th>
-                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-right">Stok</th>
-                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Status</th>
-                          <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold text-left">Catatan</th>
-                        </tr>
-                      </thead>
                       <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
                         {todayStock.length === 0 ? (
                           <tr>
@@ -567,7 +649,7 @@ function MitraDashboard({ role }) {
                               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-outline">
                                 <span className="material-symbols-outlined text-[20px]">mail</span>
                               </div>
-                              <input className="w-full h-12 pl-12 pr-4 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md text-on-background placeholder:text-outline/70" id="email" type="email" placeholder="email@example.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
+                              <input className="w-full h-12 pl-12 pr-4 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md text-on-background placeholder:text-outline/70" id="email" type="email" placeholder="email@example.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
                             </div>
                           </div>
                           <div className="space-y-2">
@@ -673,65 +755,104 @@ function MitraDashboard({ role }) {
                           filteredMitra.map((mitra, idx) => (
                             <tr key={mitra.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
                               <td className="px-6 py-4">
-                                <div className="flex items-center gap-4">
-                                  <div className="w-12 h-12 rounded-full bg-surface-container overflow-hidden border border-outline-variant flex-shrink-0 shadow-sm">
-                                    {mitra.photo ? (
-                                      <img src={mitra.photo} alt={mitra.fullName} className="w-full h-full object-cover" />
-                                    ) : (
-                                      <div className="w-full h-full flex items-center justify-center text-outline">
-                                        <span className="material-symbols-outlined text-2xl">person</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div>
-                                    <div className="font-semibold text-on-surface text-base">{mitra.fullName}</div>
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                      <span className="font-label-sm text-label-sm text-on-surface-variant">{mitra.gender}</span>
-                                      <span className="w-1 h-1 rounded-full bg-outline-variant"></span>
-                                      <span className="font-label-sm text-label-sm text-on-surface-variant">{mitra.address.split(',')[0]}</span>
-                                    </div>
-                                  </div>
-                                </div>
+                                {editingMitra === mitra.id ? (
+                                  <input
+                                    className="w-full h-10 px-3 rounded-lg border border-primary bg-surface font-body-md text-body-md outline-none"
+                                    value={editMitraName}
+                                    onChange={(e) => setEditMitraName(e.target.value)}
+                                    onBlur={handleUpdateMitra}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') handleUpdateMitra();
+                                      if (e.key === 'Escape') {
+                                        setEditingMitra(null);
+                                        setEditMitraName('');
+                                      }
+                                    }}
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <span className="font-semibold text-on-surface text-base">{mitra.fullName}</span>
+                                )}
                               </td>
                               <td className="px-6 py-4">
-                                <div className="flex items-center gap-2 text-on-surface mb-1">
-                                  <span className="material-symbols-outlined text-[16px] text-on-surface-variant">phone</span>
-                                  <span className="font-numeric-data text-numeric-data text-sm">{mitra.phone}</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-on-surface-variant">
-                                  <span className="material-symbols-outlined text-[16px]">mail</span>
-                                  <span className="font-body-sm text-body-sm">{mitra.email}</span>
-                                </div>
+                                {editingMitra === mitra.id ? (
+                                  <span className="font-body-sm text-body-sm text-on-surface-variant">Tekan Enter untuk simpan, Esc untuk batal</span>
+                                ) : (
+                                  <div>
+                                    <div className="flex items-center gap-2 text-on-surface mb-1">
+                                      <span className="material-symbols-outlined text-[16px] text-on-surface-variant">phone</span>
+                                      <span className="font-numeric-data text-numeric-data text-sm">{mitra.phone}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-on-surface-variant">
+                                      <span className="material-symbols-outlined text-[16px]">mail</span>
+                                      <span className="font-body-sm text-body-sm">{mitra.email}</span>
+                                    </div>
+                                  </div>
+                                )}
                               </td>
                               <td className="px-6 py-4 text-center">
-                                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-label-md text-label-md ${mitra.status === 'Aktif' ? 'bg-tertiary-fixed/15 text-tertiary-container border border-tertiary-fixed/30' : 'bg-error-container/15 text-error border border-error-container/30'}`}>
-                                  <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                                  {mitra.status}
-                                </span>
+                                {editingMitra === mitra.id ? (
+                                  <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full font-label-md text-label-sm bg-primary/10 text-primary border border-primary/20">
+                                    <span className="material-symbols-outlined text-[14px]">edit</span>
+                                    Mengedit...
+                                  </span>
+                                ) : (
+                                  <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-label-md text-label-md ${mitra.status === 'Aktif' ? 'bg-tertiary-fixed/15 text-tertiary-container border border-tertiary-fixed/30' : 'bg-error-container/15 text-error border border-error-container/30'}`}>
+                                    <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                                    {mitra.status}
+                                  </span>
+                                )}
                               </td>
                               <td className="px-6 py-4 text-right">
-                                <span className="font-numeric-data text-numeric-data text-on-background">{mitra.totalTransaction}</span>
+                                {editingMitra === mitra.id ? (
+                                  <span className="font-numeric-data text-numeric-data text-on-surface-variant">-</span>
+                                ) : (
+                                  <span className="font-numeric-data text-numeric-data text-on-background">{mitra.totalTransaction}</span>
+                                )}
                               </td>
                               <td className="px-6 py-4 text-right">
-                                <span className="font-numeric-data text-numeric-data text-primary font-semibold">Rp {mitra.totalOmzet.toLocaleString('id-ID')}</span>
+                                {editingMitra === mitra.id ? (
+                                  <span className="font-numeric-data text-numeric-data text-on-surface-variant">-</span>
+                                ) : (
+                                  <span className="font-numeric-data text-numeric-data text-primary font-semibold">Rp {mitra.totalOmzet.toLocaleString('id-ID')}</span>
+                                )}
                               </td>
                               <td className="px-6 py-4 text-center">
-                                <div className="flex items-center justify-center gap-2">
-                                  <button
-                                    onClick={() => handleEditMitra(mitra)}
-                                    className="h-8 w-8 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-on-primary flex items-center justify-center transition-all"
-                                    title="Edit"
-                                  >
-                                    <span className="material-symbols-outlined text-[18px]">edit</span>
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteMitra(mitra.id)}
-                                    className="h-8 w-8 rounded-lg bg-error/10 text-error hover:bg-error hover:text-on-error flex items-center justify-center transition-all"
-                                    title="Hapus"
-                                  >
-                                    <span className="material-symbols-outlined text-[18px]">delete</span>
-                                  </button>
-                                </div>
+                                {editingMitra === mitra.id ? (
+                                  <div className="flex items-center justify-center gap-2">
+                                    <button
+                                      onClick={handleUpdateMitra}
+                                      className="h-8 w-8 rounded-lg bg-tertiary-fixed/20 text-tertiary-container hover:bg-tertiary-fixed hover:text-on-tertiary-fixed flex items-center justify-center transition-all"
+                                      title="Simpan"
+                                    >
+                                      <span className="material-symbols-outlined text-[18px]">check</span>
+                                    </button>
+                                    <button
+                                      onClick={() => { setEditingMitra(null); setEditMitraName(''); }}
+                                      className="h-8 w-8 rounded-lg bg-surface-container text-on-surface-variant hover:bg-error hover:text-on-error flex items-center justify-center transition-all"
+                                      title="Batal"
+                                    >
+                                      <span className="material-symbols-outlined text-[18px]">close</span>
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center justify-center gap-2">
+                                    <button
+                                      onClick={() => handleEditMitra(mitra)}
+                                      className="h-8 w-8 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-on-primary flex items-center justify-center transition-all"
+                                      title="Edit"
+                                    >
+                                      <span className="material-symbols-outlined text-[18px]">edit</span>
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteMitra(mitra.id)}
+                                      className="h-8 w-8 rounded-lg bg-error/10 text-error hover:bg-error hover:text-on-error flex items-center justify-center transition-all"
+                                      title="Hapus"
+                                    >
+                                      <span className="material-symbols-outlined text-[18px]">delete</span>
+                                    </button>
+                                  </div>
+                                )}
                               </td>
                             </tr>
                           ))
