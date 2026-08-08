@@ -384,6 +384,27 @@ export const pendingStockValidationService = {
     return data || [];
   },
 
+  async getAllHistory(filters = {}) {
+    let query = supabase
+      .from('pending_stock_validations')
+      .select(`
+        *,
+        mitra:mitra_id (full_name),
+        product:product_id (nama_produk, unit)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (filters.mitraId) query = query.eq('mitra_id', filters.mitraId);
+    if (filters.startDate) query = query.gte('date', filters.startDate);
+    if (filters.endDate) query = query.lte('date', filters.endDate);
+    if (filters.status) query = query.eq('status', filters.status);
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+    return data || [];
+  },
+
   async validate(id) {
     const { data, error } = await supabase
       .from('pending_stock_validations')
