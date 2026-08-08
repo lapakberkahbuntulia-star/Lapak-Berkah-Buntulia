@@ -361,6 +361,7 @@ function MitraDashboard({ role }) {
   };
 
   const handleValidateStock = async (stockId) => {
+    console.log('[MitraDashboard] handleValidateStock called with stockId:', stockId);
     const stock = stockInputs.find((s) => s.id === stockId);
     if (!stock) {
       setToast({ message: 'Data stok tidak ditemukan', type: 'error' });
@@ -384,6 +385,7 @@ function MitraDashboard({ role }) {
         mitra_id: stock.mitraId ? String(stock.mitraId) : null,
       };
 
+      console.log('[MitraDashboard] inserting stock movement payload:', payload);
       await stockMovementService.create(payload);
 
       setStockInputs((prev) => prev.filter((s) => s.id !== stockId));
@@ -398,7 +400,7 @@ function MitraDashboard({ role }) {
 
       setToast({ message: 'Stok berhasil divalidasi!', type: 'success' });
     } catch (error) {
-      console.error('Failed to validate stock:', error);
+      console.error('[MitraDashboard] Failed to validate stock:', error);
       const detail = [error?.message, error?.details, error?.hint, error?.code].filter(Boolean).join(' | ') || JSON.stringify(error);
       setToast({ message: 'Gagal memvalidasi stok: ' + detail, type: 'error' });
     }
@@ -666,10 +668,10 @@ function MitraDashboard({ role }) {
                              const product = products.find((p) => p.id === stock.productId);
                               if (!isMitra && selectedMitra && stock.mitraId !== selectedMitra) return null;
                              return (
-                               <tr key={stock.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
-                                 <td className="px-6 py-4">
-                                   <span className="font-body-sm text-body-sm text-on-surface">{stock.date}</span>
-                                 </td>
+                                <tr key={stock.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
+                                  <td className="px-6 py-4">
+                                    <span className="font-body-sm text-body-sm text-on-surface">{stock.date || (stock.created_at ? stock.created_at.split('T')[0] : '-')}</span>
+                                  </td>
                                  <td className="px-6 py-4">
                                    <span className="font-body-sm text-body-sm text-on-surface">{stock.mitraName}</span>
                                  </td>

@@ -301,24 +301,25 @@ export const transactionItemService = {
 
 export const stockMovementService = {
   async create(movement) {
+    console.log('[stockMovementService.create] payload:', movement);
     const { data, error } = await supabase
       .from('stock_movements')
       .insert([movement])
-      .select()
+      .select('id, product_id, type, quantity, note, mitra_id, created_at')
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[stockMovementService.create] error:', error);
+      throw error;
+    }
     return data;
   },
 
   async getAll(filters = {}) {
+    console.log('[stockMovementService.getAll] filters:', filters);
     let query = supabase
       .from('stock_movements')
-      .select(`
-        *,
-        product:product_id (nama_produk, unit),
-        mitra:mitra_id (full_name)
-      `)
+      .select('id, product_id, type, quantity, note, mitra_id, created_at, product:product_id (nama_produk, unit), mitra:mitra_id (full_name)')
       .order('created_at', { ascending: false });
 
     if (filters.type) query = query.eq('type', filters.type);
@@ -328,7 +329,10 @@ export const stockMovementService = {
 
     const { data, error } = await query;
 
-    if (error) throw error;
+    if (error) {
+      console.error('[stockMovementService.getAll] error:', error);
+    }
+    console.log('[stockMovementService.getAll] result count:', data?.length || 0);
     return data || [];
   },
 };
