@@ -158,7 +158,7 @@ function MitraDashboard({ role }) {
   const totalOmzet = mitraList.reduce((sum, m) => sum + (m.totalOmzet || 0), 0);
 
   const today = new Date().toISOString().split('T')[0];
-  const mitraIdNum = Number(selectedMitra);
+  const mitraIdNum = selectedMitra;
 
   const todayTransactions = transactions.filter((tx) => {
     if (!isMitra) return tx.date === today;
@@ -309,8 +309,8 @@ function MitraDashboard({ role }) {
     const isAdminInput = !isMitra;
     try {
       const newStock = await pendingStockValidationService.create({
-        mitra_id: Number(selectedMitra),
-        product_id: Number(stockFormData.productId),
+        mitra_id: selectedMitra,
+        product_id: stockFormData.productId,
         date: stockDate,
         quantity,
         note: stockFormData.note,
@@ -629,7 +629,7 @@ function MitraDashboard({ role }) {
                         ) : (
                            todayStock.map((stock, idx) => {
                              const product = products.find((p) => p.id === stock.productId);
-                             if (!isMitra && selectedMitra && stock.mitraId !== Number(selectedMitra)) return null;
+                              if (!isMitra && selectedMitra && stock.mitraId !== selectedMitra) return null;
                              return (
                                <tr key={stock.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
                                  <td className="px-6 py-4">
@@ -956,14 +956,14 @@ function MitraDashboard({ role }) {
                         </tr>
                       </thead>
                         <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
-                          {products
-                            .filter((p) => {
-                              if (isMitra) {
-                                return true;
-                              }
-                              return productFilter === 'Semua' || p.mitraId === Number(productFilter);
-                            })
-                            .map((product, idx) => (
+                           {products
+                             .filter((p) => {
+                               if (isMitra) {
+                                 return true;
+                               }
+                               return productFilter === 'Semua' || p.mitraId === productFilter;
+                             })
+                             .map((product, idx) => (
                             <tr key={product.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
                               <td className="px-6 py-4">
                                 <span className="font-body-sm text-body-sm text-on-surface">{product.name}</span>
