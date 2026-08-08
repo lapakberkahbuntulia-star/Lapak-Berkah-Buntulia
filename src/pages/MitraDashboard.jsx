@@ -392,6 +392,7 @@ function MitraDashboard({ role }) {
 
       if (product) {
         const updatedStock = (product.stock || 0) + Number(stock.quantity);
+        console.log('[MitraDashboard] updating product stock:', { productId: product.id, oldStock: product.stock, quantity: stock.quantity, newStock: updatedStock });
         await productService.update(product.id, { stock: updatedStock });
         setProducts((prev) =>
           prev.map((p) => (p.id === product.id ? { ...p, stock: updatedStock } : p)),
