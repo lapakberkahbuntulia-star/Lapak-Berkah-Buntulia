@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { productService, transactionService, transactionItemService, stockMovementService, mitraService } from '../lib/services';
+import { productService, transactionService, transactionItemService, stockMovementService, mitraService, heldTransactionService } from '../lib/services';
 
 function createEmptyTransaction(id) {
   return {
@@ -217,7 +217,39 @@ function KasirDesktopCart({ user }) {
   const [_completedTransactions, setCompletedTransactions] = useState([]);
   const [checkingOut, setCheckingOut] = useState(false);
 
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   const activeTransaction = transactions.find((t) => t.id === activeTransactionId) || transactions[0];
+
+  useEffect(() => {
+    const loadHeldTransactions = async () => {
+      if (!user?.id) return;
+      try {
+        const held = await heldTransactionService.getAllByUser(user.id);
+        if (held.length > 0) {
+          const heldTransactions = held.map((h) => ({
+            id: h.local_id,
+            items: h.items || [],
+            status: 'held',
+            createdAt: new Date(h.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+            heldDbId: h.id,
+          }));
+          setTransactions((prev) => {
+            const existingIds = new Set(prev.map((t) => t.id));
+            const newTransactions = heldTransactions.filter((t) => !existingIds.has(t.id));
+            return [...prev, ...newTransactions];
+          });
+        }
+      } catch (_error) {
+        showToast('Gagal memuat transaksi sementara', 'error');
+      }
+    };
+
+    loadHeldTransactions();
+  }, [user]);
 
   const updateQty = (transactionId, productId, delta) => {
     setTransactions((prev) =>
@@ -284,25 +316,52 @@ function KasirDesktopCart({ user }) {
     );
   };
 
-  const holdTransaction = () => {
+  const holdTransaction = async () => {
     if (activeTransaction.items.length === 0) return;
     const newTransaction = createEmptyTransaction(Date.now());
-    setTransactions((prev) => [...prev, newTransaction]);
+    const updatedTransactions = [...transactions, newTransaction];
+    setTransactions(updatedTransactions);
     setActiveTransactionId(newTransaction.id);
     setPaymentAmount('');
+
+    try {
+      const heldRecord = await heldTransactionService.create({
+        user_id: user?.id || null,
+        local_id: newTransaction.id,
+        items: newTransaction.items,
+        payment_method: paymentMethod,
+        status: 'held',
+      });
+      setTransactions((prev) =>
+        prev.map((t) => (t.id === newTransaction.id ? { ...t, heldDbId: heldRecord.id } : t)),
+      );
+    } catch (_error) {
+      showToast('Gagal menyimpan transaksi sementara', 'error');
+    }
   };
 
-  const resumeTransaction = (id) => {
+  const resumeTransaction = async (id) => {
     setActiveTransactionId(id);
     setPaymentAmount('');
   };
 
-  const deleteTransaction = (id, e) => {
+  const deleteTransaction = async (id, e) => {
     e.stopPropagation();
+    const transaction = transactions.find((t) => t.id === id);
     setTransactions((prev) => prev.filter((t) => t.id !== id));
     if (activeTransactionId === id) {
       const remaining = transactions.filter((t) => t.id !== id);
       setActiveTransactionId(remaining[0]?.id || null);
+    }
+
+    try {
+      if (transaction?.heldDbId) {
+        await heldTransactionService.delete(transaction.heldDbId);
+      } else {
+        await heldTransactionService.deleteByLocalId(id);
+      }
+    } catch (_error) {
+      showToast('Gagal menghapus transaksi sementara', 'error');
     }
   };
 
@@ -400,6 +459,9 @@ function KasirDesktopCart({ user }) {
         completedAt: new Date().toLocaleString('id-ID'),
       };
       setCompletedTransactions((prev) => [completed, ...prev]);
+      if (activeTransaction.heldDbId) {
+        heldTransactionService.delete(activeTransaction.heldDbId).catch(() => {});
+      }
       setToast({ message: `Pembayaran ${paymentMethod} berhasil`, type: 'success' });
       setPaymentAmount('');
       setTransactions((prev) => prev.filter((t) => t.id !== activeTransactionId));

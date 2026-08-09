@@ -426,6 +426,49 @@ export const returnService = {
   },
 };
 
+export const heldTransactionService = {
+  async create(heldData) {
+    const { data, error } = await supabase
+      .from('held_transactions')
+      .insert([heldData])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async getAllByUser(userId) {
+    const { data, error } = await supabase
+      .from('held_transactions')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('status', 'held')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  async delete(id) {
+    const { error } = await supabase
+      .from('held_transactions')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+  },
+
+  async deleteByLocalId(localId) {
+    const { error } = await supabase
+      .from('held_transactions')
+      .delete()
+      .eq('local_id', localId);
+
+    if (error) throw error;
+  },
+};
+
 export const transactionItemService = {
   async create(item) {
     const { data, error } = await supabase
