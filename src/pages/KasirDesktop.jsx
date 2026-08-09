@@ -203,7 +203,15 @@ function KasirDesktopCart({ user }) {
       prev.map((t) => {
         if (t.id !== transactionId) return t;
         const updatedItems = t.items
-          .map((item) => (item.productId === productId ? { ...item, qty: Math.max(0, item.qty + delta) } : item))
+          .map((item) => {
+            if (item.productId !== productId) return item;
+            const newQty = item.qty + delta;
+            if (newQty > (item.currentStock || 99)) {
+              setToast({ message: 'Jumlah melebihi stok tersedia', type: 'error' });
+              return item;
+            }
+            return { ...item, qty: Math.max(0, newQty) };
+          })
           .filter((item) => item.qty > 0);
         return { ...t, items: updatedItems };
       }),
@@ -221,11 +229,19 @@ function KasirDesktopCart({ user }) {
 
   const addProductToTransaction = ({ productId, product }) => {
     if (!product) return;
+    if ((product.stock || 0) <= 0) {
+      setToast({ message: 'Stok habis, tidak dapat menambahkan', type: 'error' });
+      return;
+    }
 
     setTransactions((prev) =>
       prev.map((t) => {
         if (t.id !== activeTransactionId) return t;
         const existing = t.items.find((item) => item.productId === productId);
+        if (existing && existing.qty >= (existing.currentStock || 99)) {
+          setToast({ message: 'Stok tidak cukup untuk menambahkan lagi', type: 'error' });
+          return t;
+        }
         const updatedItems = existing
           ? t.items.map((item) => (item.productId === productId ? { ...item, qty: item.qty + 1 } : item))
           : [

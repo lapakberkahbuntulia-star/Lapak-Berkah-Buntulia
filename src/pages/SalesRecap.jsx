@@ -8,6 +8,12 @@ function SalesRecap() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedMitra, setSelectedMitra] = useState('Semua Mitra');
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const getLocalDate = (value) => {
     const d = value instanceof Date ? value : new Date(value);
@@ -57,12 +63,99 @@ function SalesRecap() {
   const totalSales = filteredTransactions.reduce((sum, t) => sum + t.total, 0);
   const totalQty = filteredTransactions.reduce((sum, t) => sum + t.qty, 0);
 
-  const handleExportPDF = () => {
-    alert('Fitur Export PDF akan segera tersedia. Data dapat diekspor ke format PDF.');
+  const handleExportExcel = () => {
+    const headers = ['No', 'Tanggal', 'Mitra', 'Produk', 'Qty', 'Total', 'Metode', 'Status'];
+    const rows = filteredTransactions.map((t, i) => [
+      i + 1,
+      t.date,
+      `"${t.mitraName}"`,
+      `"${t.productName}"`,
+      t.qty,
+      t.total,
+      t.paymentMethod,
+      t.status,
+    ]);
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `laporan-penjualan-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast('Export Excel berhasil!', 'success');
   };
 
-  const handleExportExcel = () => {
-    alert('Fitur Export Excel akan segera tersedia. Data dapat diekspor ke format Excel.');
+  const handleExportPDF = () => {
+    const rows = filteredTransactions.map((t, i) => `
+      <tr style="border-bottom: 1px solid #eee;">
+        <td style="padding: 8px; text-align: center;">${i + 1}</td>
+        <td style="padding: 8px;">${t.date}</td>
+        <td style="padding: 8px;">${t.mitraName}</td>
+        <td style="padding: 8px;">${t.productName}</td>
+        <td style="padding: 8px; text-align: center;">${t.qty}</td>
+        <td style="padding: 8px; text-align: right;">Rp ${t.total.toLocaleString('id-ID')}</td>
+        <td style="padding: 8px;">${t.paymentMethod}</td>
+        <td style="padding: 8px;">${t.status}</td>
+      </tr>
+    `).join('');
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Laporan Penjualan</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #111; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #f5f5f5; padding: 8px; text-align: left; font-weight: 600; border-bottom: 2px solid #ccc; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .header h1 { margin: 0 0 4px 0; font-size: 18px; }
+    .header p { margin: 0; font-size: 12px; color: #666; }
+    .summary { display: flex; gap: 20px; margin-bottom: 20px; font-size: 12px; }
+    .summary div { padding: 8px 12px; background: #f9f9f9; border-radius: 4px; }
+    @media print { body { padding: 0; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>LAPAK BERKAH BUNTULIA</h1>
+    <p>Laporan Penjualan - ${new Date().toLocaleDateString('id-ID')}</p>
+  </div>
+  <div class="summary">
+    <div><strong>Total Transaksi:</strong> ${filteredTransactions.length}</div>
+    <div><strong>Total Penjualan:</strong> Rp ${totalSales.toLocaleString('id-ID')}</div>
+    <div><strong>Total Qty:</strong> ${totalQty}</div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>Tanggal</th>
+        <th>Mitra</th>
+        <th>Produk</th>
+        <th>Qty</th>
+        <th>Total</th>
+        <th>Metode</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <script>window.onload = function() { window.print(); }</script>
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const printWindow = window.open(url, '_blank', 'width=800,height=600');
+    if (!printWindow) {
+      showToast('Popup diblokir. Izinkan popup untuk export PDF.', 'error');
+      URL.revokeObjectURL(url);
+      return;
+    }
+    showToast('Export PDF berhasil! Pilih "Save as PDF" di dialog cetak.', 'success');
   };
 
   if (loading) {
@@ -288,6 +381,18 @@ function SalesRecap() {
           </div>
         </div>
       </main>
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg border text-sm flex items-center gap-2 animate-bounce ${
+          toast.type === 'error' 
+            ? 'bg-error-container text-error border-error/30' 
+            : 'bg-surface-container-high text-on-background border-outline-variant'
+        }`}>
+          <span className="material-symbols-outlined text-[18px]">
+            {toast.type === 'error' ? 'error' : 'check_circle'}
+          </span>
+          <span className="font-label-md text-label-md">{toast.message}</span>
+        </div>
+      )}
     </div>
   );
 }

@@ -64,10 +64,36 @@ function FinancialReports() {
 }
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [role, setRole] = useState(null);
-  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    try {
+      const stored = localStorage.getItem('lapak-berkah-auth');
+      return stored ? JSON.parse(stored).isAuthenticated : false;
+    } catch {
+      return false;
+    }
+  });
+  const [role, setRole] = useState(() => {
+    try {
+      const stored = localStorage.getItem('lapak-berkah-auth');
+      return stored ? JSON.parse(stored).role : null;
+    } catch {
+      return null;
+    }
+  });
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('lapak-berkah-auth');
+      return stored ? JSON.parse(stored).user : null;
+    } catch {
+      return null;
+    }
+  });
   const [page, setPage] = useState('dashboard');
+
+  useEffect(() => {
+    const authData = { isAuthenticated, role, user };
+    localStorage.setItem('lapak-berkah-auth', JSON.stringify(authData));
+  }, [isAuthenticated, role, user]);
 
   const handleLogin = (selectedRole, userData = null) => {
     setIsAuthenticated(true);
@@ -80,6 +106,7 @@ function App() {
     setIsAuthenticated(false);
     setRole(null);
     setUser(null);
+    localStorage.removeItem('lapak-berkah-auth');
   };
 
   const accessiblePages = role ? rolePageAccess[role] || [] : [];
