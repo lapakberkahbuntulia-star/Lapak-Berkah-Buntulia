@@ -29,6 +29,9 @@ const roleDefaultPage = {
   mitra: 'mitra',
 };
 
+const SESSION_TIMEOUT = 30 * 60 * 1000;
+const WARNING_BEFORE = 60 * 1000;
+
 function FinancialReports() {
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
@@ -91,6 +94,7 @@ function App() {
   });
   const [page, setPage] = useState('dashboard');
   const [lowStockCount, setLowStockCount] = useState(0);
+  const [sessionWarning, setSessionWarning] = useState(false);
 
   useEffect(() => {
     const authData = { isAuthenticated, role, user };
@@ -111,6 +115,42 @@ function App() {
     localStorage.removeItem('lapak-berkah-auth');
   };
 
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    let inactivityTimer = null;
+    let warningTimer = null;
+
+    const resetTimers = () => {
+      setSessionWarning(false);
+      clearTimeout(inactivityTimer);
+      clearTimeout(warningTimer);
+
+      warningTimer = setTimeout(() => {
+        setSessionWarning(true);
+      }, SESSION_TIMEOUT - WARNING_BEFORE);
+
+      inactivityTimer = setTimeout(() => {
+        handleLogout();
+      }, SESSION_TIMEOUT);
+    };
+
+    const activityEvents = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'];
+    activityEvents.forEach((event) => {
+      window.addEventListener(event, resetTimers);
+    });
+
+    resetTimers();
+
+    return () => {
+      clearTimeout(inactivityTimer);
+      clearTimeout(warningTimer);
+      activityEvents.forEach((event) => {
+        window.removeEventListener(event, resetTimers);
+      });
+    };
+  }, [isAuthenticated]);
+
   const accessiblePages = role ? rolePageAccess[role] || [] : [];
 
   const navigateTo = (targetPage) => {
@@ -125,6 +165,33 @@ function App() {
 
   return (
     <div className="min-h-screen">
+      {sessionWarning && (
+        <div className="fixed inset-0 bg-black/40 z-[100] flex items-center justify-center p-4">
+          <div className="bg-surface border border-outline-variant rounded-xl shadow-lg max-w-sm w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="material-symbols-outlined text-4xl text-warning">warning</span>
+              <h3 className="font-headline-md text-headline-md text-on-surface">Sesi Akan Berakhir</h3>
+            </div>
+            <p className="font-body-md text-body-md text-on-surface-variant mb-4">
+              Anda tidak aktif selama beberapa menit. Sesi akan berakhir dalam 1 menit untuk keamanan.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setSessionWarning(false)}
+                className="flex-1 h-10 px-4 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary-fixed-variant transition-colors"
+              >
+                Tetap Masuk
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex-1 h-10 px-4 bg-surface border border-outline-variant text-on-surface rounded-lg font-label-md text-label-md hover:bg-surface-container transition-colors"
+              >
+                Keluar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <TopAppBar title={page === 'pos' || page === 'pos-desktop' ? 'Halaman Kasir' : 'Lapak Berkah'} showNotifications={page === 'pos' || page === 'pos-desktop'} onLogout={handleLogout} />
       <div className="flex h-[calc(100vh-64px)] overflow-hidden">
         <NavDrawer activePage={page} onNavigate={navigateTo} onLogout={handleLogout} role={role} />
