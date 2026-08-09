@@ -188,6 +188,7 @@ function ProductManagement() {
   };
 
   const handleDelete = async (id) => {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus produk ini?')) return;
     try {
       await productService.delete(id);
       setProducts(products.filter(p => p.id !== id));
@@ -256,6 +257,10 @@ function ProductManagement() {
       setDeleteConfirm(null);
       return;
     }
+    if (!window.confirm(`Apakah Anda yakin ingin menghapus kategori "${cat}"?`)) {
+      setDeleteConfirm(null);
+      return;
+    }
     try {
       await categoryService.delete(catObj.id);
       showToast('Kategori berhasil dihapus!', 'success');
@@ -312,6 +317,10 @@ function ProductManagement() {
     const productsInType = products.filter(p => p.type?.name === type).length;
     if (productsInType > 0) {
       showToast(`Tidak dapat menghapus! Ada ${productsInType} produk dengan jenis ini.`, 'error');
+      setDeleteTypeConfirm(null);
+      return;
+    }
+    if (!window.confirm(`Apakah Anda yakin ingin menghapus jenis "${type}"?`)) {
       setDeleteTypeConfirm(null);
       return;
     }
@@ -383,6 +392,10 @@ function ProductManagement() {
     const productsInMitra = products.filter(p => p.mitra_id === mitra.id).length;
     if (productsInMitra > 0) {
       showToast(`Tidak dapat menghapus! Ada ${productsInMitra} produk milik mitra ini.`, 'error');
+      setDeleteMitraConfirm(null);
+      return;
+    }
+    if (!window.confirm(`Apakah Anda yakin ingin menghapus mitra "${mitra.full_name}"?`)) {
       setDeleteMitraConfirm(null);
       return;
     }

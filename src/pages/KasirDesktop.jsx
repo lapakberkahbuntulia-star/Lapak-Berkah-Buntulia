@@ -22,6 +22,7 @@ function KasirDesktop() {
   const [selectedCategory, setSelectedCategory] = useState('Semua');
   const [barcode, setBarcode] = useState('');
   const [flash, setFlash] = useState(null);
+  const [checkingOut, setCheckingOut] = useState(false);
   const barcodeRef = useRef(null);
 
   const loadProducts = async () => {
@@ -269,6 +270,7 @@ function KasirDesktopCart({ user }) {
   };
 
   const handleCheckout = async () => {
+    if (checkingOut) return;
     const total = activeTransaction.items.reduce((sum, item) => sum + item.sellingPrice * item.qty, 0);
     const paid = Number(paymentAmount);
     if (!paymentMethod || total <= 0) return;
@@ -277,6 +279,7 @@ function KasirDesktopCart({ user }) {
       return;
     }
 
+    setCheckingOut(true);
     try {
       const mitraId = activeTransaction.items.find((item) => item.mitraId)?.mitraId || null;
       const transactionData = {
@@ -313,11 +316,13 @@ function KasirDesktopCart({ user }) {
             mitra_id: item.mitraId || null,
           });
 
-          await productService.update(item.productId, {
-            stock: Math.max(0, (item.currentStock || 0) - item.qty),
-          });
+          const success = await productService.decrementStock(item.productId, item.qty);
+          if (!success) {
+            throw new Error(`Stok tidak cukup untuk ${item.name}`);
+          }
         } catch (stockError) {
           console.error('[KasirDesktopCart] Failed to update stock for product:', item.productId, stockError);
+          throw stockError;
         }
       }
 
@@ -358,6 +363,8 @@ function KasirDesktopCart({ user }) {
     } catch (error) {
       console.error('[KasirDesktopCart] Failed to checkout:', error);
       setToast({ message: 'Gagal memproses pembayaran: ' + (error?.message || ''), type: 'error' });
+    } finally {
+      setCheckingOut(false);
     }
   };
 
@@ -614,11 +621,15 @@ function KasirDesktopCart({ user }) {
           )}
           <button
             onClick={handleCheckout}
-            disabled={activeTransaction.items.length === 0 || (paymentMethod === 'Tunai' && (Number(paymentAmount) < total || Number(paymentAmount) === 0))}
+            disabled={checkingOut || activeTransaction.items.length === 0 || (paymentMethod === 'Tunai' && (Number(paymentAmount) < total || Number(paymentAmount) === 0))}
             className="w-full h-12 bg-secondary-container hover:bg-[#f4a7b9] text-on-secondary-container font-headline-sm text-headline-sm rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span className="material-symbols-outlined">point_of_sale</span>
-            Bayar
+            {checkingOut ? (
+              <span className="material-symbols-outlined animate-spin">progress_activity</span>
+            ) : (
+              <span className="material-symbols-outlined">point_of_sale</span>
+            )}
+            {checkingOut ? 'Memproses...' : 'Bayar'}
           </button>
         </div>
       )}

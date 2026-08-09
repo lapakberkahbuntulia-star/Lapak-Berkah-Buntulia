@@ -498,6 +498,7 @@ function MitraDashboard({ role, user }) {
       setToast({ message: `Tidak dapat menghapus! Ada ${productsInMitra} produk milik mitra ini.`, type: 'error' });
       return;
     }
+    if (!window.confirm('Apakah Anda yakin ingin menghapus mitra ini?')) return;
     try {
       await mitraService.delete(mitraId);
       setMitraList((prev) => prev.filter((m) => m.id !== mitraId));

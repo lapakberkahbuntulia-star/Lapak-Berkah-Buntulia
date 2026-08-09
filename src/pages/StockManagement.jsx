@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import {
   productService,
   stockMovementService,
@@ -87,6 +88,9 @@ function StockManagement() {
   }, []);
 
   const updateProductStock = async (productId, quantity, type) => {
+    const optimisticProduct = productsList.find((p) => p.id === productId);
+    if (!optimisticProduct) return;
+
     setProductsList((prev) =>
       prev.map((p) => {
         if (p.id !== productId) return p;
@@ -96,11 +100,20 @@ function StockManagement() {
     );
 
     try {
-      const product = productsList.find((p) => p.id === productId);
-      if (!product) return;
-      const delta = type === 'in' ? quantity : -quantity;
-      const updatedStock = Math.max(0, (product.stock || 0) + delta);
-      await productService.update(productId, { stock: updatedStock });
+      if (type === 'out') {
+        const success = await productService.decrementStock(productId, quantity);
+        if (!success) {
+          throw new Error('Stok tidak cukup untuk dikurangi');
+        }
+      } else {
+        const { data: currentProduct } = await supabase
+          .from('products')
+          .select('stock')
+          .eq('id', productId)
+          .single();
+        const updatedStock = Math.max(0, (currentProduct?.stock || 0) + quantity);
+        await productService.update(productId, { stock: updatedStock });
+      }
     } catch (error) {
       console.error('Failed to update product stock in database:', error);
       showToast('Gagal memperbarui stok produk di database', 'error');
