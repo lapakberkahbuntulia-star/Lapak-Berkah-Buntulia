@@ -52,6 +52,7 @@ function MitraDashboard({ role, user }) {
     return `${year}-${month}-${day}`;
   };
   const [mitraList, setMitraList] = useState([]);
+  const [allMitra, setAllMitra] = useState([]);
   const [products, setProducts] = useState([]);
   const [stockInputs, setStockInputs] = useState([]);
   const [stockHistory, setStockHistory] = useState([]);
@@ -78,9 +79,9 @@ function MitraDashboard({ role, user }) {
 
   const loggedInMitraId = useMemo(() => {
     if (!isMitra || !user?.email) return null;
-    const currentMitra = mitraList.find((m) => m.email === user.email);
+    const currentMitra = allMitra.find((m) => m.email === user.email);
     return currentMitra ? String(currentMitra.id) : null;
-  }, [isMitra, user?.email, mitraList]);
+  }, [isMitra, user?.email, allMitra]);
 
   useEffect(() => {
     if (isMitra && loggedInMitraId) {
@@ -106,11 +107,12 @@ function MitraDashboard({ role, user }) {
   const [mitraSearch, setMitraSearch] = useState('');
   const [mitraPage, setMitraPage] = useState(1);
   const [mitraPerPage] = useState(10);
+  const [totalMitra, setTotalMitra] = useState(0);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [mitraData, productData, pendingStockData, stockHistoryData, txData] = await Promise.all([
+      const [allMitraData, productData, pendingStockData, stockHistoryData, txData] = await Promise.all([
         mitraService.getAll(),
         productService.getAll(),
         pendingStockValidationService.getAll(),
@@ -118,7 +120,7 @@ function MitraDashboard({ role, user }) {
         transactionService.getHistory(),
       ]);
 
-      const mappedMitra = (mitraData || []).map((m) => ({
+      const mappedMitra = (allMitraData || []).map((m) => ({
         id: m.id,
         fullName: m.full_name,
         address: m.address,
@@ -152,7 +154,7 @@ function MitraDashboard({ role, user }) {
         quantity: s.quantity,
         note: s.note || '',
         status: s.status,
-        mitraName: (mitraData || []).find((m) => m.id === s.mitra_id)?.full_name || (s.mitra?.full_name) || '-',
+        mitraName: (allMitraData || []).find((m) => m.id === s.mitra_id)?.full_name || (s.mitra?.full_name) || '-',
         productName: (productData || []).find((p) => p.id === s.product_id)?.nama_produk || (s.product?.nama_produk) || '-',
       }));
 
@@ -164,7 +166,7 @@ function MitraDashboard({ role, user }) {
         quantity: s.quantity,
         note: s.note || '',
         status: s.status,
-        mitraName: (mitraData || []).find((m) => m.id === s.mitra_id)?.full_name || (s.mitra?.full_name) || '-',
+        mitraName: (allMitraData || []).find((m) => m.id === s.mitra_id)?.full_name || (s.mitra?.full_name) || '-',
         productName: (productData || []).find((p) => p.id === s.product_id)?.nama_produk || (s.product?.nama_produk) || '-',
         currentStock: (productData || []).find((p) => p.id === s.product_id)?.stock || 0,
       }));
@@ -177,7 +179,9 @@ function MitraDashboard({ role, user }) {
         items: tx.items || [],
       }));
 
+      setAllMitra(mappedMitra);
       setMitraList(mappedMitra);
+      setTotalMitra(mappedMitra.length);
       setProducts(mappedProducts);
       setStockInputs(mappedPendingStock);
       setStockHistory(mappedStockHistory);
@@ -189,14 +193,47 @@ function MitraDashboard({ role, user }) {
     }
   };
 
+  const loadMitraPage = async () => {
+    const result = await mitraService.getAll({
+      search: mitraSearch || undefined,
+      limit: mitraPerPage,
+      offset: (mitraPage - 1) * mitraPerPage,
+    });
+
+    const mapped = (result.data || []).map((m) => ({
+      id: m.id,
+      fullName: m.full_name,
+      address: m.address,
+      phone: m.phone,
+      email: m.email,
+      gender: m.gender,
+      photo: m.photo,
+      status: m.status,
+      totalTransaction: m.total_transaction || 0,
+      totalOmzet: m.total_omzet || 0,
+    }));
+
+    setMitraList(mapped);
+    setTotalMitra(result.count || 0);
+  };
+
   useEffect(() => {
     loadData();
+    loadMitraPage();
   }, []);
 
-  const totalMitra = mitraList.length;
-  const activeMitra = mitraList.filter((m) => m.status === 'Aktif').length;
-  const totalTransaction = mitraList.reduce((sum, m) => sum + (m.totalTransaction || 0), 0);
-  const totalOmzet = mitraList.reduce((sum, m) => sum + (m.totalOmzet || 0), 0);
+  useEffect(() => {
+    setMitraPage(1);
+    loadMitraPage();
+  }, [mitraSearch]);
+
+  useEffect(() => {
+    loadMitraPage();
+  }, [mitraPage]);
+
+  const activeMitra = allMitra.filter((m) => m.status === 'Aktif').length;
+  const totalTransaction = allMitra.reduce((sum, m) => sum + (m.totalTransaction || 0), 0);
+  const totalOmzet = allMitra.reduce((sum, m) => sum + (m.totalOmzet || 0), 0);
 
   const today = getLocalDate(new Date());
   const mitraIdNum = selectedMitra;
@@ -226,17 +263,6 @@ function MitraDashboard({ role, user }) {
     }
     return todayStock;
   }, [isMitra, loggedInMitraId, selectedMitra, todayStock]);
-
-  const filteredMitra = useMemo(() => mitraList.filter((mitra) =>
-    mitra.fullName.toLowerCase().includes(mitraSearch.toLowerCase()) ||
-    mitra.email.toLowerCase().includes(mitraSearch.toLowerCase()) ||
-    mitra.phone.includes(mitraSearch)
-  ), [mitraList, mitraSearch]);
-
-  const paginatedMitra = useMemo(() => {
-    const start = (mitraPage - 1) * mitraPerPage;
-    return filteredMitra.slice(start, start + mitraPerPage);
-  }, [filteredMitra, mitraPage, mitraPerPage]);
 
   useEffect(() => {
     setMitraPage(1);
@@ -328,6 +354,21 @@ function MitraDashboard({ role, user }) {
 
       setMitraList([
         ...mitraList,
+        {
+          id: newMitra.id,
+          fullName: newMitra.full_name,
+          address: newMitra.address,
+          phone: newMitra.phone,
+          email: newMitra.email,
+          gender: newMitra.gender,
+          photo: newMitra.photo,
+          status: newMitra.status,
+          totalTransaction: newMitra.total_transaction || 0,
+          totalOmzet: newMitra.total_omzet || 0,
+        },
+      ]);
+      setAllMitra([
+        ...allMitra,
         {
           id: newMitra.id,
           fullName: newMitra.full_name,
@@ -477,6 +518,7 @@ function MitraDashboard({ role, user }) {
     try {
       await mitraService.update(editingMitra, { full_name: editMitraName });
       setMitraList((prev) => prev.map((m) => (m.id === editingMitra ? { ...m, fullName: editMitraName } : m)));
+      setAllMitra((prev) => prev.map((m) => (m.id === editingMitra ? { ...m, fullName: editMitraName } : m)));
       setEditingMitra(null);
       setEditMitraName('');
       setToast({ message: 'Mitra berhasil diperbarui!', type: 'success' });
@@ -495,6 +537,7 @@ function MitraDashboard({ role, user }) {
     try {
       await mitraService.delete(mitraId);
       setMitraList((prev) => prev.filter((m) => m.id !== mitraId));
+      setAllMitra((prev) => prev.filter((m) => m.id !== mitraId));
       setToast({ message: 'Mitra berhasil dihapus!', type: 'success' });
     } catch (_error) {
       setToast({ message: 'Gagal menghapus mitra', type: 'error' });
@@ -913,15 +956,15 @@ function MitraDashboard({ role, user }) {
                         </tr>
                       </thead>
                       <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
-                        {filteredMitra.length === 0 ? (
+                        {mitraList.length === 0 ? (
                           <tr>
                             <td colSpan={6} className="px-6 py-12 text-center">
                               <span className="material-symbols-outlined text-6xl text-outline mb-3">person_off</span>
                               <p className="font-body-md text-body-md text-on-surface-variant">Tidak ada mitra yang ditemukan</p>
                             </td>
                           </tr>
-                          ) : (
-                            paginatedMitra.map((mitra, idx) => (
+                           ) : (
+                             mitraList.map((mitra, idx) => (
                             <tr key={mitra.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
                               <td className="px-6 py-4">
                                 {editingMitra === mitra.id ? (
@@ -957,7 +1000,7 @@ function MitraDashboard({ role, user }) {
                                       <span className="font-body-sm text-body-sm">{mitra.email}</span>
                   </div>
                   <Pagination
-                    totalItems={filteredMitra.length}
+                    totalItems={totalMitra}
                     itemsPerPage={mitraPerPage}
                     currentPage={mitraPage}
                     onPageChange={setMitraPage}

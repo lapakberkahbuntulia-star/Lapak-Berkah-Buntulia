@@ -250,11 +250,15 @@ export const productTypeService = {
 };
 
 export const mitraService = {
-  async getAll({ limit, offset } = {}) {
+  async getAll({ limit, offset, search } = {}) {
     let query = supabase
       .from('mitra')
       .select('*')
       .order('full_name');
+
+    if (search) {
+      query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
+    }
 
     if (limit !== undefined) {
       query = query.limit(limit);
@@ -268,10 +272,15 @@ export const mitraService = {
     if (error) throw error;
 
     if (limit !== undefined) {
-      const { count } = await supabase
+      let countQuery = supabase
         .from('mitra')
         .select('*', { count: 'exact', head: true });
 
+      if (search) {
+        countQuery = countQuery.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
+      }
+
+      const { count } = await countQuery;
       return { data: data || [], count: count || 0 };
     }
 

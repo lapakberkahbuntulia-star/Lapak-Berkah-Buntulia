@@ -17,6 +17,8 @@ function TransactionHistory() {
   const [toast, setToast] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
+  const [totalTransactions, setTotalTransactions] = useState(0);
+  const [totalOmzet, setTotalOmzet] = useState(0);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -27,13 +29,24 @@ function TransactionHistory() {
     loadTransactions();
   }, []);
 
+  useEffect(() => {
+    loadTransactions();
+  }, [currentPage, startDate, endDate, selectedPayment]);
+
   const loadTransactions = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await transactionService.getHistory();
+      const result = await transactionService.getHistory(
+        {
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+          paymentMethod: selectedPayment !== 'Semua' ? selectedPayment : undefined,
+        },
+        { limit: itemsPerPage, offset: (currentPage - 1) * itemsPerPage }
+      );
 
-      const mapped = data.map((tx) => {
+      const mapped = result.data.map((tx) => {
         const txId = tx.transaction_id || `TX-${String(tx.id).padStart(3, '0')}`;
         const rawDate = tx.created_at || '';
         const formattedDate = rawDate
@@ -57,32 +70,14 @@ function TransactionHistory() {
       });
 
       setHistory(mapped);
+      setTotalTransactions(result.count || 0);
+      setTotalOmzet(mapped.reduce((sum, h) => sum + h.total, 0));
     } catch (err) {
       setError(err.message || 'Gagal memuat riwayat transaksi');
     } finally {
       setLoading(false);
     }
   };
-
-  const filteredHistory = useMemo(() => history.filter((h) => {
-    const matchesSearch = h.transactionId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      h.mitraName.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesDate = (!startDate || h.date >= startDate) && (!endDate || h.date >= endDate + ' 23:59');
-    const matchesPayment = selectedPayment === 'Semua' || h.paymentMethod === selectedPayment;
-    return matchesSearch && matchesDate && matchesPayment;
-  }), [history, searchQuery, startDate, endDate, selectedPayment]);
-
-  const totalTransactions = useMemo(() => filteredHistory.length, [filteredHistory]);
-  const totalOmzet = useMemo(() => filteredHistory.reduce((sum, h) => sum + (h.total || 0), 0), [filteredHistory]);
-
-  const paginatedHistory = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredHistory.slice(start, start + itemsPerPage);
-  }, [filteredHistory, currentPage, itemsPerPage]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, startDate, endDate, selectedPayment]);
 
   const printReceipt = (transaction) => {
     const receiptWindow = window.open('', '_blank', 'width=320,height=600');
@@ -291,7 +286,7 @@ function TransactionHistory() {
               </div>
               <div>
                 <p className="font-label-md text-label-md text-on-surface-variant mb-1">Total Item</p>
-                <p className="font-display-lg text-display-lg text-on-background tracking-tight">{filteredHistory.reduce((sum, h) => sum + h.items, 0)}</p>
+                <p className="font-display-lg text-display-lg text-on-background tracking-tight">{history.reduce((sum, h) => sum + h.items, 0)}</p>
               </div>
             </div>
 
@@ -376,10 +371,10 @@ function TransactionHistory() {
           <div className="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
             <div className="p-6 border-b border-outline-variant bg-surface">
               <h3 className="font-headline-sm text-headline-sm text-on-background">Daftar Transaksi</h3>
-              <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Menampilkan {filteredHistory.length} transaksi</p>
+               <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Menampilkan {totalTransactions} transaksi</p>
             </div>
 
-            {filteredHistory.length === 0 ? (
+             {history.length === 0 ? (
               <div className="p-12 text-center">
                 <span className="material-symbols-outlined text-6xl text-outline mb-3">receipt_long</span>
                 <p className="font-body-md text-body-md text-on-surface-variant">Tidak ada transaksi yang ditemukan</p>
@@ -400,7 +395,7 @@ function TransactionHistory() {
                     </tr>
                   </thead>
                   <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
-                    {paginatedHistory.map((h, idx) => (
+                    {history.map((h, idx) => (
                       <tr key={h.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
                         <td className="px-6 py-4">
                           <span className="font-mono text-sm bg-surface-container px-2 py-1 rounded-md text-on-surface-variant">#{h.transactionId}</span>

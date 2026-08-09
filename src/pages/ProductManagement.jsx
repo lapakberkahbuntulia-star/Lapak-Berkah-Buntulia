@@ -30,59 +30,60 @@ function ProductManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
   const [loading, setLoading] = useState(true);
+  const [totalFilteredProducts, setTotalFilteredProducts] = useState(0);
 
   useEffect(() => {
-    loadData();
+    loadProducts();
+    loadCategories();
+    loadTypes();
+    loadMitra();
   }, []);
 
-  const loadData = async () => {
+  useEffect(() => {
+    setCurrentPage(1);
+    loadProducts();
+  }, [searchQuery, selectedCategory]);
+
+  const loadProducts = async () => {
     try {
-      const [productsData, categoriesData, typesData, mitraData] = await Promise.all([
-        productService.getAll(),
-        categoryService.getAll(),
-        productTypeService.getAll(),
-        mitraService.getAll(),
-      ]);
-      setProducts(productsData);
-      setCategories(categoriesData);
-      setTypes(typesData);
-      setMitraList(mitraData);
+      const categoryId = selectedCategory !== 'Semua' ? categories.find(c => c.name === selectedCategory)?.id : undefined;
+      const result = await productService.getAll(
+        { categoryId, search: searchQuery || undefined },
+        { limit: itemsPerPage, offset: (currentPage - 1) * itemsPerPage }
+      );
+      setProducts(result.data);
+      setTotalFilteredProducts(result.count || 0);
     } catch (_error) {
-      showToast('Gagal memuat data', 'error');
-    } finally {
-      setLoading(false);
+      showToast('Gagal memuat produk', 'error');
     }
   };
 
-  const totalProducts = useMemo(() => products.length, [products]);
-  const activeCategories = useMemo(() => categories.filter(c => c.name && c.name !== 'Semua').length, [categories]);
-  const lowStock = useMemo(() => products.filter(p => p.stock > 0 && p.stock <= 10).length, [products]);
-  const outOfStock = useMemo(() => products.filter(p => p.stock === 0).length, [products]);
+  const loadCategories = async () => {
+    try {
+      const data = await categoryService.getAll();
+      setCategories(data);
+    } catch (_error) {
+      showToast('Gagal memuat kategori', 'error');
+    }
+  };
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const matchesSearch = product.nama_produk.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (product.barcode_id && product.barcode_id.toLowerCase().includes(searchQuery.toLowerCase()));
-      const matchesCategory = selectedCategory === 'Semua' || product.category?.name === selectedCategory;
-      return matchesSearch && matchesCategory;
-    });
-  }, [products, searchQuery, selectedCategory]);
+  const loadTypes = async () => {
+    try {
+      const data = await productTypeService.getAll();
+      setTypes(data);
+    } catch (_error) {
+      showToast('Gagal memuat jenis produk', 'error');
+    }
+  };
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, selectedCategory]);
-
-  const paginatedProducts = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredProducts.slice(start, start + itemsPerPage);
-  }, [filteredProducts, currentPage, itemsPerPage]);
-
-  const totalFilteredProducts = filteredProducts.length;
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, selectedCategory]);
+  const loadMitra = async () => {
+    try {
+      const data = await mitraService.getAll();
+      setMitraList(data);
+    } catch (_error) {
+      showToast('Gagal memuat data mitra', 'error');
+    }
+  };
 
   const getStatusBadge = (product) => {
     if (product.stock === 0) {
@@ -164,7 +165,10 @@ function ProductManagement() {
       });
       setShowForm(false);
       setEditingProduct(null);
-      await loadData();
+      await loadProducts();
+      await loadCategories();
+      await loadTypes();
+      await loadMitra();
     } catch (_error) {
       const detail = [error?.message, error?.details, error?.hint, error?.code].filter(Boolean).join(' | ') || 'Terjadi kesalahan saat menyimpan produk';
       showToast('Gagal menyimpan produk: ' + detail, 'error');
@@ -195,6 +199,7 @@ function ProductManagement() {
     try {
       await productService.delete(id);
       setProducts(products.filter(p => p.id !== id));
+      await loadProducts();
       showToast('Produk berhasil dihapus!', 'success');
     } catch (_error) {
       showToast('Gagal menghapus produk', 'error');
@@ -679,16 +684,16 @@ function ProductManagement() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-outline-variant/50 text-sm">
-                    {filteredProducts.length === 0 ? (
+                     {products.length === 0 ? (
                       <tr>
                         <td colSpan="10" className="text-center py-8 text-on-surface-variant">
                           Tidak ada produk yang ditemukan.
                         </td>
                       </tr>
-                      ) : (
-                        paginatedProducts.map((product) => {
-                        const badge = getStatusBadge(product);
-                        return (
+                        ) : (
+                         products.map((product) => {
+                           const badge = getStatusBadge(product);
+                           return (
                           <tr key={product.id} className="hover:bg-surface-container-low/50 transition-colors">
                             <td className="py-3 px-4 flex items-center gap-3">
                               <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center overflow-hidden border border-outline-variant">

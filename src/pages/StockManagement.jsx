@@ -27,24 +27,19 @@ function StockManagement() {
   const [validationPage, setValidationPage] = useState(1);
   const [movementsPerPage] = useState(20);
   const [validationsPerPage] = useState(20);
+  const [totalMovements, setTotalMovements] = useState(0);
+  const [totalValidations, setTotalValidations] = useState(0);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  const loadData = async () => {
+  const loadProducts = async () => {
     try {
-      setLoading(true);
-      const [productsData, movementsData, validationsData, mitraData] = await Promise.all([
-        productService.getAll(),
-        stockMovementService.getAll(),
-        pendingStockValidationService.getAll(),
-        mitraService.getAll(),
-      ]);
-
+      const data = await productService.getAll();
       setProductsList(
-        productsData.map((p) => ({
+        data.map((p) => ({
           id: p.id,
           name: p.nama_produk,
           sku: p.sku,
@@ -56,9 +51,34 @@ function StockManagement() {
           unit: p.unit,
         })),
       );
+    } catch (_error) {
+      showToast('Gagal memuat produk', 'error');
+    }
+  };
+
+  const loadMitra = async () => {
+    try {
+      const data = await mitraService.getAll();
+      setMitraList(data);
+    } catch (_error) {
+      showToast('Gagal memuat data mitra', 'error');
+    }
+  };
+
+  const loadMovements = async () => {
+    try {
+      const result = await stockMovementService.getAll(
+        {
+          type: filterType !== 'Semua' ? filterType : undefined,
+          productId: filterProduct !== 'Semua' ? filterProduct : undefined,
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+        },
+        { limit: movementsPerPage, offset: (movementPage - 1) * movementsPerPage }
+      );
 
       setStockMovements(
-        movementsData.map((m) => ({
+        result.data.map((m) => ({
           id: m.id,
           type: m.type,
           productId: m.product_id,
@@ -69,9 +89,25 @@ function StockManagement() {
           mitraName: m.mitra?.full_name,
         })),
       );
+      setTotalMovements(result.count || 0);
+    } catch (_error) {
+      showToast('Gagal memuat transaksi stok', 'error');
+    }
+  };
+
+  const loadValidations = async () => {
+    try {
+      const result = await pendingStockValidationService.getAll(
+        {
+          mitraId: valMitra !== 'Semua' ? valMitra : undefined,
+          startDate: valStartDate || undefined,
+          endDate: valEndDate || undefined,
+        },
+        { limit: validationsPerPage, offset: (validationPage - 1) * validationsPerPage }
+      );
 
       setPendingValidations(
-        validationsData.map((v) => ({
+        result.data.map((v) => ({
           id: v.id,
           mitraName: v.mitra?.full_name,
           mitraId: v.mitra_id,
@@ -82,16 +118,36 @@ function StockManagement() {
           note: v.note,
         })),
       );
+      setTotalValidations(result.count || 0);
     } catch (_error) {
-      showToast('Gagal memuat data stok', 'error');
-    } finally {
-      setLoading(false);
+      showToast('Gagal memuat validasi stok', 'error');
     }
   };
 
   useEffect(() => {
-    loadData();
+    loadProducts();
+    loadMitra();
+    loadMovements();
+    loadValidations();
   }, []);
+
+  useEffect(() => {
+    setMovementPage(1);
+    loadMovements();
+  }, [filterType, filterProduct, startDate, endDate]);
+
+  useEffect(() => {
+    setValidationPage(1);
+    loadValidations();
+  }, [valMitra, valStartDate, valEndDate]);
+
+  useEffect(() => {
+    loadMovements();
+  }, [movementPage]);
+
+  useEffect(() => {
+    loadValidations();
+  }, [validationPage]);
 
   const updateProductStock = async (productId, quantity, type) => {
     if (type === 'out') {
@@ -128,7 +184,9 @@ function StockManagement() {
       setFormData({ type: 'in', productId: '', quantity: '', note: '' });
       setShowForm(false);
       showToast('Transaksi stok berhasil disimpan!', 'success');
-      await loadData();
+      await loadProducts();
+      await loadMovements();
+      await loadValidations();
     } catch (_error) {
       showToast('Gagal menyimpan transaksi stok', 'error');
     }
@@ -154,36 +212,15 @@ function StockManagement() {
 
       await updateProductStock(validation.productId, validation.quantity, 'in');
       showToast('Stok berhasil divalidasi!', 'success');
-      await loadData();
+      await loadProducts();
+      await loadMovements();
+      await loadValidations();
     } catch (_error) {
       showToast('Gagal memvalidasi stok', 'error');
     }
   };
 
-  const filteredMovements = useMemo(() => stockMovements.filter((m) => {
-    const matchesType = filterType === 'Semua' || m.type === filterType;
-    const matchesProduct = filterProduct === 'Semua' || m.productId === Number(filterProduct);
-    const matchesDate = (!startDate || m.date >= startDate) && (!endDate || m.date <= endDate);
-    return matchesType && matchesProduct && matchesDate;
-  }), [stockMovements, filterType, filterProduct, startDate, endDate]);
-
-  const filteredPendingValidations = useMemo(() => pendingValidations.filter((v) => {
-    const matchesMitra = valMitra === 'Semua' || v.mitraName === valMitra;
-    const matchesDate = (!valStartDate || v.date >= valStartDate) && (!valEndDate || v.date <= valEndDate);
-    return matchesMitra && matchesDate;
-  }), [pendingValidations, valMitra, valStartDate, valEndDate]);
-
   const mitraNames = useMemo(() => ['Semua', ...new Set(pendingValidations.map((v) => v.mitraName))], [pendingValidations]);
-
-  const paginatedMovements = useMemo(() => {
-    const start = (movementPage - 1) * movementsPerPage;
-    return filteredMovements.slice(start, start + movementsPerPage);
-  }, [filteredMovements, movementPage, movementsPerPage]);
-
-  const paginatedValidations = useMemo(() => {
-    const start = (validationPage - 1) * validationsPerPage;
-    return filteredPendingValidations.slice(start, start + validationsPerPage);
-  }, [filteredPendingValidations, validationPage, validationsPerPage]);
 
   useEffect(() => {
     setMovementPage(1);
@@ -293,7 +330,7 @@ function StockManagement() {
                 </div>
               </div>
 
-              {filteredPendingValidations.length === 0 ? (
+              {pendingValidations.length === 0 ? (
                 <div className="p-8 text-center">
                   <span className="material-symbols-outlined text-5xl text-outline mb-2">check_circle</span>
                   <p className="font-body-md text-body-md text-on-surface-variant">Tidak ada stok yang menunggu validasi</p>
@@ -312,7 +349,7 @@ function StockManagement() {
                       </tr>
                     </thead>
                     <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
-                      {paginatedValidations.map((validation, idx) => {
+                      {pendingValidations.map((validation, idx) => {
                         const product = productsList.find((p) => p.id === validation.productId);
                         return (
                           <tr key={validation.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
@@ -348,7 +385,7 @@ function StockManagement() {
                 </div>
               )}
               <Pagination
-                totalItems={filteredPendingValidations.length}
+                totalItems={totalValidations}
                 itemsPerPage={validationsPerPage}
                 currentPage={validationPage}
                 onPageChange={setValidationPage}
@@ -530,10 +567,10 @@ function StockManagement() {
           <div className="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
             <div className="p-6 border-b border-outline-variant bg-surface">
               <h3 className="font-headline-sm text-headline-sm text-on-background">Riwayat Transaksi Stok</h3>
-              <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Menampilkan {filteredMovements.length} transaksi</p>
+              <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Menampilkan {totalMovements} transaksi</p>
             </div>
 
-            {filteredMovements.length === 0 ? (
+            {stockMovements.length === 0 ? (
               <div className="p-12 text-center">
                 <span className="material-symbols-outlined text-6xl text-outline mb-3">inventory_2</span>
                 <p className="font-body-md text-body-md text-on-surface-variant">Tidak ada transaksi stok</p>
@@ -552,7 +589,7 @@ function StockManagement() {
                     </tr>
                   </thead>
                   <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
-                    {paginatedMovements.map((movement, idx) => {
+                    {stockMovements.map((movement, idx) => {
                       const product = productsList.find((p) => p.id === movement.productId);
                       return (
                         <tr
@@ -597,7 +634,7 @@ function StockManagement() {
               </div>
             )}
             <Pagination
-              totalItems={filteredMovements.length}
+              totalItems={totalMovements}
               itemsPerPage={movementsPerPage}
               currentPage={movementPage}
               onPageChange={setMovementPage}
