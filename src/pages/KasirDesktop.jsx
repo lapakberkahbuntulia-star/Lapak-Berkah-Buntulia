@@ -22,7 +22,6 @@ function KasirDesktop() {
   const [selectedCategory, setSelectedCategory] = useState('Semua');
   const [barcode, setBarcode] = useState('');
   const [flash, setFlash] = useState(null);
-  const [checkingOut, setCheckingOut] = useState(false);
   const barcodeRef = useRef(null);
 
   const loadProducts = async () => {
@@ -216,6 +215,7 @@ function KasirDesktopCart({ user }) {
   const [paymentMethod, setPaymentMethod] = useState('Tunai');
   const [toast, setToast] = useState(null);
   const [_completedTransactions, setCompletedTransactions] = useState([]);
+  const [checkingOut, setCheckingOut] = useState(false);
 
   const activeTransaction = transactions.find((t) => t.id === activeTransactionId) || transactions[0];
 
