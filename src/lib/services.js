@@ -35,8 +35,8 @@ export const userService = {
 };
 
 export const productService = {
-  async getAll() {
-    const { data, error } = await supabase
+  async getAll(filters = {}, { limit, offset } = {}) {
+    let query = supabase
       .from('products')
       .select(`
         *,
@@ -46,9 +46,38 @@ export const productService = {
       `)
       .order('created_at', { ascending: false });
 
+    if (filters.categoryId) query = query.eq('category_id', filters.categoryId);
+    if (filters.search) {
+      query = query.or(`nama_produk.ilike.%${filters.search}%,sku.ilike.%${filters.search}%,barcode_id.ilike.%${filters.search}%`);
+    }
+
+    if (limit !== undefined) {
+      query = query.limit(limit);
+      if (offset !== undefined) {
+        query = query.range(offset, offset + limit - 1);
+      }
+    }
+
+    const { data, error } = await query;
+
     if (error) {
       throw error;
     }
+
+    if (limit !== undefined) {
+      let countQuery = supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true });
+
+      if (filters.categoryId) countQuery = countQuery.eq('category_id', filters.categoryId);
+      if (filters.search) {
+        countQuery = countQuery.or(`nama_produk.ilike.%${filters.search}%,sku.ilike.%${filters.search}%,barcode_id.ilike.%${filters.search}%`);
+      }
+
+      const { count } = await countQuery;
+      return { data: data || [], count: count || 0 };
+    }
+
     return data || [];
   },
 
@@ -188,13 +217,31 @@ export const productTypeService = {
 };
 
 export const mitraService = {
-  async getAll() {
-    const { data, error } = await supabase
+  async getAll({ limit, offset } = {}) {
+    let query = supabase
       .from('mitra')
       .select('*')
       .order('full_name');
 
+    if (limit !== undefined) {
+      query = query.limit(limit);
+      if (offset !== undefined) {
+        query = query.range(offset, offset + limit - 1);
+      }
+    }
+
+    const { data, error } = await query;
+
     if (error) throw error;
+
+    if (limit !== undefined) {
+      const { count } = await supabase
+        .from('mitra')
+        .select('*', { count: 'exact', head: true });
+
+      return { data: data || [], count: count || 0 };
+    }
+
     return data || [];
   },
 
@@ -254,7 +301,7 @@ export const transactionService = {
     return data;
   },
 
-  async getHistory(filters = {}) {
+  async getHistory(filters = {}, { limit, offset } = {}) {
     let query = supabase
       .from('transactions')
       .select(`
@@ -272,9 +319,31 @@ export const transactionService = {
     if (filters.mitraId) query = query.eq('mitra_id', filters.mitraId);
     if (filters.paymentMethod) query = query.eq('metode_pembayaran', filters.paymentMethod);
 
+    if (limit !== undefined) {
+      query = query.limit(limit);
+      if (offset !== undefined) {
+        query = query.range(offset, offset + limit - 1);
+      }
+    }
+
     const { data, error } = await query;
 
     if (error) throw error;
+
+    if (limit !== undefined) {
+      let countQuery = supabase
+        .from('transactions')
+        .select('*', { count: 'exact', head: true });
+
+      if (filters.startDate) countQuery = countQuery.gte('created_at', filters.startDate);
+      if (filters.endDate) countQuery = countQuery.lte('created_at', filters.endDate + 'T23:59:59');
+      if (filters.mitraId) countQuery = countQuery.eq('mitra_id', filters.mitraId);
+      if (filters.paymentMethod) countQuery = countQuery.eq('metode_pembayaran', filters.paymentMethod);
+
+      const { count } = await countQuery;
+      return { data: data || [], count: count || 0 };
+    }
+
     return data || [];
   },
 
@@ -361,7 +430,7 @@ export const stockMovementService = {
     return data;
   },
 
-  async getAll(filters = {}) {
+  async getAll(filters = {}, { limit, offset } = {}) {
     let query = supabase
       .from('stock_movements')
       .select('id, product_id, type, quantity, note, mitra_id, created_at, product:product_id (nama_produk, unit), mitra:mitra_id (full_name)')
@@ -373,11 +442,34 @@ export const stockMovementService = {
     if (filters.startDate) query = query.gte('created_at', filters.startDate);
     if (filters.endDate) query = query.lte('created_at', filters.endDate + 'T23:59:59');
 
+    if (limit !== undefined) {
+      query = query.limit(limit);
+      if (offset !== undefined) {
+        query = query.range(offset, offset + limit - 1);
+      }
+    }
+
     const { data, error } = await query;
 
     if (error) {
       throw error;
     }
+
+    if (limit !== undefined) {
+      let countQuery = supabase
+        .from('stock_movements')
+        .select('*', { count: 'exact', head: true });
+
+      if (filters.type) countQuery = countQuery.eq('type', filters.type);
+      if (filters.productId) countQuery = countQuery.eq('product_id', filters.productId);
+      if (filters.mitraId) countQuery = countQuery.eq('mitra_id', filters.mitraId);
+      if (filters.startDate) countQuery = countQuery.gte('created_at', filters.startDate);
+      if (filters.endDate) countQuery = countQuery.lte('created_at', filters.endDate + 'T23:59:59');
+
+      const { count } = await countQuery;
+      return { data: data || [], count: count || 0 };
+    }
+
     return data || [];
   },
 };
@@ -394,7 +486,7 @@ export const pendingStockValidationService = {
     return data;
   },
 
-  async getAll(filters = {}) {
+  async getAll(filters = {}, { limit, offset } = {}) {
     let query = supabase
       .from('pending_stock_validations')
       .select(`
@@ -409,13 +501,35 @@ export const pendingStockValidationService = {
     if (filters.startDate) query = query.gte('date', filters.startDate);
     if (filters.endDate) query = query.lte('date', filters.endDate);
 
+    if (limit !== undefined) {
+      query = query.limit(limit);
+      if (offset !== undefined) {
+        query = query.range(offset, offset + limit - 1);
+      }
+    }
+
     const { data, error } = await query;
 
     if (error) throw error;
+
+    if (limit !== undefined) {
+      let countQuery = supabase
+        .from('pending_stock_validations')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending');
+
+      if (filters.mitraId) countQuery = countQuery.eq('mitra_id', filters.mitraId);
+      if (filters.startDate) countQuery = countQuery.gte('date', filters.startDate);
+      if (filters.endDate) countQuery = countQuery.lte('date', filters.endDate);
+
+      const { count } = await countQuery;
+      return { data: data || [], count: count || 0 };
+    }
+
     return data || [];
   },
 
-  async getAllHistory(filters = {}) {
+  async getAllHistory(filters = {}, { limit, offset } = {}) {
     let query = supabase
       .from('pending_stock_validations')
       .select(`
@@ -430,9 +544,31 @@ export const pendingStockValidationService = {
     if (filters.endDate) query = query.lte('date', filters.endDate);
     if (filters.status) query = query.eq('status', filters.status);
 
+    if (limit !== undefined) {
+      query = query.limit(limit);
+      if (offset !== undefined) {
+        query = query.range(offset, offset + limit - 1);
+      }
+    }
+
     const { data, error } = await query;
 
     if (error) throw error;
+
+    if (limit !== undefined) {
+      let countQuery = supabase
+        .from('pending_stock_validations')
+        .select('*', { count: 'exact', head: true });
+
+      if (filters.mitraId) countQuery = countQuery.eq('mitra_id', filters.mitraId);
+      if (filters.startDate) countQuery = countQuery.gte('date', filters.startDate);
+      if (filters.endDate) countQuery = countQuery.lte('date', filters.endDate);
+      if (filters.status) countQuery = countQuery.eq('status', filters.status);
+
+      const { count } = await countQuery;
+      return { data: data || [], count: count || 0 };
+    }
+
     return data || [];
   },
 
