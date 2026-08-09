@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { transactionService, returnService, productService, stockMovementService } from '../lib/services';
 
 function TransactionHistory() {
@@ -61,16 +61,16 @@ function TransactionHistory() {
     }
   };
 
-  const filteredHistory = history.filter((h) => {
+  const filteredHistory = useMemo(() => history.filter((h) => {
     const matchesSearch = h.transactionId.toLowerCase().includes(searchQuery.toLowerCase()) ||
       h.mitraName.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesDate = (!startDate || h.date >= startDate) && (!endDate || h.date <= endDate + ' 23:59');
+    const matchesDate = (!startDate || h.date >= startDate) && (!endDate || h.date >= endDate + ' 23:59');
     const matchesPayment = selectedPayment === 'Semua' || h.paymentMethod === selectedPayment;
     return matchesSearch && matchesDate && matchesPayment;
-  });
+  }), [history, searchQuery, startDate, endDate, selectedPayment]);
 
-  const totalTransactions = filteredHistory.length;
-  const totalOmzet = filteredHistory.reduce((sum, h) => sum + (h.total || 0), 0);
+  const totalTransactions = useMemo(() => filteredHistory.length, [filteredHistory]);
+  const totalOmzet = useMemo(() => filteredHistory.reduce((sum, h) => sum + (h.total || 0), 0), [filteredHistory]);
 
   const printReceipt = (transaction) => {
     const receiptWindow = window.open('', '_blank', 'width=320,height=600');

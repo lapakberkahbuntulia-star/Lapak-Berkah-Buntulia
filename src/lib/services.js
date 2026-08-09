@@ -453,46 +453,48 @@ export const dashboardService = {
   async getTodayStats() {
     const today = new Date().toISOString().split('T')[0];
 
-    const { count: totalTransactions, error: txError } = await supabase
-      .from('transactions')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', today);
+    const [txCountResult, txDataResult, mitraCountResult] = await Promise.all([
+      supabase
+        .from('transactions')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', today),
+      supabase
+        .from('transactions')
+        .select('id, total')
+        .gte('created_at', today),
+      supabase
+        .from('mitra')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Aktif'),
+    ]);
 
-    if (txError) throw txError;
+    if (txCountResult.error) throw txCountResult.error;
+    if (txDataResult.error) throw txDataResult.error;
+    if (mitraCountResult.error) throw mitraCountResult.error;
 
-    const { data: transactions, error: txDataError } = await supabase
-      .from('transactions')
-      .select('id, total')
-      .gte('created_at', today);
+    const totalTransactions = txCountResult.count || 0;
+    const transactions = txDataResult.data || [];
+    const totalSales = transactions.reduce((sum, t) => sum + (t.total || 0), 0);
+    const activeMitra = mitraCountResult.count || 0;
 
-    if (txDataError) throw txDataError;
-
-    const totalSales = transactions?.reduce((sum, t) => sum + (t.total || 0), 0) || 0;
-
-    const transactionIds = transactions?.map(t => t.id) || [];
+    const transactionIds = transactions.map(t => t.id);
     let totalItems = 0;
 
     if (transactionIds.length > 0) {
-      const { count: itemCount } = await supabase
+      const { count: itemCount, error: itemError } = await supabase
         .from('transaction_items')
         .select('*', { count: 'exact', head: true })
         .in('transaction_id', transactionIds);
 
+      if (itemError) throw itemError;
       totalItems = itemCount || 0;
     }
 
-    const { count: activeMitra, error: mitraError } = await supabase
-      .from('mitra')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'Aktif');
-
-    if (mitraError) throw mitraError;
-
     return {
-      totalTransactions: totalTransactions || 0,
+      totalTransactions,
       totalSales,
       totalItems,
-      activeMitra: activeMitra || 0,
+      activeMitra,
     };
   },
 };

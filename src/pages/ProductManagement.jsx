@@ -65,10 +65,10 @@ function ProductManagement() {
     }
   };
 
-  const totalProducts = products.length;
-  const activeCategories = categories.filter(c => c.name && c.name !== 'Semua').length;
-  const lowStock = products.filter(p => p.stock > 0 && p.stock <= 10).length;
-  const outOfStock = products.filter(p => p.stock === 0).length;
+  const totalProducts = useMemo(() => products.length, [products]);
+  const activeCategories = useMemo(() => categories.filter(c => c.name && c.name !== 'Semua').length, [categories]);
+  const lowStock = useMemo(() => products.filter(p => p.stock > 0 && p.stock <= 10).length, [products]);
+  const outOfStock = useMemo(() => products.filter(p => p.stock === 0).length, [products]);
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {

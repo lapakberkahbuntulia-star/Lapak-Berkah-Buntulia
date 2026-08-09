@@ -197,13 +197,13 @@ function MitraDashboard({ role, user }) {
   const today = getLocalDate(new Date());
   const mitraIdNum = selectedMitra;
 
-  const todayTransactions = transactions.filter((tx) => {
+  const todayTransactions = useMemo(() => transactions.filter((tx) => {
     if (!isMitra) return tx.date === today;
     return tx.date === today && String(tx.mitraId) === mitraIdNum;
-  });
+  }), [transactions, isMitra, today, mitraIdNum]);
 
-  const todayOmzet = todayTransactions.reduce((sum, tx) => sum + tx.total, 0);
-  const todayTransactionCount = todayTransactions.length;
+  const todayOmzet = useMemo(() => todayTransactions.reduce((sum, tx) => sum + tx.total, 0), [todayTransactions]);
+  const todayTransactionCount = useMemo(() => todayTransactions.length, [todayTransactions]);
 
   const productMap = useMemo(() => {
     const map = new Map();
@@ -223,11 +223,11 @@ function MitraDashboard({ role, user }) {
     return todayStock;
   }, [isMitra, loggedInMitraId, selectedMitra, todayStock]);
 
-  const filteredMitra = mitraList.filter((mitra) =>
+  const filteredMitra = useMemo(() => mitraList.filter((mitra) =>
     mitra.fullName.toLowerCase().includes(mitraSearch.toLowerCase()) ||
     mitra.email.toLowerCase().includes(mitraSearch.toLowerCase()) ||
     mitra.phone.includes(mitraSearch)
-  );
+  ), [mitraList, mitraSearch]);
 
   const tabs = useMemo(() => {
     const base = [

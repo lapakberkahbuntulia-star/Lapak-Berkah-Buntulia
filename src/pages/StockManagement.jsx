@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import {
   productService,
@@ -194,20 +194,20 @@ function StockManagement() {
     }
   };
 
-  const filteredMovements = stockMovements.filter((m) => {
+  const filteredMovements = useMemo(() => stockMovements.filter((m) => {
     const matchesType = filterType === 'Semua' || m.type === filterType;
     const matchesProduct = filterProduct === 'Semua' || m.productId === Number(filterProduct);
     const matchesDate = (!startDate || m.date >= startDate) && (!endDate || m.date <= endDate);
     return matchesType && matchesProduct && matchesDate;
-  });
+  }), [stockMovements, filterType, filterProduct, startDate, endDate]);
 
-  const filteredPendingValidations = pendingValidations.filter((v) => {
+  const filteredPendingValidations = useMemo(() => pendingValidations.filter((v) => {
     const matchesMitra = valMitra === 'Semua' || v.mitraName === valMitra;
     const matchesDate = (!valStartDate || v.date >= valStartDate) && (!valEndDate || v.date <= valEndDate);
     return matchesMitra && matchesDate;
-  });
+  }), [pendingValidations, valMitra, valStartDate, valEndDate]);
 
-  const mitraNames = ['Semua', ...new Set(pendingValidations.map((v) => v.mitraName))];
+  const mitraNames = useMemo(() => ['Semua', ...new Set(pendingValidations.map((v) => v.mitraName))], [pendingValidations]);
 
   if (loading) {
     return (

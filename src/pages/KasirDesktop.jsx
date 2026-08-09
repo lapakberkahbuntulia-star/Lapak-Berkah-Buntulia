@@ -57,12 +57,18 @@ function KasirDesktop() {
   }, []);
 
   useEffect(() => {
-    const handler = async (e) => {
+    const handler = (e) => {
       const updatedProducts = e.detail?.products;
       if (Array.isArray(updatedProducts)) {
-        setProducts(updatedProducts);
+        setProducts((prev) => {
+          const map = new Map(prev.map((p) => [p.id, p]));
+          for (const p of updatedProducts) {
+            map.set(p.id, p);
+          }
+          return Array.from(map.values());
+        });
       } else {
-        await loadProducts();
+        loadProducts();
       }
     };
     window.addEventListener('kasir:stock-updated', handler);
@@ -320,7 +326,7 @@ function KasirDesktopCart({ user }) {
 
       await transactionItemService.createBatch(items);
 
-      for (const item of activeTransaction.items) {
+      const stockUpdates = activeTransaction.items.map(async (item) => {
         await stockMovementService.create({
           type: 'out',
           product_id: item.productId,
@@ -333,7 +339,9 @@ function KasirDesktopCart({ user }) {
         if (!success) {
           throw new Error(`Stok tidak cukup untuk ${item.name}`);
         }
-      }
+      });
+
+      await Promise.all(stockUpdates);
 
       if (mitraId) {
         try {
