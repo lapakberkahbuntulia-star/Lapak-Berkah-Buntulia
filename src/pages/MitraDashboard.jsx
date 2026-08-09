@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { mitraService, productService, pendingStockValidationService, stockMovementService, transactionService, userService } from '../lib/services';
 import Pagination from '../components/Pagination';
+import compressImage from '../utils/compressImage';
 
 function Toast({ message, type = 'success', onClose }) {
   useEffect(() => {
@@ -351,14 +352,21 @@ function MitraDashboard({ role, user }) {
     }
   };
 
-  const handlePhotoChange = (e) => {
+  const handlePhotoChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, photo: reader.result });
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressed = await compressImage(file, {
+          maxWidth: 400,
+          maxHeight: 400,
+          quality: 0.7,
+          mimeType: 'image/jpeg',
+        });
+        setFormData({ ...formData, photo: compressed.dataUrl });
+        showToast(`Foto berhasil dimuat (${compressed.sizeKB}KB)`, 'success');
+      } catch (_error) {
+        showToast('Gagal memproses foto', 'error');
+      }
     }
   };
 
@@ -851,7 +859,7 @@ function MitraDashboard({ role, user }) {
                             <div className="flex items-center gap-6">
                               <div className="w-20 h-20 rounded-full bg-surface-container overflow-hidden border-2 border-outline-variant flex items-center justify-center flex-shrink-0 shadow-sm">
                                 {formData.photo ? (
-                                  <img src={formData.photo} alt="Preview" className="w-full h-full object-cover" />
+                                   <img src={formData.photo} alt="Preview" width="80" height="80" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                                 ) : (
                                   <span className="material-symbols-outlined text-outline text-4xl">person</span>
                                 )}

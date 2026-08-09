@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { productService, categoryService, productTypeService, mitraService } from '../lib/services';
 import Pagination from '../components/Pagination';
+import compressImage from '../utils/compressImage';
 
 function ProductManagement() {
   const [products, setProducts] = useState([]);
@@ -215,14 +216,21 @@ function ProductManagement() {
     }
   };
 
-  const handlePhotoChange = (e) => {
+  const handlePhotoChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, photo: reader.result });
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressed = await compressImage(file, {
+          maxWidth: 400,
+          maxHeight: 400,
+          quality: 0.7,
+          mimeType: 'image/jpeg',
+        });
+        setFormData({ ...formData, photo: compressed.dataUrl });
+        showToast(`Gambar berhasil dimuat (${compressed.sizeKB}KB)`, 'success');
+      } catch (_error) {
+        showToast('Gagal memproses gambar', 'error');
+      }
     }
   };
 
@@ -789,7 +797,7 @@ function ProductManagement() {
                        <div className="flex items-center gap-4">
                          <div className="w-20 h-20 rounded-lg bg-surface-container border border-outline-variant overflow-hidden flex items-center justify-center">
                            {formData.photo ? (
-                             <img src={formData.photo} alt="Preview" className="w-full h-full object-cover" />
+                              <img src={formData.photo} alt="Preview" width="80" height="80" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                            ) : (
                              <span className="material-symbols-outlined text-outline text-3xl">image</span>
                            )}
@@ -892,7 +900,7 @@ function ProductManagement() {
                             <td className="py-3 px-4 flex items-center gap-3">
                               <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center overflow-hidden border border-outline-variant">
                                 {product.photo ? (
-                                  <img src={product.photo} alt={product.nama_produk} className="w-full h-full object-cover" />
+                                   <img src={product.photo} alt={product.nama_produk} width="40" height="40" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                                 ) : (
                                   <span className="material-symbols-outlined text-outline">image</span>
                                 )}

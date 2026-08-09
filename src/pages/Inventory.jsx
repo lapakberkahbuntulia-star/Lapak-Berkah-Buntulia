@@ -221,7 +221,7 @@ function Inventory() {
                                 <div className="flex items-center gap-4">
                                   <div className="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden border border-slate-200 flex-shrink-0 shadow-sm">
                                     {product.photo ? (
-                                      <img src={product.photo} alt={product.nama_produk} className="w-full h-full object-cover" />
+                                       <img src={product.photo} alt={product.nama_produk} width="48" height="48" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                                     ) : (
                                       <div className="w-full h-full flex items-center justify-center text-slate-400">
                                         <span className="material-symbols-outlined text-xl">image</span>

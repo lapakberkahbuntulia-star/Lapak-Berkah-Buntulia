@@ -157,7 +157,7 @@ function KasirDesktop() {
               >
                 <div className="aspect-square w-full rounded-lg bg-surface-container overflow-hidden relative">
                   {product.photo ? (
-                     <img className="w-full h-full object-cover" alt={product.name} src={product.photo} />
+                      <img className="w-full h-full object-cover" alt={product.name} width="80" height="80" loading="lazy" decoding="async" src={product.photo} />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <span className="material-symbols-outlined text-4xl text-outline">image</span>
