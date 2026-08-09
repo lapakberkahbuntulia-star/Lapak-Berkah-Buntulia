@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
-import { mitraSettlementService, mitraService, productService } from '../lib/services';
+import { mitraSettlementService, mitraService, productService, transactionService, stockMovementService } from '../lib/services';
 
 function MitraSettlement({ user }) {
   const [settlements, setSettlements] = useState([]);
   const [mitraList, setMitraList] = useState([]);
   const [products, setProducts] = useState([]);
+  const [soldQuantities, setSoldQuantities] = useState({});
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingSettlement, setEditingSettlement] = useState(null);
@@ -21,6 +22,47 @@ function MitraSettlement({ user }) {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (formData.mitra_id) {
+      calculateSoldQuantities(formData.mitra_id);
+    }
+  }, [formData.mitra_id]);
+
+  const calculateSoldQuantities = async (mitraId) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const { data: transactions } = await transactionService.getHistory({
+        startDate: today,
+        endDate: today,
+        mitraId,
+      });
+
+      const quantities = {};
+      transactions.forEach(tx => {
+        tx.items?.forEach(item => {
+          if (item.product_id) {
+            quantities[item.product_id] = (quantities[item.product_id] || 0) + item.quantity;
+          }
+        });
+      });
+
+      const { data: movements } = await stockMovementService.getAll({
+        type: 'out',
+        mitraId,
+      });
+
+      movements.forEach(m => {
+        if (m.product_id) {
+          quantities[m.product_id] = (quantities[m.product_id] || 0) + m.quantity;
+        }
+      });
+
+      setSoldQuantities(quantities);
+    } catch (error) {
+      console.error('Failed to calculate sold quantities:', error);
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -69,12 +111,14 @@ function MitraSettlement({ user }) {
     const updatedItems = [...formData.items];
     if (field === 'product_id') {
       const product = products.find(p => p.id === value);
+      const soldQty = soldQuantities[value] || 0;
       updatedItems[index] = {
         ...updatedItems[index],
         product_id: value,
         product_name: product?.nama_produk || '',
         selling_price: product?.selling_price || 0,
         cost_price: product?.mitra_price || 0,
+        quantity: soldQty > 0 ? soldQty : 1,
       };
     } else {
       updatedItems[index] = { ...updatedItems[index], [field]: value };
@@ -315,10 +359,14 @@ function MitraSettlement({ user }) {
                             onChange={(e) => updateItem(index, 'product_id', e.target.value)}
                             required
                           >
-                            <option value="">Pilih Produk</option>
-                            {products.map(p => (
-                              <option key={p.id} value={p.id}>{p.nama_produk}</option>
-                            ))}
+                             <option value="">Pilih Produk</option>
+                             {products
+                               .filter(p => !formData.mitra_id || p.mitra_id === formData.mitra_id)
+                               .map(p => (
+                               <option key={p.id} value={p.id}>
+                                 {p.nama_produk} {soldQuantities[p.id] ? `(Terjual: ${soldQuantities[p.id]})` : ''}
+                               </option>
+                             ))}
                           </select>
                         </div>
                         <div className="md:col-span-2 space-y-2">

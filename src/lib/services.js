@@ -338,6 +338,7 @@ export const stockMovementService = {
 
     if (filters.type) query = query.eq('type', filters.type);
     if (filters.productId) query = query.eq('product_id', filters.productId);
+    if (filters.mitraId) query = query.eq('mitra_id', filters.mitraId);
     if (filters.startDate) query = query.gte('created_at', filters.startDate);
     if (filters.endDate) query = query.lte('created_at', filters.endDate + 'T23:59:59');
 
@@ -431,7 +432,7 @@ export const dashboardService = {
 
     const { data: transactions, error: txDataError } = await supabase
       .from('transactions')
-      .select('total')
+      .select('id, total')
       .gte('created_at', today);
 
     if (txDataError) throw txDataError;
