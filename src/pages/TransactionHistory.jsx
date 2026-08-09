@@ -348,6 +348,7 @@ function TransactionHistory() {
                             onClick={() => printReceipt(h)}
                             className="w-8 h-8 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-on-primary flex items-center justify-center transition-all duration-200"
                             title="Cetak Struk"
+                            aria-label="Cetak struk"
                           >
                             <span className="material-symbols-outlined text-[18px]">print</span>
                           </button>

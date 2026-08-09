@@ -2,7 +2,7 @@ function TopAppBar({ title = 'Lapak Berkah', showNotifications = false, onLogout
   return (
     <header className="flex justify-between items-center h-16 px-4 w-full z-50 bg-primary dark:bg-primary-container docked full-width top-0 shadow-sm sticky">
       <div className="flex items-center gap-4">
-        <button className="md:hidden text-on-primary/70 hover:bg-primary-fixed-dim/20 transition-colors duration-200 p-2 rounded-full h-[48px] w-[48px] flex items-center justify-center">
+        <button aria-label="Menu" className="md:hidden text-on-primary/70 hover:bg-primary-fixed-dim/20 transition-colors duration-200 p-2 rounded-full h-[48px] w-[48px] flex items-center justify-center">
           <span className="material-symbols-outlined" data-icon="menu">menu</span>
         </button>
         <h1 className="font-headline-md text-headline-md-mobile font-bold text-secondary-fixed">{title}</h1>
@@ -14,7 +14,7 @@ function TopAppBar({ title = 'Lapak Berkah', showNotifications = false, onLogout
           </button>
         )}
         {onLogout && (
-          <button onClick={onLogout} className="text-on-primary/70 hover:bg-primary-fixed-dim/20 transition-colors duration-200 p-2 rounded-full h-[48px] w-[48px] flex items-center justify-center" title="Logout">
+          <button onClick={onLogout} aria-label="Keluar" title="Keluar" className="text-on-primary/70 hover:bg-primary-fixed-dim/20 transition-colors duration-200 p-2 rounded-full h-[48px] w-[48px] flex items-center justify-center">
             <span className="material-symbols-outlined" data-icon="logout">logout</span>
           </button>
         )}

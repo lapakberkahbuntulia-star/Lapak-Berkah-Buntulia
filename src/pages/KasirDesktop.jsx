@@ -151,7 +151,7 @@ function KasirDesktop() {
               >
                 <div className="aspect-square w-full rounded-lg bg-surface-container overflow-hidden relative">
                   {product.photo ? (
-                    <img className="w-full h-full object-cover" data-alt={product.name} src={product.photo} />
+                     <img className="w-full h-full object-cover" alt={product.name} src={product.photo} />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <span className="material-symbols-outlined text-4xl text-outline">image</span>
@@ -520,6 +520,7 @@ function KasirDesktopCart({ user }) {
               onClick={() => printReceipt(activeTransaction)}
               className="text-primary hover:bg-primary-container p-2 rounded-full transition-colors"
               title="Cetak Struk"
+              aria-label="Cetak struk"
             >
               <span className="material-symbols-outlined">print</span>
             </button>
@@ -532,6 +533,7 @@ function KasirDesktopCart({ user }) {
             }}
             className="text-error hover:bg-error-container p-2 rounded-full transition-colors"
             title="Tutup transaksi"
+            aria-label="Tutup transaksi"
           >
             <span className="material-symbols-outlined">close</span>
           </button>
@@ -558,7 +560,7 @@ function KasirDesktopCart({ user }) {
                     <h4 className="font-label-md text-label-md text-on-surface line-clamp-2 leading-tight">{item.name}</h4>
                     <p className="font-label-sm text-label-sm text-on-surface-variant mt-0.5">{item.sku} · {item.barcodeId}</p>
                   </div>
-                  <button onClick={() => removeItem(activeTransaction.id, item.productId)} className="text-on-surface-variant hover:text-error p-1 -mr-1 -mt-1">
+                  <button onClick={() => removeItem(activeTransaction.id, item.productId)} aria-label="Hapus item" className="text-on-surface-variant hover:text-error p-1 -mr-1 -mt-1">
                     <span className="material-symbols-outlined text-[18px]">delete</span>
                   </button>
                 </div>

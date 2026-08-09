@@ -63,7 +63,7 @@ function BottomNav({ activePage, onNavigate, onLogout, role }) {
           <div className="fixed bottom-0 left-0 w-full bg-surface rounded-t-2xl z-[70] md:hidden">
             <div className="flex items-center justify-between p-4 border-b border-outline-variant/50">
               <h3 className="font-headline-sm text-headline-sm text-on-background">Menu Lainnya</h3>
-              <button onClick={() => setShowMore(false)} className="w-8 h-8 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant">
+              <button onClick={() => setShowMore(false)} aria-label="Tutup menu" className="w-8 h-8 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant">
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>

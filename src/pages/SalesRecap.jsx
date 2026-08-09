@@ -210,10 +210,10 @@ function SalesRecap() {
               <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Rekap penjualan</p>
             </div>
             <div className="flex gap-2">
-              <button onClick={handleExportExcel} className="h-10 w-10 bg-surface border border-primary text-primary rounded-lg flex items-center justify-center">
+              <button onClick={handleExportExcel} aria-label="Export Excel" className="h-10 w-10 bg-surface border border-primary text-primary rounded-lg flex items-center justify-center">
                 <span className="material-symbols-outlined text-[18px]">description</span>
               </button>
-              <button onClick={handleExportPDF} className="h-10 w-10 bg-secondary text-on-secondary rounded-lg flex items-center justify-center">
+              <button onClick={handleExportPDF} aria-label="Export PDF" className="h-10 w-10 bg-secondary text-on-secondary rounded-lg flex items-center justify-center">
                 <span className="material-symbols-outlined text-[18px]">picture_as_pdf</span>
               </button>
             </div>

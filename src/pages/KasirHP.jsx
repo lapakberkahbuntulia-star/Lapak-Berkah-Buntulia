@@ -131,7 +131,7 @@ function KasirHP() {
                   {product.image ? (
                     <img
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      data-alt={product.name}
+                      alt={product.name}
                       src={product.image}
                     />
                   ) : (
@@ -278,7 +278,7 @@ function KasirHP() {
       </div>
 
       {/* Mobile FAB for Scanning */}
-      <button className="md:hidden fixed bottom-24 right-4 w-14 h-14 bg-secondary text-on-secondary rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.15)] flex items-center justify-center z-40 active:scale-90 transition-transform">
+      <button aria-label="Scan barcode" className="md:hidden fixed bottom-24 right-4 w-14 h-14 bg-secondary text-on-secondary rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.15)] flex items-center justify-center z-40 active:scale-90 transition-transform">
         <span className="material-symbols-outlined filled" data-icon="barcode_scanner">barcode_scanner</span>
       </button>
 

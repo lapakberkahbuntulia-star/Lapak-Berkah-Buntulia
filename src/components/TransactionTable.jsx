@@ -59,10 +59,10 @@ function TransactionTable() {
       <div className="px-6 py-4 border-t border-outline-variant bg-surface flex justify-between items-center text-on-surface-variant font-label-sm text-label-sm">
         <span>Menampilkan 1-4 dari 240 transaksi</span>
         <div className="flex gap-2">
-          <button className="p-2 border border-outline-variant rounded-md hover:bg-surface-container-lowest h-[48px] w-[48px] flex items-center justify-center disabled:opacity-50" disabled>
+          <button aria-label="Halaman sebelumnya" className="p-2 border border-outline-variant rounded-md hover:bg-surface-container-lowest h-[48px] w-[48px] flex items-center justify-center disabled:opacity-50" disabled>
             <span className="material-symbols-outlined" data-icon="chevron_left">chevron_left</span>
           </button>
-          <button className="p-2 border border-outline-variant rounded-md hover:bg-surface-container-lowest h-[48px] w-[48px] flex items-center justify-center">
+          <button aria-label="Halaman berikutnya" className="p-2 border border-outline-variant rounded-md hover:bg-surface-container-lowest h-[48px] w-[48px] flex items-center justify-center">
             <span className="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
           </button>
         </div>

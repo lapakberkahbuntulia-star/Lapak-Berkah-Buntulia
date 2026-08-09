@@ -997,39 +997,43 @@ function MitraDashboard({ role, user }) {
                               <td className="px-6 py-4 text-center">
                                  {editingMitra === mitra.id ? (
                                    <div className="flex items-center justify-center gap-2">
-                                     <button
-                                       onMouseDown={(e) => e.preventDefault()}
-                                       onClick={handleUpdateMitra}
-                                       className="h-8 w-8 rounded-lg bg-tertiary-fixed/20 text-tertiary-container hover:bg-tertiary-fixed hover:text-on-tertiary-fixed flex items-center justify-center transition-all"
-                                       title="Simpan"
-                                     >
-                                       <span className="material-symbols-outlined text-[18px]">check</span>
-                                     </button>
-                                     <button
-                                       onMouseDown={(e) => e.preventDefault()}
-                                       onClick={() => { setEditingMitra(null); setEditMitraName(''); }}
-                                       className="h-8 w-8 rounded-lg bg-surface-container text-on-surface-variant hover:bg-error hover:text-on-error flex items-center justify-center transition-all"
-                                       title="Batal"
-                                     >
-                                       <span className="material-symbols-outlined text-[18px]">close</span>
-                                     </button>
+                                      <button
+                                        onMouseDown={(e) => e.preventDefault()}
+                                        onClick={handleUpdateMitra}
+                                        className="h-8 w-8 rounded-lg bg-tertiary-fixed/20 text-tertiary-container hover:bg-tertiary-fixed hover:text-on-tertiary-fixed flex items-center justify-center transition-all"
+                                        title="Simpan"
+                                        aria-label="Simpan"
+                                      >
+                                        <span className="material-symbols-outlined text-[18px]">check</span>
+                                      </button>
+                                      <button
+                                        onMouseDown={(e) => e.preventDefault()}
+                                        onClick={() => { setEditingMitra(null); setEditMitraName(''); }}
+                                        className="h-8 w-8 rounded-lg bg-surface-container text-on-surface-variant hover:bg-error hover:text-on-error flex items-center justify-center transition-all"
+                                        title="Batal"
+                                        aria-label="Batal"
+                                      >
+                                        <span className="material-symbols-outlined text-[18px]">close</span>
+                                      </button>
                                    </div>
                                  ) : (
                                    <div className="flex items-center justify-center gap-2">
-                                    <button
-                                      onClick={() => handleEditMitra(mitra)}
-                                      className="h-8 w-8 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-on-primary flex items-center justify-center transition-all"
-                                      title="Edit"
-                                    >
-                                      <span className="material-symbols-outlined text-[18px]">edit</span>
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteMitra(mitra.id)}
-                                      className="h-8 w-8 rounded-lg bg-error/10 text-error hover:bg-error hover:text-on-error flex items-center justify-center transition-all"
-                                      title="Hapus"
-                                    >
-                                      <span className="material-symbols-outlined text-[18px]">delete</span>
-                                    </button>
+                                     <button
+                                       onClick={() => handleEditMitra(mitra)}
+                                       className="h-8 w-8 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-on-primary flex items-center justify-center transition-all"
+                                       title="Edit"
+                                       aria-label="Edit mitra"
+                                     >
+                                       <span className="material-symbols-outlined text-[18px]">edit</span>
+                                     </button>
+                                     <button
+                                       onClick={() => handleDeleteMitra(mitra.id)}
+                                       className="h-8 w-8 rounded-lg bg-error/10 text-error hover:bg-error hover:text-on-error flex items-center justify-center transition-all"
+                                       title="Hapus"
+                                       aria-label="Hapus mitra"
+                                     >
+                                       <span className="material-symbols-outlined text-[18px]">delete</span>
+                                     </button>
                                   </div>
                                 )}
                               </td>

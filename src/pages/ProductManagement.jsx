@@ -473,6 +473,7 @@ function ProductManagement() {
               </div>
               <button
                 onClick={toggleForm}
+                aria-label={showForm ? 'Batal' : 'Tambah Produk'}
                 className="h-10 w-10 bg-primary hover:bg-primary-fixed-variant text-on-primary rounded-full flex items-center justify-center transition-all duration-200 shadow-sm active:scale-95"
               >
                 <span className="material-symbols-outlined">{showForm ? 'close' : 'add'}</span>
@@ -927,6 +928,7 @@ function ProductManagement() {
                                   onClick={() => handleEdit(product)}
                                   className="w-8 h-8 rounded-lg bg-secondary-container/50 hover:bg-secondary-container text-on-secondary-container flex items-center justify-center transition-all"
                                   title="Edit"
+                                  aria-label="Edit produk"
                                 >
                                   <span className="material-symbols-outlined text-sm">edit</span>
                                 </button>
@@ -934,6 +936,7 @@ function ProductManagement() {
                                   onClick={() => handleDelete(product.id)}
                                   className="w-8 h-8 rounded-lg bg-error-container/30 hover:bg-error-container/50 text-error flex items-center justify-center transition-all"
                                   title="Hapus"
+                                  aria-label="Hapus produk"
                                 >
                                   <span className="material-symbols-outlined text-sm">delete</span>
                                 </button>

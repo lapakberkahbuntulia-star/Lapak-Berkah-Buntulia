@@ -651,6 +651,7 @@ function MitraSettlement({ user }) {
                                 onClick={() => handlePrint(settlement)}
                                 className="w-8 h-8 rounded-lg bg-secondary-container/50 hover:bg-secondary-container text-on-secondary-container flex items-center justify-center transition-all"
                                 title="Cetak"
+                                aria-label="Cetak invoice"
                               >
                                 <span className="material-symbols-outlined text-sm">print</span>
                               </button>
@@ -658,6 +659,7 @@ function MitraSettlement({ user }) {
                                 onClick={() => handleEdit(settlement)}
                                 className="w-8 h-8 rounded-lg bg-secondary-container/50 hover:bg-secondary-container text-on-secondary-container flex items-center justify-center transition-all"
                                 title="Edit"
+                                aria-label="Edit invoice"
                               >
                                 <span className="material-symbols-outlined text-sm">edit</span>
                               </button>
@@ -665,6 +667,7 @@ function MitraSettlement({ user }) {
                                 onClick={() => handleDelete(settlement.id)}
                                 className="w-8 h-8 rounded-lg bg-error-container/30 hover:bg-error-container/50 text-error flex items-center justify-center transition-all"
                                 title="Hapus"
+                                aria-label="Hapus invoice"
                               >
                                 <span className="material-symbols-outlined text-sm">delete</span>
                               </button>
