@@ -29,8 +29,7 @@ function ProductManagement() {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
-  const [loading, _setLoading] = useState(true);
-  const [totalFilteredProducts, setTotalFilteredProducts] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   const selectedCategoryId = useMemo(() => {
     if (selectedCategory === 'Semua') return undefined;
@@ -38,10 +37,10 @@ function ProductManagement() {
   }, [selectedCategory, categories]);
 
   useEffect(() => {
-    loadProducts();
-    loadCategories();
-    loadTypes();
-    loadMitra();
+    (async () => {
+      await Promise.all([loadProducts(), loadCategories(), loadTypes(), loadMitra()]);
+      setLoading(false);
+    })();
   }, []);
 
   useEffect(() => {

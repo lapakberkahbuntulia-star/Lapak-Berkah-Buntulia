@@ -12,7 +12,7 @@ function StockManagement() {
   const [productsList, setProductsList] = useState([]);
   const [stockMovements, setStockMovements] = useState([]);
   const [pendingValidations, setPendingValidations] = useState([]);
-  const [loading, _setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [filterType, setFilterType] = useState('Semua');
   const [filterProduct, setFilterProduct] = useState('Semua');
@@ -125,10 +125,10 @@ function StockManagement() {
   };
 
   useEffect(() => {
-    loadProducts();
-    loadMitra();
-    loadMovements();
-    loadValidations();
+    (async () => {
+      await Promise.all([loadProducts(), loadMitra(), loadMovements(), loadValidations()]);
+      setLoading(false);
+    })();
   }, []);
 
   useEffect(() => {
