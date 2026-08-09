@@ -214,7 +214,14 @@ function MitraSettlement({ user }) {
 
   const handlePrint = (settlement) => {
     setSelectedSettlement(settlement);
-    setTimeout(() => window.print(), 100);
+    setTimeout(() => {
+      const printArea = document.querySelector('.print-section');
+      if (printArea) {
+        window.print();
+      } else {
+        console.error('[MitraSettlement] print area not found');
+      }
+    }, 300);
   };
 
   const getStatusBadge = (status) => {
@@ -553,9 +560,9 @@ function MitraSettlement({ user }) {
 
       {/* Print Area */}
       {selectedSettlement && (
-        <div className="fixed inset-0 bg-black/50 z-50 hidden print:block print:bg-transparent print:relative print:inset-auto print-area">
-          <div className="absolute inset-4 bg-white rounded-lg shadow-2xl overflow-auto print:absolute print:inset-0 print:shadow-none print:rounded-none">
-            <div className="p-8 max-w-[80mm] mx-auto print:max-w-none print:p-4">
+        <div className="print-section">
+          <div className="bg-white rounded-lg shadow-2xl overflow-auto w-full max-w-[80mm] mx-auto">
+            <div className="p-8">
               {/* Invoice Header */}
               <div className="text-center border-b-2 border-double border-gray-300 pb-4 mb-4">
                 <h1 className="text-2xl font-bold mb-1">LAPAK BERKAH BUNTULIA</h1>
