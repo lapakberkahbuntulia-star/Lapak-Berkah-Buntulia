@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { productService, categoryService, productTypeService, mitraService } from '../lib/services';
 import Pagination from '../components/Pagination';
 import compressImage from '../utils/compressImage';
