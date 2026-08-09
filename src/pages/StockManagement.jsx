@@ -78,7 +78,7 @@ function StockManagement() {
           })),
         );
       } catch (error) {
-        console.error('Failed to load stock data:', error);
+        showToast('Gagal memuat data stok', 'error');
       } finally {
         setLoading(false);
       }
@@ -115,7 +115,6 @@ function StockManagement() {
         await productService.update(productId, { stock: updatedStock });
       }
     } catch (error) {
-      console.error('Failed to update product stock in database:', error);
       showToast('Gagal memperbarui stok produk di database', 'error');
     }
   };
@@ -152,7 +151,6 @@ function StockManagement() {
       setShowForm(false);
       showToast('Transaksi stok berhasil disimpan!', 'success');
     } catch (error) {
-      console.error('Failed to create stock movement:', error);
       showToast('Gagal menyimpan transaksi stok', 'error');
     }
   };
@@ -192,7 +190,6 @@ function StockManagement() {
       setPendingValidations((prev) => prev.filter((v) => v.id !== validationId));
       showToast('Stok berhasil divalidasi!', 'success');
     } catch (error) {
-      console.error('Failed to validate stock:', error);
       showToast('Gagal memvalidasi stok', 'error');
     }
   };

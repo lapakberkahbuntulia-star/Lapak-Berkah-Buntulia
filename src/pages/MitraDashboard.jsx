@@ -41,7 +41,6 @@ function StatCard({ icon, label, value, subtitle, trend, trendUp, colorClass = '
 }
 
 function MitraDashboard({ role, user }) {
-  console.log('[MitraDashboard] component rendered, role:', role, 'user:', user);
   const isMitra = role === 'mitra';
   const getLocalDate = (value) => {
     const d = value instanceof Date ? value : new Date(value);
@@ -111,7 +110,6 @@ function MitraDashboard({ role, user }) {
     visibleProductIds: Array.from(visibleProductIds).slice(0, 5),
   };
 
-  console.log('[MitraDashboard] filter debug:', debugInfo);
   const [profitMonth, setProfitMonth] = useState(new Date().toISOString().slice(0, 7));
   const [profitStartDate, setProfitStartDate] = useState('');
   const [profitEndDate, setProfitEndDate] = useState('');
@@ -195,7 +193,6 @@ function MitraDashboard({ role, user }) {
       setStockHistory(mappedStockHistory);
       setTransactions(mappedTx);
     } catch (error) {
-      console.error('Failed to load dashboard data:', error);
       setToast({ message: 'Gagal memuat data dashboard', type: 'error' });
     } finally {
       setLoading(false);
@@ -352,7 +349,6 @@ function MitraDashboard({ role, user }) {
         type: 'success',
       });
     } catch (error) {
-      console.error('Failed to create mitra:', error);
       setToast({ message: 'Gagal menambahkan mitra: ' + (error?.message || ''), type: 'error' });
     }
   };
@@ -417,7 +413,6 @@ function MitraDashboard({ role, user }) {
         type: 'success',
       });
     } catch (error) {
-      console.error('Failed to create stock input:', error);
       setToast({ message: 'Gagal menyimpan stok harian', type: 'error' });
     }
   };
@@ -428,16 +423,13 @@ function MitraDashboard({ role, user }) {
   };
 
   const handleValidateStock = async (stockId) => {
-    console.log('[MitraDashboard] handleValidateStock called with stockId:', stockId);
     const stock = stockInputs.find((s) => s.id === stockId);
-    console.log('[MitraDashboard] stock found:', stock);
     if (!stock) {
       setToast({ message: 'Data stok tidak ditemukan', type: 'error' });
       return;
     }
 
     const product = products.find((p) => p.id === stock.productId);
-    console.log('[MitraDashboard] product lookup:', { stockProductId: stock.productId, productIdType: typeof stock.productId, productsCount: products.length, productIds: products.map(p => p.id), product });
     if (!product) {
       setToast({ message: 'Produk tidak ditemukan untuk stok ini', type: 'error' });
       return;
@@ -454,16 +446,13 @@ function MitraDashboard({ role, user }) {
         mitra_id: stock.mitraId ? String(stock.mitraId) : null,
       };
 
-      console.log('[MitraDashboard] inserting stock movement payload:', payload);
       await stockMovementService.create(payload);
 
       setStockInputs((prev) => prev.filter((s) => s.id !== stockId));
 
       if (product) {
         const updatedStock = (product.stock || 0) + Number(stock.quantity);
-        console.log('[MitraDashboard] updating product stock:', { productId: product.id, productName: product.name, oldStock: product.stock, quantity: stock.quantity, newStock: updatedStock });
         const updateResult = await productService.update(product.id, { stock: updatedStock });
-        console.log('[MitraDashboard] productService.update result:', updateResult);
         setProducts((prev) =>
           prev.map((p) => (p.id === product.id ? { ...p, stock: updatedStock } : p)),
         );
@@ -472,7 +461,6 @@ function MitraDashboard({ role, user }) {
       await loadData();
       setToast({ message: 'Stok berhasil divalidasi!', type: 'success' });
     } catch (error) {
-      console.error('[MitraDashboard] Failed to validate stock:', error);
       const detail = [error?.message, error?.details, error?.hint, error?.code].filter(Boolean).join(' | ') || JSON.stringify(error);
       setToast({ message: 'Gagal memvalidasi stok: ' + detail, type: 'error' });
     }
@@ -487,7 +475,6 @@ function MitraDashboard({ role, user }) {
       setEditMitraName('');
       setToast({ message: 'Mitra berhasil diperbarui!', type: 'success' });
     } catch (error) {
-      console.error('Failed to update mitra:', error);
       setToast({ message: 'Gagal memperbarui mitra', type: 'error' });
     }
   };
@@ -504,7 +491,6 @@ function MitraDashboard({ role, user }) {
       setMitraList((prev) => prev.filter((m) => m.id !== mitraId));
       setToast({ message: 'Mitra berhasil dihapus!', type: 'success' });
     } catch (error) {
-      console.error('Failed to delete mitra:', error);
       setToast({ message: 'Gagal menghapus mitra', type: 'error' });
     }
   };

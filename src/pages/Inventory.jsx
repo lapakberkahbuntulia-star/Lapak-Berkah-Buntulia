@@ -17,7 +17,7 @@ function Inventory() {
       const data = await productService.getAll();
       setProducts(data);
     } catch (error) {
-      console.error('Failed to load products:', error);
+      showToast('Gagal memuat produk', 'error');
     } finally {
       setLoading(false);
     }

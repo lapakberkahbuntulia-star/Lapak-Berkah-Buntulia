@@ -46,7 +46,7 @@ function KasirDesktop() {
       }));
       setProducts(mapped);
     } catch (err) {
-      console.error('Failed to load products:', err);
+      setToast({ message: 'Gagal memuat produk', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -308,7 +308,6 @@ function KasirDesktopCart({ user }) {
         status: 'Selesai',
       };
 
-      console.log('[KasirDesktopCart] creating transaction:', transactionData);
       const createdTransaction = await transactionService.create(transactionData);
 
       const items = activeTransaction.items.map((item) => ({
@@ -319,7 +318,6 @@ function KasirDesktopCart({ user }) {
         subtotal: item.sellingPrice * item.qty,
       }));
 
-      console.log('[KasirDesktopCart] creating transaction items:', items);
       await transactionItemService.createBatch(items);
 
       for (const item of activeTransaction.items) {
@@ -337,7 +335,6 @@ function KasirDesktopCart({ user }) {
             throw new Error(`Stok tidak cukup untuk ${item.name}`);
           }
         } catch (stockError) {
-          console.error('[KasirDesktopCart] Failed to update stock for product:', item.productId, stockError);
           throw stockError;
         }
       }
@@ -352,7 +349,7 @@ function KasirDesktopCart({ user }) {
             });
           }
         } catch (mitraError) {
-          console.error('[KasirDesktopCart] Failed to update mitra totals:', mitraError);
+          // silently continue checkout
         }
       }
 
@@ -391,7 +388,6 @@ function KasirDesktopCart({ user }) {
       setActiveTransactionId(remaining[0]?.id || null);
       setTimeout(() => printReceipt(completed), 300);
     } catch (error) {
-      console.error('[KasirDesktopCart] Failed to checkout:', error);
       setToast({ message: 'Gagal memproses pembayaran: ' + (error?.message || ''), type: 'error' });
     } finally {
       setCheckingOut(false);

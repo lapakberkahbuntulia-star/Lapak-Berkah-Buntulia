@@ -2,7 +2,6 @@ import { supabase } from './supabase';
 
 export const authService = {
   async login(email, password, role) {
-    console.log('Login attempt:', { email, role });
     const { data, error } = await supabase
       .from('users')
       .select('*')
@@ -11,15 +10,11 @@ export const authService = {
       .eq('role', role)
       .maybeSingle();
 
-    console.log('Login result:', { data, error });
-
     if (error) {
-      console.error('Login error:', error);
       throw new Error(error.message || 'Login gagal');
     }
 
     if (!data) {
-      console.error('Login failed: no user found');
       throw new Error('Email, kata sandi, atau peran salah');
     }
 
@@ -42,7 +37,6 @@ export const userService = {
 
 export const productService = {
   async getAll() {
-    console.log('[productService.getAll] fetching products');
     const { data, error } = await supabase
       .from('products')
       .select(`
@@ -54,15 +48,12 @@ export const productService = {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('[productService.getAll] error:', error);
       throw error;
     }
-    console.log('[productService.getAll] result count:', data?.length || 0, 'products:', data?.map(p => ({ id: p.id, nama_produk: p.nama_produk, stock: p.stock })));
     return data || [];
   },
 
   async create(product) {
-    console.log('[productService.create] payload:', product);
     const { data, error } = await supabase
       .from('products')
       .insert([product])
@@ -70,14 +61,12 @@ export const productService = {
       .single();
 
     if (error) {
-      console.error('[productService.create] error:', error);
       throw error;
     }
     return data;
   },
 
   async update(id, product) {
-    console.log('[productService.update] id:', id, 'payload:', product);
     const { data, error } = await supabase
       .from('products')
       .update(product)
@@ -86,10 +75,8 @@ export const productService = {
       .single();
 
     if (error) {
-      console.error('[productService.update] error:', error);
       throw error;
     }
-    console.log('[productService.update] result:', data);
     return data;
   },
 
@@ -98,7 +85,6 @@ export const productService = {
       .rpc('decrement_product_stock', { p_product_id: id, p_qty: qty });
 
     if (error) {
-      console.error('[productService.decrementStock] error:', error);
       throw error;
     }
     return data;
@@ -337,7 +323,6 @@ export const transactionItemService = {
 
 export const stockMovementService = {
   async create(movement) {
-    console.log('[stockMovementService.create] payload:', movement);
     const { data, error } = await supabase
       .from('stock_movements')
       .insert([movement])
@@ -345,14 +330,12 @@ export const stockMovementService = {
       .single();
 
     if (error) {
-      console.error('[stockMovementService.create] error:', error);
       throw error;
     }
     return data;
   },
 
   async getAll(filters = {}) {
-    console.log('[stockMovementService.getAll] filters:', filters);
     let query = supabase
       .from('stock_movements')
       .select('id, product_id, type, quantity, note, mitra_id, created_at, product:product_id (nama_produk, unit), mitra:mitra_id (full_name)')
@@ -367,9 +350,8 @@ export const stockMovementService = {
     const { data, error } = await query;
 
     if (error) {
-      console.error('[stockMovementService.getAll] error:', error);
+      throw error;
     }
-    console.log('[stockMovementService.getAll] result count:', data?.length || 0);
     return data || [];
   },
 };

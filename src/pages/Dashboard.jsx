@@ -28,7 +28,7 @@ function Dashboard() {
         mitraName: t.mitra?.full_name || '-',
       })));
     } catch (error) {
-      console.error('Failed to load dashboard:', error);
+      showToast('Gagal memuat data dashboard', 'error');
     } finally {
       setLoading(false);
     }

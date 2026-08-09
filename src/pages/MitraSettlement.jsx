@@ -60,7 +60,7 @@ function MitraSettlement({ user }) {
 
       setSoldQuantities(quantities);
     } catch (error) {
-      console.error('Failed to calculate sold quantities:', error);
+      // silently continue
     }
   };
 
@@ -75,9 +75,7 @@ function MitraSettlement({ user }) {
       setSettlements(settlementsData || []);
       setMitraList(mitraData || []);
       setProducts(productsData || []);
-      console.log('[MitraSettlement] loaded mitra:', mitraData);
     } catch (error) {
-      console.error('Failed to load settlement data:', error);
       showToast('Gagal memuat data', 'error');
     } finally {
       setLoading(false);
@@ -88,8 +86,6 @@ function MitraSettlement({ user }) {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
-
-  console.log('[MitraSettlement] render mitraList:', mitraList);
 
   const generateInvoiceNumber = () => {
     const date = new Date();
@@ -143,7 +139,6 @@ function MitraSettlement({ user }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validItems = (formData.items || []).filter(item => item.product_id && item.quantity > 0);
-    console.log('[MitraSettlement] submit formData:', { mitra_id: formData.mitra_id, items: formData.items, validItems });
     if (!formData.mitra_id || validItems.length === 0) {
       showToast('Pilih mitra dan minimal satu produk', 'error');
       return;
@@ -161,7 +156,6 @@ function MitraSettlement({ user }) {
         user_id: user?.id || null,
       };
 
-      console.log('[MitraSettlement] creating settlement:', settlementData);
       if (editingSettlement) {
         await mitraSettlementService.update(editingSettlement.id, settlementData);
         showToast('Invoice berhasil diperbarui!', 'success');
@@ -173,7 +167,6 @@ function MitraSettlement({ user }) {
       resetForm();
       await loadData();
     } catch (error) {
-      console.error('Failed to save settlement:', error);
       showToast('Gagal menyimpan invoice: ' + (error?.message || ''), 'error');
     }
   };
@@ -207,7 +200,6 @@ function MitraSettlement({ user }) {
       showToast('Invoice berhasil dihapus!', 'success');
       await loadData();
     } catch (error) {
-      console.error('Failed to delete settlement:', error);
       showToast('Gagal menghapus invoice', 'error');
     }
   };
@@ -217,7 +209,7 @@ function MitraSettlement({ user }) {
     setTimeout(() => {
       const printContent = document.querySelector('.print-section');
       if (!printContent) {
-        console.error('[MitraSettlement] print section not found');
+        showToast('Gagal mencetak: konten tidak ditemukan', 'error');
         return;
       }
 
@@ -344,8 +336,7 @@ function MitraSettlement({ user }) {
       const url = URL.createObjectURL(blob);
       const printWindow = window.open(url, '_blank', 'width=800,height=600');
       if (!printWindow) {
-        console.error('[MitraSettlement] print window blocked');
-        alert('Popup diblokir. Izinkan popup untuk mencetak invoice.');
+        showToast('Popup diblokir. Izinkan popup untuk mencetak invoice.', 'error');
         URL.revokeObjectURL(url);
         return;
       }

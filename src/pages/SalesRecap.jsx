@@ -45,7 +45,7 @@ function SalesRecap() {
         setTransactions(mapped);
         setMitraList(['Semua Mitra', ...mitraData.map((m) => m.full_name)]);
       } catch (error) {
-        console.error('Failed to load sales recap data:', error);
+        showToast('Gagal memuat data penjualan', 'error');
       } finally {
         setLoading(false);
       }
