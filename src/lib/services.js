@@ -465,3 +465,73 @@ export const dashboardService = {
     };
   },
 };
+
+export const mitraSettlementService = {
+  async getAll(filters = {}) {
+    let query = supabase
+      .from('mitra_settlements')
+      .select(`
+        *,
+        mitra:mitra_id (full_name),
+        user:user_id (nama, email)
+      `)
+      .order('date', { ascending: false });
+
+    if (filters.mitraId) query = query.eq('mitra_id', filters.mitraId);
+    if (filters.startDate) query = query.gte('date', filters.startDate);
+    if (filters.endDate) query = query.lte('date', filters.endDate);
+    if (filters.status) query = query.eq('status', filters.status);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getById(id) {
+    const { data, error } = await supabase
+      .from('mitra_settlements')
+      .select(`
+        *,
+        mitra:mitra_id (full_name),
+        user:user_id (nama, email),
+        items:mitra_settlement_items (*)
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async create(settlement) {
+    const { data, error } = await supabase
+      .from('mitra_settlements')
+      .insert([settlement])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async update(id, settlement) {
+    const { data, error } = await supabase
+      .from('mitra_settlements')
+      .update(settlement)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async delete(id) {
+    const { error } = await supabase
+      .from('mitra_settlements')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+  },
+};

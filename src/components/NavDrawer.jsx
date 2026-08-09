@@ -3,6 +3,7 @@ const navItems = [
   { icon: 'point_of_sale', label: 'POS Cashier', page: 'pos-desktop', roles: ['admin', 'kasir'] },
   { icon: 'inventory_2', label: 'Inventory', page: 'inventory', roles: ['admin', 'kasir'] },
   { icon: 'handshake', label: 'Mitra Dashboard', page: 'mitra', roles: ['admin', 'mitra'] },
+  { icon: 'receipt_long', label: 'Nota Penjualan Mitra', page: 'mitra-settlement', roles: ['admin'] },
   { icon: 'assessment', label: 'Laporan Penjualan', page: 'sales-recap', roles: ['admin'] },
   { icon: 'history', label: 'Riwayat Transaksi', page: 'transaction-history', roles: ['admin', 'kasir'] },
   { icon: 'inventory', label: 'Product Management', page: 'product', roles: ['admin'] },

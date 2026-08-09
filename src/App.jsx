@@ -14,9 +14,10 @@ import SalesRecap from './pages/SalesRecap';
 import Inventory from './pages/Inventory';
 import TransactionHistory from './pages/TransactionHistory';
 import StockManagement from './pages/StockManagement';
+import MitraSettlement from './pages/MitraSettlement';
 
 const rolePageAccess = {
-  admin: ['dashboard', 'pos-desktop', 'inventory', 'mitra', 'sales-recap', 'transaction-history', 'product', 'financial', 'stock-management'],
+  admin: ['dashboard', 'pos-desktop', 'inventory', 'mitra', 'sales-recap', 'transaction-history', 'product', 'financial', 'stock-management', 'mitra-settlement'],
   kasir: ['dashboard', 'pos-desktop', 'inventory', 'transaction-history', 'stock-management'],
   mitra: ['dashboard', 'mitra'],
 };
@@ -99,16 +100,17 @@ function App() {
       <div className="flex h-[calc(100vh-64px)] overflow-hidden">
         <NavDrawer activePage={page} onNavigate={navigateTo} onLogout={handleLogout} role={role} />
         <main className={`flex-1 overflow-y-auto bg-surface md:ml-72 pb-24 md:pb-8 ${page === 'pos-desktop' ? 'md:mr-[380px]' : ''}`}>
-          {page === 'financial' && <FinancialReports />}
-          {page === 'dashboard' && <Dashboard />}
-          {page === 'sales-recap' && <SalesRecap />}
-          {page === 'mitra' && <MitraDashboard role={role} user={user} />}
-          {page === 'inventory' && <Inventory />}
-          {page === 'transaction-history' && <TransactionHistory />}
-          {page === 'stock-management' && <StockManagement />}
-          {page === 'product' && <ProductManagement />}
-          {page === 'pos' && <KasirHP />}
-          {page === 'pos-desktop' && <KasirDesktop />}
+           {page === 'financial' && <FinancialReports />}
+           {page === 'dashboard' && <Dashboard />}
+           {page === 'sales-recap' && <SalesRecap />}
+           {page === 'mitra' && <MitraDashboard role={role} user={user} />}
+           {page === 'inventory' && <Inventory />}
+           {page === 'transaction-history' && <TransactionHistory />}
+           {page === 'stock-management' && <StockManagement />}
+           {page === 'product' && <ProductManagement />}
+           {page === 'mitra-settlement' && <MitraSettlement user={user} />}
+           {page === 'pos' && <KasirHP />}
+           {page === 'pos-desktop' && <KasirDesktop />}
         </main>
         {page === 'pos-desktop' && <KasirDesktopCart user={user} />}
         <BottomNav activePage={page} onNavigate={navigateTo} onLogout={handleLogout} role={role} />
