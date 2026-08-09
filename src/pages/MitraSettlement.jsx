@@ -216,25 +216,151 @@ function MitraSettlement({ user }) {
     setSelectedSettlement(settlement);
     setTimeout(() => {
       const printContent = document.querySelector('.print-section');
-      if (!printContent) return;
-
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) {
-        window.print();
+      if (!printContent) {
+        console.error('[MitraSettlement] print section not found');
         return;
       }
 
-      const styles = Array.from(document.styleSheets)
-        .map(sheet => {
-          try { return Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n'); } catch (e) { return ''; }
-        })
-        .join('\n');
+      const html = `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Invoice ${settlement.invoice_number}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      color: #111;
+      background: #fff;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 8px 6px; vertical-align: top; }
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+    .font-bold { font-weight: bold; }
+    .border-b { border-bottom: 1px solid #ccc; }
+    .border-b-2 { border-bottom: 2px solid #000; }
+    .border-double { border-style: double; }
+    .border-t { border-top: 1px solid #ccc; }
+    .border-t-2 { border-top: 2px solid #000; }
+    .mt-8 { margin-top: 32px; }
+    .mb-4 { margin-bottom: 16px; }
+    .mb-6 { margin-bottom: 24px; }
+    .mb-2 { margin-bottom: 8px; }
+    .mb-1 { margin-bottom: 4px; }
+    .pt-4 { padding-top: 16px; }
+    .pb-4 { padding-bottom: 16px; }
+    .p-3 { padding: 12px; }
+    .text-2xl { font-size: 24px; }
+    .text-sm { font-size: 14px; }
+    .text-xs { font-size: 12px; }
+    .text-lg { font-size: 18px; }
+    .space-y-1 > * + * { margin-top: 4px; }
+    .space-y-2 > * + * { margin-top: 8px; }
+    .grid { display: grid; }
+    .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .gap-8 { gap: 32px; }
+    .bg-gray-50 { background: #f8f9fa; }
+    .rounded { border-radius: 6px; }
+    .mx-auto { margin-left: auto; margin-right: auto; }
+  </style>
+</head>
+<body>
+  <div style="max-width: 80mm; margin: 0 auto;">
+    <div class="text-center border-b-2 border-double border-gray-300 pb-4 mb-4">
+      <h1 class="text-2xl font-bold mb-1">LAPAK BERKAH BUNTULIA</h1>
+      <p class="text-sm mb-2">Nota Penjualan Mitra</p>
+      <div class="text-xs space-y-1">
+        <p>No. Invoice: <span class="font-bold">${settlement.invoice_number}</span></p>
+        <p>Tanggal: ${settlement.date}</p>
+      </div>
+    </div>
 
-      printWindow.document.write(`<!DOCTYPE html><html><head><title>Invoice ${settlement.invoice_number}</title><style>${styles} @media print { body * { display: none !important; } .print-section, .print-section * { display: block !important; visibility: visible !important; } .print-section { position: fixed; inset: 0; background: white; padding: 20px; z-index: 9999; } .print-section > div { box-shadow: none; border-radius: 0; overflow: visible; padding: 0; max-width: none; } }</style></head><body>${printContent.innerHTML}</body></html>`);
-      printWindow.document.close();
-      printWindow.focus();
-      printWindow.print();
-      printWindow.close();
+    <div class="mb-4 p-3 bg-gray-50 rounded">
+      <p class="font-bold mb-1">Kepada:</p>
+      <p class="font-bold">${settlement.mitra?.full_name || '-'}</p>
+      <p class="text-xs">Mitra Lapak Berkah</p>
+    </div>
+
+    <table class="w-full text-xs border-collapse mb-4">
+      <thead>
+        <tr class="border-b-2 border-gray-300">
+          <th class="text-left py-2 px-1">Produk</th>
+          <th class="text-center py-2 px-1">Qty</th>
+          <th class="text-right py-2 px-1">Harga</th>
+          <th class="text-right py-2 px-1">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${(settlement.items || []).map((item, index) => `
+          <tr class="border-b border-gray-200">
+            <td class="py-2 px-1">${item.product_name}</td>
+            <td class="text-center py-2 px-1">${item.quantity}</td>
+            <td class="text-right py-2 px-1">Rp ${(item.selling_price || 0).toLocaleString('id-ID')}</td>
+            <td class="text-right py-2 px-1">Rp ${(item.selling_price * item.quantity || 0).toLocaleString('id-ID')}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+
+    <div class="border-t-2 border-gray-300 pt-2 space-y-1 mb-6">
+      <div class="flex justify-between text-sm">
+        <span>Total Jual:</span>
+        <span class="font-bold">Rp ${(settlement.total_amount || 0).toLocaleString('id-ID')}</span>
+      </div>
+      <div class="flex justify-between text-sm">
+        <span>Total Modal:</span>
+        <span class="font-bold">Rp ${((settlement.items || []).reduce((sum, item) => sum + (item.cost_price * item.quantity), 0)).toLocaleString('id-ID')}</span>
+      </div>
+      <div class="flex justify-between text-lg font-bold border-t border-double border-gray-400 pt-2 mt-2">
+        <span>Keuntungan:</span>
+        <span class="text-primary">Rp ${(settlement.total_profit || 0).toLocaleString('id-ID')}</span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-8 mt-8 pt-4">
+      <div class="text-center">
+        <p class="font-bold mb-8">Mitra</p>
+        <div class="border-b border-gray-400 mb-2" style="height: 32px;"></div>
+        <p class="text-sm font-bold">${settlement.mitra?.full_name || '_________________'}</p>
+        <p class="text-xs">Penerima</p>
+      </div>
+      <div class="text-center">
+        <p class="font-bold mb-8">Owner/Admin</p>
+        <div class="border-b border-gray-400 mb-2" style="height: 32px;"></div>
+        <p class="text-sm font-bold">${settlement.user?.nama || user?.nama || '_________________'}</p>
+        <p class="text-xs">Pembuat</p>
+      </div>
+    </div>
+
+    <div class="mt-8 pt-4 border-t border-gray-200 text-center text-xs">
+      <p>Dokumen ini dicetak secara otomatis oleh sistem Lapak Berkah Buntulia</p>
+      <p>${new Date().toLocaleString('id-ID')}</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+      const blob = new Blob([html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const printWindow = window.open(url, '_blank', 'width=800,height=600');
+      if (!printWindow) {
+        console.error('[MitraSettlement] print window blocked');
+        alert('Popup diblokir. Izinkan popup untuk mencetak invoice.');
+        URL.revokeObjectURL(url);
+        return;
+      }
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+          setTimeout(() => {
+            printWindow.close();
+            URL.revokeObjectURL(url);
+          }, 100);
+        }, 500);
+      };
     }, 300);
   };
 
