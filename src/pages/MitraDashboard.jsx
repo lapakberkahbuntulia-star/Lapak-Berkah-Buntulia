@@ -146,30 +146,41 @@ function MitraDashboard({ role, user }) {
         stock: p.stock || 0,
       }));
 
-      const mappedPendingStock = (pendingStockData || []).map((s) => ({
-        id: s.id,
-        mitraId: s.mitra_id,
-        productId: s.product_id,
-        date: s.date,
-        quantity: s.quantity,
-        note: s.note || '',
-        status: s.status,
-        mitraName: (allMitraData || []).find((m) => m.id === s.mitra_id)?.full_name || (s.mitra?.full_name) || '-',
-        productName: (productData || []).find((p) => p.id === s.product_id)?.nama_produk || (s.product?.nama_produk) || '-',
-      }));
+      const mitraMap = new Map((allMitraData || []).map((m) => [m.id, m]));
+      const productMap = new Map((productData || []).map((p) => [p.id, p]));
 
-      const mappedStockHistory = (stockHistoryData || []).map((s) => ({
-        id: s.id,
-        mitraId: s.mitra_id,
-        productId: s.product_id,
-        date: s.date,
-        quantity: s.quantity,
-        note: s.note || '',
-        status: s.status,
-        mitraName: (allMitraData || []).find((m) => m.id === s.mitra_id)?.full_name || (s.mitra?.full_name) || '-',
-        productName: (productData || []).find((p) => p.id === s.product_id)?.nama_produk || (s.product?.nama_produk) || '-',
-        currentStock: (productData || []).find((p) => p.id === s.product_id)?.stock || 0,
-      }));
+      const mappedPendingStock = (pendingStockData || []).map((s) => {
+        const mitra = mitraMap.get(s.mitra_id);
+        const product = productMap.get(s.product_id);
+        return {
+          id: s.id,
+          mitraId: s.mitra_id,
+          productId: s.product_id,
+          date: s.date,
+          quantity: s.quantity,
+          note: s.note || '',
+          status: s.status,
+          mitraName: mitra?.full_name || s.mitra?.full_name || '-',
+          productName: product?.nama_produk || s.product?.nama_produk || '-',
+        };
+      });
+
+      const mappedStockHistory = (stockHistoryData || []).map((s) => {
+        const mitra = mitraMap.get(s.mitra_id);
+        const product = productMap.get(s.product_id);
+        return {
+          id: s.id,
+          mitraId: s.mitra_id,
+          productId: s.product_id,
+          date: s.date,
+          quantity: s.quantity,
+          note: s.note || '',
+          status: s.status,
+          mitraName: mitra?.full_name || s.mitra?.full_name || '-',
+          productName: product?.nama_produk || s.product?.nama_produk || '-',
+          currentStock: product?.stock || 0,
+        };
+      });
 
       const mappedTx = (txData || []).map((tx) => ({
         id: tx.id,
@@ -180,7 +191,6 @@ function MitraDashboard({ role, user }) {
       }));
 
       setAllMitra(mappedMitra);
-      setMitraList(mappedMitra);
       setTotalMitra(mappedMitra.length);
       setProducts(mappedProducts);
       setStockInputs(mappedPendingStock);

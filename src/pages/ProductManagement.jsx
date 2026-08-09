@@ -32,6 +32,11 @@ function ProductManagement() {
   const [loading, _setLoading] = useState(true);
   const [totalFilteredProducts, setTotalFilteredProducts] = useState(0);
 
+  const selectedCategoryId = useMemo(() => {
+    if (selectedCategory === 'Semua') return undefined;
+    return categories.find((c) => c.name === selectedCategory)?.id;
+  }, [selectedCategory, categories]);
+
   useEffect(() => {
     loadProducts();
     loadCategories();
@@ -42,13 +47,12 @@ function ProductManagement() {
   useEffect(() => {
     setCurrentPage(1);
     loadProducts();
-  }, [searchQuery, selectedCategory]);
+  }, [searchQuery, selectedCategoryId]);
 
   const loadProducts = async () => {
     try {
-      const categoryId = selectedCategory !== 'Semua' ? categories.find(c => c.name === selectedCategory)?.id : undefined;
       const result = await productService.getAll(
-        { categoryId, search: searchQuery || undefined },
+        { categoryId: selectedCategoryId, search: searchQuery || undefined },
         { limit: itemsPerPage, offset: (currentPage - 1) * itemsPerPage }
       );
       setProducts(result.data);
