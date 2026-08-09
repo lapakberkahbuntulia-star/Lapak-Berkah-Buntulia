@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { transactionService } from '../lib/services';
+import { transactionService, returnService, productService, stockMovementService } from '../lib/services';
 
 function TransactionHistory() {
   const [history, setHistory] = useState([]);
@@ -9,6 +9,16 @@ function TransactionHistory() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedPayment, setSelectedPayment] = useState('Semua');
+  const [returnModal, setReturnModal] = useState({ open: false, transaction: null });
+  const [returnItems, setReturnItems] = useState({});
+  const [returnReason, setReturnReason] = useState('');
+  const [processingReturn, setProcessingReturn] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     loadTransactions();
@@ -34,6 +44,7 @@ function TransactionHistory() {
           date: formattedDate,
           mitraName: tx.mitra?.full_name || 'Tidak Diketahui',
           items: totalQty,
+          rawItems: tx.items || [],
           total: tx.total || 0,
           paymentMethod: tx.metode_pembayaran || '-',
           status: tx.status || '-',
@@ -118,6 +129,68 @@ function TransactionHistory() {
     `);
     receiptWindow.document.close();
     receiptWindow.print();
+  };
+
+  const openReturnModal = (transaction) => {
+    setReturnModal({ open: true, transaction });
+    setReturnItems({});
+    setReturnReason('');
+  };
+
+  const handleReturnQuantityChange = (itemId, maxQty, value) => {
+    const qty = Math.max(1, Math.min(Number(value) || 0, maxQty));
+    setReturnItems((prev) => ({ ...prev, [itemId]: qty }));
+  };
+
+  const handleSubmitReturn = async () => {
+    if (!returnModal.transaction || processingReturn) return;
+
+    const itemsToReturn = Object.entries(returnItems)
+      .filter(([_itemId, qty]) => qty > 0)
+      .map(([itemId, qty]) => ({ itemId, qty }));
+
+    if (itemsToReturn.length === 0) {
+      showToast('Pilih minimal satu item untuk diretur', 'error');
+      return;
+    }
+
+    setProcessingReturn(true);
+    try {
+      for (const { itemId, qty } of itemsToReturn) {
+        const item = returnModal.transaction.rawItems.find((i) => i.id === itemId);
+        if (!item) continue;
+
+        await returnService.create({
+          transaction_id: returnModal.transaction.id,
+          transaction_item_id: itemId,
+          product_id: item.product_id,
+          quantity: qty,
+          reason: returnReason,
+          user_id: null,
+        });
+
+        const newStock = (item.product?.stock || 0) + qty;
+        await productService.update(item.product_id, { stock: newStock });
+
+        await stockMovementService.create({
+          type: 'in',
+          product_id: item.product_id,
+          quantity: qty,
+          note: `Retur #${returnModal.transaction.transactionId}`,
+          mitra_id: null,
+        });
+      }
+
+      showToast('Retur berhasil diproses', 'success');
+      setReturnModal({ open: false, transaction: null });
+      setReturnItems({});
+      setReturnReason('');
+      loadTransactions();
+    } catch (_error) {
+      showToast('Gagal memproses retur', 'error');
+    } finally {
+      setProcessingReturn(false);
+    }
   };
 
   if (loading) {
@@ -344,14 +417,24 @@ function TransactionHistory() {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-center">
-                          <button
-                            onClick={() => printReceipt(h)}
-                            className="w-8 h-8 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-on-primary flex items-center justify-center transition-all duration-200"
-                            title="Cetak Struk"
-                            aria-label="Cetak struk"
-                          >
-                            <span className="material-symbols-outlined text-[18px]">print</span>
-                          </button>
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => openReturnModal(h)}
+                              className="w-8 h-8 rounded-lg bg-tertiary-fixed/15 text-tertiary-container hover:bg-tertiary-fixed hover:text-on-tertiary-fixed flex items-center justify-center transition-all duration-200"
+                              title="Retur"
+                              aria-label="Retur transaksi"
+                            >
+                              <span className="material-symbols-outlined text-[18px]">undo</span>
+                            </button>
+                            <button
+                              onClick={() => printReceipt(h)}
+                              className="w-8 h-8 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-on-primary flex items-center justify-center transition-all duration-200"
+                              title="Cetak Struk"
+                              aria-label="Cetak struk"
+                            >
+                              <span className="material-symbols-outlined text-[18px]">print</span>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -362,6 +445,86 @@ function TransactionHistory() {
           </div>
         </div>
       </main>
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg border text-sm flex items-center gap-2 animate-bounce ${
+          toast.type === 'error'
+            ? 'bg-error-container text-error border-error/30'
+            : 'bg-surface-container-high text-on-background border-outline-variant'
+        }`}>
+          <span className="material-symbols-outlined text-[18px]">
+            {toast.type === 'error' ? 'error' : 'check_circle'}
+          </span>
+          <span className="font-label-md text-label-md">{toast.message}</span>
+        </div>
+      )}
+
+      {returnModal.open && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-surface border border-outline-variant rounded-xl shadow-lg max-w-lg w-full max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-outline-variant">
+              <h3 className="font-headline-md text-headline-md text-on-surface">Retur Transaksi</h3>
+              <button onClick={() => setReturnModal({ open: false, transaction: null })} className="w-8 h-8 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              <p className="font-body-sm text-body-sm text-on-surface-variant">
+                Transaksi: <span className="font-mono text-sm bg-surface-container px-2 py-1 rounded-md">#{returnModal.transaction?.transactionId}</span>
+              </p>
+              <div>
+                <label className="font-label-md text-label-md text-on-surface block mb-1">Alasan Retur</label>
+                <textarea
+                  value={returnReason}
+                  onChange={(e) => setReturnReason(e.target.value)}
+                  className="w-full px-3 py-2 border border-outline-variant rounded-lg bg-surface text-on-surface font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  rows={2}
+                  placeholder="Masukkan alasan retur..."
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="font-label-md text-label-md text-on-surface block">Pilih Item</label>
+                {returnModal.transaction?.rawItems?.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between p-3 bg-surface-container-lowest rounded-lg border border-outline-variant/50">
+                    <div className="flex-1">
+                      <p className="font-body-md text-body-md text-on-surface">{item.product?.nama_produk || 'Produk'}</p>
+                      <p className="font-label-sm text-label-sm text-on-surface-variant">
+                        Qty: {item.quantity} | Rp {(item.harga_satuan * item.quantity).toLocaleString('id-ID')}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min={1}
+                        max={item.quantity}
+                        value={returnItems[item.id] || ''}
+                        onChange={(e) => handleReturnQuantityChange(item.id, item.quantity, e.target.value)}
+                        className="w-16 px-2 py-1 border border-outline-variant rounded-md text-center font-numeric-data text-numeric-data text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                        placeholder="0"
+                      />
+                      <span className="font-label-sm text-label-sm text-on-surface-variant">/ {item.quantity}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex gap-2 p-4 border-t border-outline-variant">
+              <button
+                onClick={() => setReturnModal({ open: false, transaction: null })}
+                className="flex-1 h-10 px-4 bg-surface border border-outline-variant text-on-surface rounded-lg font-label-md text-label-md hover:bg-surface-container transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleSubmitReturn}
+                disabled={processingReturn}
+                className="flex-1 h-10 px-4 bg-tertiary-fixed text-on-tertiary-fixed rounded-lg font-label-md text-label-md hover:bg-tertiary-fixed/90 transition-colors disabled:opacity-50"
+              >
+                {processingReturn ? 'Memproses...' : 'Proses Retur'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

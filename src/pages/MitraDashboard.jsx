@@ -56,7 +56,6 @@ function MitraDashboard({ role, user }) {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState(null);
   const [showStockForm, setShowStockForm] = useState(false);
   const [selectedMitra, setSelectedMitra] = useState(isMitra ? '' : '');
@@ -96,19 +95,6 @@ function MitraDashboard({ role, user }) {
     if (!activeFilter || activeFilter === 'Semua') return new Set();
     return new Set(products.filter((p) => String(p.mitraId) === activeFilter).map((p) => p.id));
   }, [isMitra, loggedInMitraId, activeTab, selectedMitra, productFilter, products]);
-
-  const debugInfo = {
-    isMitra,
-    userEmail: user?.email,
-    loggedInMitraId,
-    productFilter,
-    selectedMitra,
-    productsCount: products.length,
-    sampleProductMitraIds: products.slice(0, 5).map(p => ({ id: p.id, mitraId: p.mitraId, type: typeof p.mitraId })),
-    mitraListCount: mitraList.length,
-    mitraListEmails: mitraList.slice(0, 3).map(m => ({ id: m.id, email: m.email })),
-    visibleProductIds: Array.from(visibleProductIds).slice(0, 5),
-  };
 
   const [profitMonth, setProfitMonth] = useState(new Date().toISOString().slice(0, 7));
   const [profitStartDate, setProfitStartDate] = useState('');
@@ -192,7 +178,7 @@ function MitraDashboard({ role, user }) {
       setStockInputs(mappedPendingStock);
       setStockHistory(mappedStockHistory);
       setTransactions(mappedTx);
-    } catch (error) {
+    } catch (_error) {
       setToast({ message: 'Gagal memuat data dashboard', type: 'error' });
     } finally {
       setLoading(false);
@@ -345,10 +331,10 @@ function MitraDashboard({ role, user }) {
       setFormData({ fullName: '', address: '', phone: '', email: '', gender: 'Laki-laki', photo: '' });
       setShowForm(false);
       setToast({
-        message: `Mitra berhasil ditambahkan! Akun login: ${newMitra.email} / ${defaultPassword}`,
+        message: `Mitra berhasil ditambahkan! Akun login: ${newMitra.email}`,
         type: 'success',
       });
-    } catch (error) {
+    } catch (_error) {
       setToast({ message: 'Gagal menambahkan mitra: ' + (error?.message || ''), type: 'error' });
     }
   };
@@ -412,7 +398,7 @@ function MitraDashboard({ role, user }) {
         message: isAdminInput ? 'Stok harian berhasil disimpan dan divalidasi otomatis!' : 'Stok harian berhasil disimpan dan menunggu validasi admin!',
         type: 'success',
       });
-    } catch (error) {
+    } catch (_error) {
       setToast({ message: 'Gagal menyimpan stok harian', type: 'error' });
     }
   };
@@ -452,7 +438,7 @@ function MitraDashboard({ role, user }) {
 
       if (product) {
         const updatedStock = (product.stock || 0) + Number(stock.quantity);
-        const updateResult = await productService.update(product.id, { stock: updatedStock });
+        await productService.update(product.id, { stock: updatedStock });
         setProducts((prev) =>
           prev.map((p) => (p.id === product.id ? { ...p, stock: updatedStock } : p)),
         );
@@ -460,7 +446,7 @@ function MitraDashboard({ role, user }) {
 
       await loadData();
       setToast({ message: 'Stok berhasil divalidasi!', type: 'success' });
-    } catch (error) {
+    } catch (_error) {
       const detail = [error?.message, error?.details, error?.hint, error?.code].filter(Boolean).join(' | ') || JSON.stringify(error);
       setToast({ message: 'Gagal memvalidasi stok: ' + detail, type: 'error' });
     }
@@ -474,7 +460,7 @@ function MitraDashboard({ role, user }) {
       setEditingMitra(null);
       setEditMitraName('');
       setToast({ message: 'Mitra berhasil diperbarui!', type: 'success' });
-    } catch (error) {
+    } catch (_error) {
       setToast({ message: 'Gagal memperbarui mitra', type: 'error' });
     }
   };
@@ -490,7 +476,7 @@ function MitraDashboard({ role, user }) {
       await mitraService.delete(mitraId);
       setMitraList((prev) => prev.filter((m) => m.id !== mitraId));
       setToast({ message: 'Mitra berhasil dihapus!', type: 'success' });
-    } catch (error) {
+    } catch (_error) {
       setToast({ message: 'Gagal menghapus mitra', type: 'error' });
     }
   };

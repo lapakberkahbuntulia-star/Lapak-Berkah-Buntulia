@@ -27,7 +27,7 @@ function Dashboard() {
         paymentMethod: t.metode_pembayaran || '-',
         mitraName: t.mitra?.full_name || '-',
       })));
-    } catch (error) {
+    } catch (_error) {
       showToast('Gagal memuat data dashboard', 'error');
     } finally {
       setLoading(false);

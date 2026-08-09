@@ -59,7 +59,7 @@ function MitraSettlement({ user }) {
       });
 
       setSoldQuantities(quantities);
-    } catch (error) {
+    } catch (_error) {
       // silently continue
     }
   };
@@ -75,7 +75,7 @@ function MitraSettlement({ user }) {
       setSettlements(settlementsData || []);
       setMitraList(mitraData || []);
       setProducts(productsData || []);
-    } catch (error) {
+    } catch (_error) {
       showToast('Gagal memuat data', 'error');
     } finally {
       setLoading(false);
@@ -166,7 +166,7 @@ function MitraSettlement({ user }) {
 
       resetForm();
       await loadData();
-    } catch (error) {
+    } catch (_error) {
       showToast('Gagal menyimpan invoice: ' + (error?.message || ''), 'error');
     }
   };
@@ -199,7 +199,7 @@ function MitraSettlement({ user }) {
       await mitraSettlementService.delete(id);
       showToast('Invoice berhasil dihapus!', 'success');
       await loadData();
-    } catch (error) {
+    } catch (_error) {
       showToast('Gagal menghapus invoice', 'error');
     }
   };

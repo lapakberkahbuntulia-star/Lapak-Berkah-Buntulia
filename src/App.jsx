@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import TopAppBar from './components/TopAppBar';
 import NavDrawer from './components/NavDrawer';
 import BottomNav from './components/BottomNav';
 import SummaryCards from './components/SummaryCards';
 import TransactionTable from './components/TransactionTable';
+import ErrorBoundary from './components/ErrorBoundary';
 import MitraDashboard from './pages/MitraDashboard';
 import KasirHP from './pages/KasirHP';
 import { KasirDesktop, KasirDesktopCart } from './pages/KasirDesktop';
@@ -127,17 +128,19 @@ function App() {
       <div className="flex h-[calc(100vh-64px)] overflow-hidden">
         <NavDrawer activePage={page} onNavigate={navigateTo} onLogout={handleLogout} role={role} />
         <main className={`flex-1 overflow-y-auto bg-surface md:ml-72 pb-24 md:pb-8 ${page === 'pos-desktop' ? 'md:mr-[380px]' : ''}`}>
-           {page === 'financial' && <FinancialReports />}
-           {page === 'dashboard' && <Dashboard />}
-           {page === 'sales-recap' && <SalesRecap />}
-           {page === 'mitra' && <MitraDashboard role={role} user={user} />}
-           {page === 'inventory' && <Inventory />}
-           {page === 'transaction-history' && <TransactionHistory />}
-           {page === 'stock-management' && <StockManagement />}
-           {page === 'product' && <ProductManagement />}
-           {page === 'mitra-settlement' && <MitraSettlement user={user} />}
-           {page === 'pos' && <KasirHP />}
-           {page === 'pos-desktop' && <KasirDesktop />}
+          <ErrorBoundary>
+            {page === 'financial' && <FinancialReports />}
+            {page === 'dashboard' && <Dashboard />}
+            {page === 'sales-recap' && <SalesRecap />}
+            {page === 'mitra' && <MitraDashboard role={role} user={user} />}
+            {page === 'inventory' && <Inventory />}
+            {page === 'transaction-history' && <TransactionHistory />}
+            {page === 'stock-management' && <StockManagement />}
+            {page === 'product' && <ProductManagement />}
+            {page === 'mitra-settlement' && <MitraSettlement user={user} />}
+            {page === 'pos' && <KasirHP />}
+            {page === 'pos-desktop' && <KasirDesktop />}
+          </ErrorBoundary>
         </main>
         {page === 'pos-desktop' && <KasirDesktopCart user={user} />}
         <BottomNav activePage={page} onNavigate={navigateTo} onLogout={handleLogout} role={role} />

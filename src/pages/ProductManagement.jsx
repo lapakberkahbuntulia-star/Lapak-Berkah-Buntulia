@@ -58,7 +58,7 @@ function ProductManagement() {
       setCategories(categoriesData);
       setTypes(typesData);
       setMitraList(mitraData);
-    } catch (error) {
+    } catch (_error) {
       showToast('Gagal memuat data', 'error');
     } finally {
       setLoading(false);
@@ -161,7 +161,7 @@ function ProductManagement() {
       setShowForm(false);
       setEditingProduct(null);
       await loadData();
-    } catch (error) {
+    } catch (_error) {
       const detail = [error?.message, error?.details, error?.hint, error?.code].filter(Boolean).join(' | ') || 'Terjadi kesalahan saat menyimpan produk';
       showToast('Gagal menyimpan produk: ' + detail, 'error');
     }
@@ -192,7 +192,7 @@ function ProductManagement() {
       await productService.delete(id);
       setProducts(products.filter(p => p.id !== id));
       showToast('Produk berhasil dihapus!', 'success');
-    } catch (error) {
+    } catch (_error) {
       showToast('Gagal menghapus produk', 'error');
     }
   };
@@ -216,7 +216,7 @@ function ProductManagement() {
         setShowCategoryForm(false);
         showToast('Kategori berhasil ditambahkan!', 'success');
         await loadData();
-      } catch (error) {
+      } catch (_error) {
         showToast('Gagal menambahkan kategori', 'error');
       }
     }
@@ -236,7 +236,7 @@ function ProductManagement() {
           showToast('Kategori berhasil diperbarui!', 'success');
           await loadData();
         }
-      } catch (error) {
+      } catch (_error) {
         showToast('Gagal memperbarui kategori', 'error');
       }
     }
@@ -262,7 +262,7 @@ function ProductManagement() {
       showToast('Kategori berhasil dihapus!', 'success');
       setDeleteConfirm(null);
       await loadData();
-    } catch (error) {
+    } catch (_error) {
       showToast('Gagal menghapus kategori', 'error');
       setDeleteConfirm(null);
     }
@@ -276,7 +276,7 @@ function ProductManagement() {
         setShowTypeForm(false);
         showToast('Jenis berhasil ditambahkan!', 'success');
         await loadData();
-      } catch (error) {
+      } catch (_error) {
         showToast('Gagal menambahkan jenis', 'error');
       }
     }
@@ -296,7 +296,7 @@ function ProductManagement() {
           showToast('Jenis berhasil diperbarui!', 'success');
           await loadData();
         }
-      } catch (error) {
+      } catch (_error) {
         showToast('Gagal memperbarui jenis', 'error');
       }
     }
@@ -322,7 +322,7 @@ function ProductManagement() {
       showToast('Jenis berhasil dihapus!', 'success');
       setDeleteTypeConfirm(null);
       await loadData();
-    } catch (error) {
+    } catch (_error) {
       showToast('Gagal menghapus jenis', 'error');
       setDeleteTypeConfirm(null);
     }
@@ -346,7 +346,7 @@ function ProductManagement() {
         setShowMitraForm(false);
         showToast('Mitra berhasil ditambahkan!', 'success');
         await loadData();
-      } catch (error) {
+      } catch (_error) {
         showToast('Gagal menambahkan mitra', 'error');
       }
     }
@@ -367,7 +367,7 @@ function ProductManagement() {
         setEditingMitra(null);
         setEditMitraName('');
         await loadData();
-      } catch (error) {
+      } catch (_error) {
         showToast('Gagal memperbarui mitra', 'error');
         setEditingMitra(null);
         setEditMitraName('');
@@ -394,7 +394,7 @@ function ProductManagement() {
       showToast('Mitra berhasil dihapus!', 'success');
       setDeleteMitraConfirm(null);
       await loadData();
-    } catch (error) {
+    } catch (_error) {
       showToast('Gagal menghapus mitra', 'error');
       setDeleteMitraConfirm(null);
     }

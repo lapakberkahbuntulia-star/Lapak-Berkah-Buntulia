@@ -77,7 +77,7 @@ function StockManagement() {
             note: v.note,
           })),
         );
-      } catch (error) {
+      } catch (_error) {
         showToast('Gagal memuat data stok', 'error');
       } finally {
         setLoading(false);
@@ -114,7 +114,7 @@ function StockManagement() {
         const updatedStock = Math.max(0, (currentProduct?.stock || 0) + quantity);
         await productService.update(productId, { stock: updatedStock });
       }
-    } catch (error) {
+    } catch (_error) {
       showToast('Gagal memperbarui stok produk di database', 'error');
     }
   };
@@ -150,7 +150,7 @@ function StockManagement() {
       setFormData({ type: 'in', productId: '', quantity: '', note: '' });
       setShowForm(false);
       showToast('Transaksi stok berhasil disimpan!', 'success');
-    } catch (error) {
+    } catch (_error) {
       showToast('Gagal menyimpan transaksi stok', 'error');
     }
   };
@@ -189,7 +189,7 @@ function StockManagement() {
       await updateProductStock(validation.productId, validation.quantity, 'in');
       setPendingValidations((prev) => prev.filter((v) => v.id !== validationId));
       showToast('Stok berhasil divalidasi!', 'success');
-    } catch (error) {
+    } catch (_error) {
       showToast('Gagal memvalidasi stok', 'error');
     }
   };

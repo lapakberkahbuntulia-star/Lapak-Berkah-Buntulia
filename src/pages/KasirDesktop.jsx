@@ -45,7 +45,7 @@ function KasirDesktop() {
         description: p.description,
       }));
       setProducts(mapped);
-    } catch (err) {
+    } catch (_err) {
       setToast({ message: 'Gagal memuat produk', type: 'error' });
     } finally {
       setLoading(false);
@@ -321,21 +321,17 @@ function KasirDesktopCart({ user }) {
       await transactionItemService.createBatch(items);
 
       for (const item of activeTransaction.items) {
-        try {
-          await stockMovementService.create({
-            type: 'out',
-            product_id: item.productId,
-            quantity: item.qty,
-            note: `Transaksi #${createdTransaction.id.toString().slice(-2)}`,
-            mitra_id: item.mitraId || null,
-          });
+        await stockMovementService.create({
+          type: 'out',
+          product_id: item.productId,
+          quantity: item.qty,
+          note: `Transaksi #${createdTransaction.id.toString().slice(-2)}`,
+          mitra_id: item.mitraId || null,
+        });
 
-          const success = await productService.decrementStock(item.productId, item.qty);
-          if (!success) {
-            throw new Error(`Stok tidak cukup untuk ${item.name}`);
-          }
-        } catch (stockError) {
-          throw stockError;
+        const success = await productService.decrementStock(item.productId, item.qty);
+        if (!success) {
+          throw new Error(`Stok tidak cukup untuk ${item.name}`);
         }
       }
 
@@ -348,7 +344,7 @@ function KasirDesktopCart({ user }) {
               total_omzet: (currentMitra.total_omzet || 0) + total,
             });
           }
-        } catch (mitraError) {
+        } catch {
           // silently continue checkout
         }
       }

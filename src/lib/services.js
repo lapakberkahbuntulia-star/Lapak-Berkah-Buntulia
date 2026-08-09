@@ -3,22 +3,21 @@ import { supabase } from './supabase';
 export const authService = {
   async login(email, password, role) {
     const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .eq('password', password)
-      .eq('role', role)
-      .maybeSingle();
+      .rpc('login_user', {
+        p_email: email,
+        p_password: password,
+        p_role: role,
+      });
 
     if (error) {
       throw new Error(error.message || 'Login gagal');
     }
 
-    if (!data) {
+    if (!data || data.length === 0) {
       throw new Error('Email, kata sandi, atau peran salah');
     }
 
-    return data;
+    return data[0];
   },
 };
 
@@ -295,6 +294,33 @@ export const transactionService = {
 
     if (error) throw error;
     return data;
+  },
+};
+
+export const returnService = {
+  async create(returnData) {
+    const { data, error } = await supabase
+      .from('returns')
+      .insert([returnData])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async getByTransaction(transactionId) {
+    const { data, error } = await supabase
+      .from('returns')
+      .select(`
+        *,
+        product:product_id (nama_produk, sku, unit)
+      `)
+      .eq('transaction_id', transactionId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
   },
 };
 
