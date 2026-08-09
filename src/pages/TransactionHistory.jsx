@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { transactionService, returnService, productService, stockMovementService } from '../lib/services';
 import Pagination from '../components/Pagination';
 
@@ -193,7 +193,7 @@ function TransactionHistory() {
       setReturnItems({});
       setReturnReason('');
       loadTransactions();
-    } catch (_error) {
+    } catch {
       showToast('Gagal memproses retur', 'error');
     } finally {
       setProcessingReturn(false);

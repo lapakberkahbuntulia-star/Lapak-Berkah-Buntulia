@@ -14,7 +14,7 @@ const moreItems = [
   { icon: 'admin_panel_settings', label: 'Admin', page: 'financial', roles: ['admin'] },
 ];
 
-function BottomNav({ activePage, onNavigate, onLogout, role, lowStockCount = 0 }) {
+function BottomNav({ activePage, onNavigate, role, lowStockCount = 0 }) {
   const accessiblePrimary = primaryItems.filter((item) => !role || item.roles.includes(role));
   const accessibleMore = moreItems.filter((item) => !role || item.roles.includes(role));
   const hasMore = accessibleMore.length > 0;

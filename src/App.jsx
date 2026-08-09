@@ -211,7 +211,7 @@ function App() {
           </ErrorBoundary>
         </main>
         {page === 'pos-desktop' && <KasirDesktopCart user={user} />}
-        <BottomNav activePage={page} onNavigate={navigateTo} onLogout={handleLogout} role={role} lowStockCount={lowStockCount} />
+        <BottomNav activePage={page} onNavigate={navigateTo} role={role} lowStockCount={lowStockCount} />
       </div>
     </div>
   );

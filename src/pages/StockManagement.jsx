@@ -12,7 +12,7 @@ function StockManagement() {
   const [productsList, setProductsList] = useState([]);
   const [stockMovements, setStockMovements] = useState([]);
   const [pendingValidations, setPendingValidations] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, _setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [filterType, setFilterType] = useState('Semua');
   const [filterProduct, setFilterProduct] = useState('Semua');
@@ -51,7 +51,7 @@ function StockManagement() {
           unit: p.unit,
         })),
       );
-    } catch (_error) {
+    } catch {
       showToast('Gagal memuat produk', 'error');
     }
   };
@@ -60,7 +60,7 @@ function StockManagement() {
     try {
       const data = await mitraService.getAll();
       setMitraList(data);
-    } catch (_error) {
+    } catch {
       showToast('Gagal memuat data mitra', 'error');
     }
   };
@@ -90,7 +90,7 @@ function StockManagement() {
         })),
       );
       setTotalMovements(result.count || 0);
-    } catch (_error) {
+    } catch {
       showToast('Gagal memuat transaksi stok', 'error');
     }
   };
@@ -119,7 +119,7 @@ function StockManagement() {
         })),
       );
       setTotalValidations(result.count || 0);
-    } catch (_error) {
+    } catch {
       showToast('Gagal memuat validasi stok', 'error');
     }
   };
@@ -187,7 +187,7 @@ function StockManagement() {
       await loadProducts();
       await loadMovements();
       await loadValidations();
-    } catch (_error) {
+    } catch {
       showToast('Gagal menyimpan transaksi stok', 'error');
     }
   };
@@ -215,7 +215,7 @@ function StockManagement() {
       await loadProducts();
       await loadMovements();
       await loadValidations();
-    } catch (_error) {
+    } catch {
       showToast('Gagal memvalidasi stok', 'error');
     }
   };

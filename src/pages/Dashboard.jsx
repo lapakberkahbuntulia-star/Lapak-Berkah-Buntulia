@@ -33,7 +33,7 @@ function Dashboard({ setLowStockCount }) {
       if (setLowStockCount) {
         setLowStockCount(lowStockData.length);
       }
-    } catch (_error) {
+    } catch {
       showToast('Gagal memuat data dashboard', 'error');
     } finally {
       setLoading(false);

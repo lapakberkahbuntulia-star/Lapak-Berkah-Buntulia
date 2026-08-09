@@ -59,7 +59,7 @@ function MitraSettlement({ user }) {
       });
 
       setSoldQuantities(quantities);
-    } catch (_error) {
+    } catch {
       // silently continue
     }
   };
@@ -75,7 +75,7 @@ function MitraSettlement({ user }) {
       setSettlements(settlementsData || []);
       setMitraList(mitraData || []);
       setProducts(productsData || []);
-    } catch (_error) {
+    } catch {
       showToast('Gagal memuat data', 'error');
     } finally {
       setLoading(false);
@@ -166,7 +166,7 @@ function MitraSettlement({ user }) {
 
       resetForm();
       await loadData();
-    } catch (_error) {
+    } catch {
       showToast('Gagal menyimpan invoice: ' + (error?.message || ''), 'error');
     }
   };
@@ -199,7 +199,7 @@ function MitraSettlement({ user }) {
       await mitraSettlementService.delete(id);
       showToast('Invoice berhasil dihapus!', 'success');
       await loadData();
-    } catch (_error) {
+    } catch {
       showToast('Gagal menghapus invoice', 'error');
     }
   };
@@ -283,7 +283,7 @@ function MitraSettlement({ user }) {
         </tr>
       </thead>
       <tbody>
-        ${(settlement.items || []).map((item, index) => `
+        ${(settlement.items || []).map((item, _index) => `
           <tr class="border-b border-gray-200">
             <td class="py-1 px-1">${item.product_name}</td>
             <td class="text-center py-1 px-1">${item.quantity}</td>

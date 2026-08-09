@@ -186,7 +186,7 @@ function MitraDashboard({ role, user }) {
       setStockInputs(mappedPendingStock);
       setStockHistory(mappedStockHistory);
       setTransactions(mappedTx);
-    } catch (_error) {
+    } catch {
       setToast({ message: 'Gagal memuat data dashboard', type: 'error' });
     } finally {
       setLoading(false);
@@ -388,7 +388,7 @@ function MitraDashboard({ role, user }) {
         message: `Mitra berhasil ditambahkan! Akun login: ${newMitra.email}`,
         type: 'success',
       });
-    } catch (_error) {
+    } catch {
       setToast({ message: 'Gagal menambahkan mitra: ' + (error?.message || ''), type: 'error' });
     }
   };
@@ -405,7 +405,7 @@ function MitraDashboard({ role, user }) {
         });
         setFormData({ ...formData, photo: compressed.dataUrl });
         showToast(`Foto berhasil dimuat (${compressed.sizeKB}KB)`, 'success');
-      } catch (_error) {
+      } catch {
         showToast('Gagal memproses foto', 'error');
       }
     }
@@ -459,7 +459,7 @@ function MitraDashboard({ role, user }) {
         message: isAdminInput ? 'Stok harian berhasil disimpan dan divalidasi otomatis!' : 'Stok harian berhasil disimpan dan menunggu validasi admin!',
         type: 'success',
       });
-    } catch (_error) {
+    } catch {
       setToast({ message: 'Gagal menyimpan stok harian', type: 'error' });
     }
   };
@@ -507,7 +507,7 @@ function MitraDashboard({ role, user }) {
 
       await loadData();
       setToast({ message: 'Stok berhasil divalidasi!', type: 'success' });
-    } catch (_error) {
+    } catch {
       const detail = [error?.message, error?.details, error?.hint, error?.code].filter(Boolean).join(' | ') || JSON.stringify(error);
       setToast({ message: 'Gagal memvalidasi stok: ' + detail, type: 'error' });
     }
@@ -522,7 +522,7 @@ function MitraDashboard({ role, user }) {
       setEditingMitra(null);
       setEditMitraName('');
       setToast({ message: 'Mitra berhasil diperbarui!', type: 'success' });
-    } catch (_error) {
+    } catch {
       setToast({ message: 'Gagal memperbarui mitra', type: 'error' });
     }
   };
@@ -539,7 +539,7 @@ function MitraDashboard({ role, user }) {
       setMitraList((prev) => prev.filter((m) => m.id !== mitraId));
       setAllMitra((prev) => prev.filter((m) => m.id !== mitraId));
       setToast({ message: 'Mitra berhasil dihapus!', type: 'success' });
-    } catch (_error) {
+    } catch {
       setToast({ message: 'Gagal menghapus mitra', type: 'error' });
     }
   };

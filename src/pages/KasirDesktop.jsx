@@ -44,7 +44,7 @@ function KasirDesktop() {
         description: p.description,
       }));
       setProducts(mapped);
-    } catch (_err) {
+      } catch {
       setToast({ message: 'Gagal memuat produk', type: 'error' });
     } finally {
       setLoading(false);
@@ -243,7 +243,7 @@ function KasirDesktopCart({ user }) {
             return [...prev, ...newTransactions];
           });
         }
-      } catch (_error) {
+      } catch {
         showToast('Gagal memuat transaksi sementara', 'error');
       }
     };
@@ -335,7 +335,7 @@ function KasirDesktopCart({ user }) {
       setTransactions((prev) =>
         prev.map((t) => (t.id === newTransaction.id ? { ...t, heldDbId: heldRecord.id } : t)),
       );
-    } catch (_error) {
+    } catch {
       showToast('Gagal menyimpan transaksi sementara', 'error');
     }
   };
@@ -360,7 +360,7 @@ function KasirDesktopCart({ user }) {
       } else {
         await heldTransactionService.deleteByLocalId(id);
       }
-    } catch (_error) {
+    } catch {
       showToast('Gagal menghapus transaksi sementara', 'error');
     }
   };

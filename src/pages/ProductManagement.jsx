@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { productService, categoryService, productTypeService, mitraService } from '../lib/services';
 import Pagination from '../components/Pagination';
 import compressImage from '../utils/compressImage';
@@ -29,7 +29,7 @@ function ProductManagement() {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
-  const [loading, setLoading] = useState(true);
+  const [loading, _setLoading] = useState(true);
   const [totalFilteredProducts, setTotalFilteredProducts] = useState(0);
 
   useEffect(() => {
@@ -53,7 +53,7 @@ function ProductManagement() {
       );
       setProducts(result.data);
       setTotalFilteredProducts(result.count || 0);
-    } catch (_error) {
+    } catch {
       showToast('Gagal memuat produk', 'error');
     }
   };
@@ -62,7 +62,7 @@ function ProductManagement() {
     try {
       const data = await categoryService.getAll();
       setCategories(data);
-    } catch (_error) {
+    } catch {
       showToast('Gagal memuat kategori', 'error');
     }
   };
@@ -71,7 +71,7 @@ function ProductManagement() {
     try {
       const data = await productTypeService.getAll();
       setTypes(data);
-    } catch (_error) {
+    } catch {
       showToast('Gagal memuat jenis produk', 'error');
     }
   };
@@ -80,7 +80,7 @@ function ProductManagement() {
     try {
       const data = await mitraService.getAll();
       setMitraList(data);
-    } catch (_error) {
+    } catch {
       showToast('Gagal memuat data mitra', 'error');
     }
   };
@@ -169,7 +169,7 @@ function ProductManagement() {
       await loadCategories();
       await loadTypes();
       await loadMitra();
-    } catch (_error) {
+    } catch {
       const detail = [error?.message, error?.details, error?.hint, error?.code].filter(Boolean).join(' | ') || 'Terjadi kesalahan saat menyimpan produk';
       showToast('Gagal menyimpan produk: ' + detail, 'error');
     }
@@ -201,7 +201,7 @@ function ProductManagement() {
       setProducts(products.filter(p => p.id !== id));
       await loadProducts();
       showToast('Produk berhasil dihapus!', 'success');
-    } catch (_error) {
+    } catch {
       showToast('Gagal menghapus produk', 'error');
     }
   };
@@ -218,7 +218,7 @@ function ProductManagement() {
         });
         setFormData({ ...formData, photo: compressed.dataUrl });
         showToast(`Gambar berhasil dimuat (${compressed.sizeKB}KB)`, 'success');
-      } catch (_error) {
+      } catch {
         showToast('Gagal memproses gambar', 'error');
       }
     }
