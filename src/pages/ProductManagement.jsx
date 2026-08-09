@@ -307,7 +307,7 @@ function ProductManagement() {
                 </div>
                 <div>
                   <p className="font-label-md text-label-md text-on-surface-variant mb-1">Total Produk</p>
-                  <p className="font-display-lg text-display-lg text-on-background tracking-tight">{totalProducts}</p>
+                  <p className="font-display-lg text-display-lg text-on-background tracking-tight">{totalFilteredProducts}</p>
                 </div>
               </div>
 
