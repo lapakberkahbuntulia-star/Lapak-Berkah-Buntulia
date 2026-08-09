@@ -81,6 +81,39 @@ export const productService = {
     return data || [];
   },
 
+  async getLowStock(threshold = 10) {
+    const { data, error } = await supabase
+      .from('products')
+      .select(`
+        *,
+        mitra:mitra_id (full_name),
+        category:category_id (name),
+        type:type_id (name)
+      `)
+      .gt('stock', 0)
+      .lte('stock', threshold)
+      .order('stock', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getOutOfStock() {
+    const { data, error } = await supabase
+      .from('products')
+      .select(`
+        *,
+        mitra:mitra_id (full_name),
+        category:category_id (name),
+        type:type_id (name)
+      `)
+      .eq('stock', 0)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  },
+
   async create(product) {
     const { data, error } = await supabase
       .from('products')

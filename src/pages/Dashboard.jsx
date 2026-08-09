@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { dashboardService, transactionService } from '../lib/services';
+import { dashboardService, transactionService, productService } from '../lib/services';
 
-function Dashboard() {
+function Dashboard({ setLowStockCount }) {
   const [stats, setStats] = useState({ totalTransactions: 0, totalSales: 0, totalItems: 0, activeMitra: 0 });
   const [todayTransactions, setTodayTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [lowStockProducts, setLowStockProducts] = useState([]);
 
   useEffect(() => {
     loadDashboardData();
@@ -12,9 +13,10 @@ function Dashboard() {
 
   const loadDashboardData = async () => {
     try {
-      const [statsData, transactionsData] = await Promise.all([
+      const [statsData, transactionsData, lowStockData] = await Promise.all([
         dashboardService.getTodayStats(),
         transactionService.getHistory(),
+        productService.getLowStock(10),
       ]);
 
       setStats(statsData);
@@ -27,6 +29,10 @@ function Dashboard() {
         paymentMethod: t.metode_pembayaran || '-',
         mitraName: t.mitra?.full_name || '-',
       })));
+      setLowStockProducts(lowStockData);
+      if (setLowStockCount) {
+        setLowStockCount(lowStockData.length);
+      }
     } catch (_error) {
       showToast('Gagal memuat data dashboard', 'error');
     } finally {
@@ -123,6 +129,49 @@ function Dashboard() {
               </div>
             </div>
           </div>
+
+          {lowStockProducts.length > 0 && (
+            <div className="bg-error-container/10 border border-error/30 rounded-xl shadow-sm overflow-hidden">
+              <div className="p-4 border-b border-error/20 bg-error-container/20">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-error">warning</span>
+                  <h3 className="font-headline-sm text-headline-sm text-error">Stok Menipis</h3>
+                  <span className="ml-auto px-2 py-0.5 bg-error text-on-error text-xs font-bold rounded-full">
+                    {lowStockProducts.length}
+                  </span>
+                </div>
+                <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
+                  Produk dengan stok &le; 10 yang perlu segera di-restock
+                </p>
+              </div>
+              <div className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {lowStockProducts.slice(0, 6).map((product) => (
+                    <div key={product.id} className="flex items-center gap-3 p-3 bg-surface rounded-lg border border-outline-variant/50">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-body-md text-body-md text-on-surface truncate">{product.nama_produk}</p>
+                        <p className="font-label-sm text-label-sm text-on-surface-variant">
+                          Stok: <span className="font-semibold text-error">{product.stock}</span> {product.unit}
+                        </p>
+                      </div>
+                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        product.stock === 0 
+                          ? 'bg-error-container text-error' 
+                          : 'bg-[#fdf2d5] text-[#7a590c]'
+                      }`}>
+                        {product.stock === 0 ? 'Habis' : 'Rendah'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {lowStockProducts.length > 6 && (
+                  <p className="font-body-sm text-body-sm text-on-surface-variant mt-3 text-center">
+                    +{lowStockProducts.length - 6} produk lainnya
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Today's Transactions Table */}
           <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">

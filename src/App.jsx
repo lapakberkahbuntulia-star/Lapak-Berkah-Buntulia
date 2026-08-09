@@ -90,6 +90,7 @@ function App() {
     }
   });
   const [page, setPage] = useState('dashboard');
+  const [lowStockCount, setLowStockCount] = useState(0);
 
   useEffect(() => {
     const authData = { isAuthenticated, role, user };
@@ -130,7 +131,7 @@ function App() {
         <main className={`flex-1 overflow-y-auto bg-surface md:ml-72 pb-24 md:pb-8 ${page === 'pos-desktop' ? 'md:mr-[380px]' : ''}`}>
           <ErrorBoundary>
             {page === 'financial' && <FinancialReports />}
-            {page === 'dashboard' && <Dashboard />}
+            {page === 'dashboard' && <Dashboard lowStockCount={lowStockCount} setLowStockCount={setLowStockCount} />}
             {page === 'sales-recap' && <SalesRecap />}
             {page === 'mitra' && <MitraDashboard role={role} user={user} />}
             {page === 'inventory' && <Inventory />}
@@ -143,7 +144,7 @@ function App() {
           </ErrorBoundary>
         </main>
         {page === 'pos-desktop' && <KasirDesktopCart user={user} />}
-        <BottomNav activePage={page} onNavigate={navigateTo} onLogout={handleLogout} role={role} />
+        <BottomNav activePage={page} onNavigate={navigateTo} onLogout={handleLogout} role={role} lowStockCount={lowStockCount} />
       </div>
     </div>
   );

@@ -141,7 +141,21 @@ function KasirDesktop() {
             <p className="font-body-md text-body-md text-on-surface-variant">Memuat produk...</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <>
+            {products.filter((p) => p.stock > 0 && p.stock <= 10).length > 0 && (
+              <div className="mb-4 p-3 bg-[#fdf2d5] border border-[#ebd083] rounded-xl flex items-center gap-3">
+                <span className="material-symbols-outlined text-[#7a590c]">warning</span>
+                <div className="flex-1">
+                  <p className="font-label-md text-label-md text-[#7a590c]">
+                    {products.filter((p) => p.stock > 0 && p.stock <= 10).length} produk stok menipis
+                  </p>
+                  <p className="font-body-sm text-body-sm text-[#7a590c]/80">
+                    Segera lakukan restock untuk menghindari kehabisan stok
+                  </p>
+                </div>
+              </div>
+            )}
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredProducts.map((product) => (
               <button
                 key={product.id}
@@ -188,6 +202,7 @@ function KasirDesktop() {
               </button>
             ))}
           </div>
+          </>
         )}
       </div>
     </div>
