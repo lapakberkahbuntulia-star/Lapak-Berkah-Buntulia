@@ -230,13 +230,14 @@ function MitraSettlement({ user }) {
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      padding: 20px;
+      padding: 5mm;
       font-family: Arial, sans-serif;
       color: #111;
       background: #fff;
+      width: 58mm;
     }
     table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 8px 6px; vertical-align: top; }
+    th, td { padding: 4px 2px; vertical-align: top; font-size: 12px; }
     .text-right { text-align: right; }
     .text-center { text-align: center; }
     .font-bold { font-weight: bold; }
@@ -245,97 +246,93 @@ function MitraSettlement({ user }) {
     .border-double { border-style: double; }
     .border-t { border-top: 1px solid #ccc; }
     .border-t-2 { border-top: 2px solid #000; }
-    .mt-8 { margin-top: 32px; }
+    .mt-4 { margin-top: 16px; }
     .mb-4 { margin-bottom: 16px; }
-    .mb-6 { margin-bottom: 24px; }
     .mb-2 { margin-bottom: 8px; }
     .mb-1 { margin-bottom: 4px; }
-    .pt-4 { padding-top: 16px; }
-    .pb-4 { padding-bottom: 16px; }
-    .p-3 { padding: 12px; }
-    .text-2xl { font-size: 24px; }
-    .text-sm { font-size: 14px; }
-    .text-xs { font-size: 12px; }
-    .text-lg { font-size: 18px; }
+    .pt-2 { padding-top: 8px; }
+    .pb-2 { padding-bottom: 8px; }
+    .p-2 { padding: 8px; }
+    .text-xl { font-size: 20px; }
+    .text-sm { font-size: 12px; }
+    .text-xs { font-size: 10px; }
     .space-y-1 > * + * { margin-top: 4px; }
-    .space-y-2 > * + * { margin-top: 8px; }
     .grid { display: grid; }
     .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .gap-8 { gap: 32px; }
+    .gap-4 { gap: 16px; }
     .bg-gray-50 { background: #f8f9fa; }
-    .rounded { border-radius: 6px; }
-    .mx-auto { margin-left: auto; margin-right: auto; }
+    .rounded { border-radius: 4px; }
   </style>
 </head>
 <body>
-  <div style="max-width: 80mm; margin: 0 auto;">
-    <div class="text-center border-b-2 border-double border-gray-300 pb-4 mb-4">
-      <h1 class="text-2xl font-bold mb-1">LAPAK BERKAH BUNTULIA</h1>
-      <p class="text-sm mb-2">Nota Penjualan Mitra</p>
+  <div>
+    <div class="text-center border-b-2 border-double border-gray-300 pb-2 mb-2">
+      <h1 class="text-xl font-bold mb-1">LAPAK BERKAH BUNTULIA</h1>
+      <p class="text-sm mb-1">Nota Penjualan Mitra</p>
       <div class="text-xs space-y-1">
         <p>No. Invoice: <span class="font-bold">${settlement.invoice_number}</span></p>
         <p>Tanggal: ${settlement.date}</p>
       </div>
     </div>
 
-    <div class="mb-4 p-3 bg-gray-50 rounded">
+    <div class="mb-2 p-2 bg-gray-50 rounded">
       <p class="font-bold mb-1">Kepada:</p>
       <p class="font-bold">${settlement.mitra?.full_name || '-'}</p>
       <p class="text-xs">Mitra Lapak Berkah</p>
     </div>
 
-    <table class="w-full text-xs border-collapse mb-4">
+    <table class="w-full text-xs border-collapse mb-2">
       <thead>
         <tr class="border-b-2 border-gray-300">
-          <th class="text-left py-2 px-1">Produk</th>
-          <th class="text-center py-2 px-1">Qty</th>
-          <th class="text-right py-2 px-1">Harga</th>
-          <th class="text-right py-2 px-1">Subtotal</th>
+          <th class="text-left py-1 px-1">Produk</th>
+          <th class="text-center py-1 px-1">Qty</th>
+          <th class="text-right py-1 px-1">Harga</th>
+          <th class="text-right py-1 px-1">Subtotal</th>
         </tr>
       </thead>
       <tbody>
         ${(settlement.items || []).map((item, index) => `
           <tr class="border-b border-gray-200">
-            <td class="py-2 px-1">${item.product_name}</td>
-            <td class="text-center py-2 px-1">${item.quantity}</td>
-            <td class="text-right py-2 px-1">Rp ${(item.selling_price || 0).toLocaleString('id-ID')}</td>
-            <td class="text-right py-2 px-1">Rp ${(item.selling_price * item.quantity || 0).toLocaleString('id-ID')}</td>
+            <td class="py-1 px-1">${item.product_name}</td>
+            <td class="text-center py-1 px-1">${item.quantity}</td>
+            <td class="text-right py-1 px-1">Rp ${(item.selling_price || 0).toLocaleString('id-ID')}</td>
+            <td class="text-right py-1 px-1">Rp ${(item.selling_price * item.quantity || 0).toLocaleString('id-ID')}</td>
           </tr>
         `).join('')}
       </tbody>
     </table>
 
-    <div class="border-t-2 border-gray-300 pt-2 space-y-1 mb-6">
-      <div class="flex justify-between text-sm">
+    <div class="border-t-2 border-gray-300 pt-1 space-y-1 mb-2">
+      <div class="flex justify-between text-xs">
         <span>Total Jual:</span>
         <span class="font-bold">Rp ${(settlement.total_amount || 0).toLocaleString('id-ID')}</span>
       </div>
-      <div class="flex justify-between text-sm">
+      <div class="flex justify-between text-xs">
         <span>Total Modal:</span>
         <span class="font-bold">Rp ${((settlement.items || []).reduce((sum, item) => sum + (item.cost_price * item.quantity), 0)).toLocaleString('id-ID')}</span>
       </div>
-      <div class="flex justify-between text-lg font-bold border-t border-double border-gray-400 pt-2 mt-2">
+      <div class="flex justify-between text-sm font-bold border-t border-double border-gray-400 pt-1 mt-1">
         <span>Keuntungan:</span>
-        <span class="text-primary">Rp ${(settlement.total_profit || 0).toLocaleString('id-ID')}</span>
+        <span>Rp ${(settlement.total_profit || 0).toLocaleString('id-ID')}</span>
       </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-8 mt-8 pt-4">
+    <div class="grid grid-cols-2 gap-4 mt-4 pt-2">
       <div class="text-center">
-        <p class="font-bold mb-8">Mitra</p>
-        <div class="border-b border-gray-400 mb-2" style="height: 32px;"></div>
-        <p class="text-sm font-bold">${settlement.mitra?.full_name || '_________________'}</p>
+        <p class="font-bold mb-4">Mitra</p>
+        <div class="border-b border-gray-400 mb-1" style="height: 24px;"></div>
+        <p class="text-xs font-bold">${settlement.mitra?.full_name || '_________________'}</p>
         <p class="text-xs">Penerima</p>
       </div>
       <div class="text-center">
-        <p class="font-bold mb-8">Owner/Admin</p>
-        <div class="border-b border-gray-400 mb-2" style="height: 32px;"></div>
-        <p class="text-sm font-bold">${settlement.user?.nama || user?.nama || '_________________'}</p>
+        <p class="font-bold mb-4">Owner/Admin</p>
+        <div class="border-b border-gray-400 mb-1" style="height: 24px;"></div>
+        <p class="text-xs font-bold">${settlement.user?.nama || user?.nama || '_________________'}</p>
         <p class="text-xs">Pembuat</p>
       </div>
     </div>
 
-    <div class="mt-8 pt-4 border-t border-gray-200 text-center text-xs">
+    <div class="mt-4 pt-2 border-t border-gray-200 text-center text-xs">
       <p>Dokumen ini dicetak secara otomatis oleh sistem Lapak Berkah Buntulia</p>
       <p>${new Date().toLocaleString('id-ID')}</p>
     </div>

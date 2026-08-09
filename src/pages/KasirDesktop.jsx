@@ -367,9 +367,9 @@ function KasirDesktopCart({ user }) {
     const total = transaction.items.reduce((sum, item) => sum + item.sellingPrice * item.qty, 0);
     const itemsHtml = transaction.items.map((item) => `
       <tr>
-        <td style="padding: 4px 0; font-size: 12px;">${item.name}</td>
-        <td style="padding: 4px 0; font-size: 12px; text-align: center;">${item.qty} x ${item.sellingPrice.toLocaleString('id-ID')}</td>
-        <td style="padding: 4px 0; font-size: 12px; text-align: right;">Rp ${(item.sellingPrice * item.qty).toLocaleString('id-ID')}</td>
+        <td style="padding: 2px 0; font-size: 11px;">${item.name}</td>
+        <td style="padding: 2px 0; font-size: 11px; text-align: center;">${item.qty} x ${item.sellingPrice.toLocaleString('id-ID')}</td>
+        <td style="padding: 2px 0; font-size: 11px; text-align: right;">Rp ${(item.sellingPrice * item.qty).toLocaleString('id-ID')}</td>
       </tr>
     `).join('');
     const now = new Date().toLocaleString('id-ID');
@@ -378,44 +378,52 @@ function KasirDesktopCart({ user }) {
         <head>
           <title>Struk #${transaction.id.toString().slice(-2)}</title>
           <style>
-            body { font-family: 'Hanken Grotesk', sans-serif; padding: 16px; color: #000; }
+            * { box-sizing: border-box; }
+            body {
+              margin: 0;
+              padding: 5mm;
+              font-family: Arial, sans-serif;
+              color: #000;
+              background: #fff;
+              width: 58mm;
+            }
             table { width: 100%; border-collapse: collapse; }
-            td, th { padding: 4px; }
+            td, th { padding: 2px; font-size: 11px; }
           </style>
         </head>
         <body>
-          <h3 style="margin: 0 0 4px 0; font-size: 16px; font-weight: 700;">Lapak Berkah Buntulia</h3>
-          <p style="margin: 0 0 12px 0; font-size: 12px; color: #424750;">Struk Pembelian</p>
-          <p style="margin: 0 0 4px 0; font-size: 12px;">No. Transaksi: #${transaction.id.toString().slice(-2)}</p>
-          <p style="margin: 0 0 4px 0; font-size: 12px;">Tanggal: ${transaction.completedAt || now}</p>
-          <p style="margin: 0 0 12px 0; font-size: 12px;">Metode: ${transaction.paymentMethod || 'Tunai'}</p>
+          <h3 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 700;">Lapak Berkah Buntulia</h3>
+          <p style="margin: 0 0 8px 0; font-size: 11px; color: #424750;">Struk Pembelian</p>
+          <p style="margin: 0 0 2px 0; font-size: 11px;">No. Transaksi: #${transaction.id.toString().slice(-2)}</p>
+          <p style="margin: 0 0 2px 0; font-size: 11px;">Tanggal: ${transaction.completedAt || now}</p>
+          <p style="margin: 0 0 8px 0; font-size: 11px;">Metode: ${transaction.paymentMethod || 'Tunai'}</p>
           <table>
             <thead>
               <tr>
-                <th style="text-align: left; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">Item</th>
-                <th style="text-align: center; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">Qty x Harga</th>
-                <th style="text-align: right; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">Total</th>
+                <th style="text-align: left; border-bottom: 1px dashed #ccc; padding-bottom: 2px; font-size: 11px;">Item</th>
+                <th style="text-align: center; border-bottom: 1px dashed #ccc; padding-bottom: 2px; font-size: 11px;">Qty x Harga</th>
+                <th style="text-align: right; border-bottom: 1px dashed #ccc; padding-bottom: 2px; font-size: 11px;">Total</th>
               </tr>
             </thead>
             <tbody>${itemsHtml}</tbody>
           </table>
-          <div style="margin-top: 12px; border-top: 1px dashed #ccc; padding-top: 8px;">
-            <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 700;">
+          <div style="margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 4px;">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700;">
               <span>Total</span>
               <span>Rp ${total.toLocaleString('id-ID')}</span>
             </div>
             ${transaction.paid > 0 ? `
-            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-top: 4px;">
+            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-top: 2px;">
               <span>Bayar</span>
               <span>Rp ${transaction.paid.toLocaleString('id-ID')}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-top: 4px;">
+            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-top: 2px;">
               <span>Kembali</span>
               <span>Rp ${transaction.change.toLocaleString('id-ID')}</span>
             </div>
             ` : ''}
           </div>
-          <p style="margin-top: 16px; font-size: 12px; text-align: center; color: #424750;">Terima kasih telah berbelanja</p>
+          <p style="margin-top: 12px; font-size: 11px; text-align: center; color: #424750;">Terima kasih telah berbelanja</p>
         </body>
       </html>
     `);
