@@ -39,8 +39,8 @@ function MitraSettlement({ user }) {
       });
 
       const quantities = {};
-      transactions.forEach(tx => {
-        tx.items?.forEach(item => {
+      (transactions || []).forEach(tx => {
+        (tx.items || []).forEach(item => {
           if (item.product_id) {
             quantities[item.product_id] = (quantities[item.product_id] || 0) + item.quantity;
           }
@@ -52,7 +52,7 @@ function MitraSettlement({ user }) {
         mitraId,
       });
 
-      movements.forEach(m => {
+      (movements || []).forEach(m => {
         if (m.product_id) {
           quantities[m.product_id] = (quantities[m.product_id] || 0) + m.quantity;
         }
@@ -142,7 +142,9 @@ function MitraSettlement({ user }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.mitra_id || formData.items.length === 0) {
+    const validItems = (formData.items || []).filter(item => item.product_id && item.quantity > 0);
+    console.log('[MitraSettlement] submit formData:', { mitra_id: formData.mitra_id, items: formData.items, validItems });
+    if (!formData.mitra_id || validItems.length === 0) {
       showToast('Pilih mitra dan minimal satu produk', 'error');
       return;
     }
@@ -151,7 +153,7 @@ function MitraSettlement({ user }) {
       const settlementData = {
         mitra_id: formData.mitra_id,
         invoice_number: editingSettlement ? editingSettlement.invoice_number : generateInvoiceNumber(),
-        items: formData.items,
+        items: validItems,
         total_amount: totals.totalAmount,
         total_profit: totals.totalProfit,
         date: formData.date,
@@ -159,6 +161,7 @@ function MitraSettlement({ user }) {
         user_id: user?.id || null,
       };
 
+      console.log('[MitraSettlement] creating settlement:', settlementData);
       if (editingSettlement) {
         await mitraSettlementService.update(editingSettlement.id, settlementData);
         showToast('Invoice berhasil diperbarui!', 'success');
