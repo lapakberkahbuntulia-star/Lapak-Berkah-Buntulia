@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { transactionService, returnService, productService, stockMovementService } from '../lib/services';
+import Pagination from '../components/Pagination';
 
 function TransactionHistory() {
   const [history, setHistory] = useState([]);
@@ -14,6 +15,8 @@ function TransactionHistory() {
   const [returnReason, setReturnReason] = useState('');
   const [processingReturn, setProcessingReturn] = useState(false);
   const [toast, setToast] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -71,6 +74,15 @@ function TransactionHistory() {
 
   const totalTransactions = useMemo(() => filteredHistory.length, [filteredHistory]);
   const totalOmzet = useMemo(() => filteredHistory.reduce((sum, h) => sum + (h.total || 0), 0), [filteredHistory]);
+
+  const paginatedHistory = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredHistory.slice(start, start + itemsPerPage);
+  }, [filteredHistory, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, startDate, endDate, selectedPayment]);
 
   const printReceipt = (transaction) => {
     const receiptWindow = window.open('', '_blank', 'width=320,height=600');
@@ -388,7 +400,7 @@ function TransactionHistory() {
                     </tr>
                   </thead>
                   <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
-                    {filteredHistory.map((h, idx) => (
+                    {paginatedHistory.map((h, idx) => (
                       <tr key={h.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
                         <td className="px-6 py-4">
                           <span className="font-mono text-sm bg-surface-container px-2 py-1 rounded-md text-on-surface-variant">#{h.transactionId}</span>
@@ -440,6 +452,12 @@ function TransactionHistory() {
                     ))}
                   </tbody>
                 </table>
+                <Pagination
+                  totalItems={totalTransactions}
+                  itemsPerPage={itemsPerPage}
+                  currentPage={currentPage}
+                  onPageChange={setCurrentPage}
+                />
               </div>
             )}
           </div>

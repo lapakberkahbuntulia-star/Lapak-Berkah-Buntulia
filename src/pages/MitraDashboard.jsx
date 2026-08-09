@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { mitraService, productService, pendingStockValidationService, stockMovementService, transactionService, userService } from '../lib/services';
+import Pagination from '../components/Pagination';
 
 function Toast({ message, type = 'success', onClose }) {
   useEffect(() => {
@@ -102,6 +103,8 @@ function MitraDashboard({ role, user }) {
   const [editingMitra, setEditingMitra] = useState(null);
   const [editMitraName, setEditMitraName] = useState('');
   const [mitraSearch, setMitraSearch] = useState('');
+  const [mitraPage, setMitraPage] = useState(1);
+  const [mitraPerPage] = useState(10);
 
   const loadData = async () => {
     setLoading(true);
@@ -228,6 +231,15 @@ function MitraDashboard({ role, user }) {
     mitra.email.toLowerCase().includes(mitraSearch.toLowerCase()) ||
     mitra.phone.includes(mitraSearch)
   ), [mitraList, mitraSearch]);
+
+  const paginatedMitra = useMemo(() => {
+    const start = (mitraPage - 1) * mitraPerPage;
+    return filteredMitra.slice(start, start + mitraPerPage);
+  }, [filteredMitra, mitraPage, mitraPerPage]);
+
+  useEffect(() => {
+    setMitraPage(1);
+  }, [mitraSearch]);
 
   const tabs = useMemo(() => {
     const base = [
@@ -900,8 +912,8 @@ function MitraDashboard({ role, user }) {
                               <p className="font-body-md text-body-md text-on-surface-variant">Tidak ada mitra yang ditemukan</p>
                             </td>
                           </tr>
-                        ) : (
-                          filteredMitra.map((mitra, idx) => (
+                          ) : (
+                            paginatedMitra.map((mitra, idx) => (
                             <tr key={mitra.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
                               <td className="px-6 py-4">
                                 {editingMitra === mitra.id ? (
@@ -935,9 +947,15 @@ function MitraDashboard({ role, user }) {
                                     <div className="flex items-center gap-2 text-on-surface-variant">
                                       <span className="material-symbols-outlined text-[16px]">mail</span>
                                       <span className="font-body-sm text-body-sm">{mitra.email}</span>
-                                    </div>
-                                  </div>
-                                )}
+                  </div>
+                  <Pagination
+                    totalItems={filteredMitra.length}
+                    itemsPerPage={mitraPerPage}
+                    currentPage={mitraPage}
+                    onPageChange={setMitraPage}
+                  />
+                </div>
+              )}
                               </td>
                               <td className="px-6 py-4 text-center">
                                 {editingMitra === mitra.id ? (

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { productService, categoryService, productTypeService, mitraService } from '../lib/services';
+import Pagination from '../components/Pagination';
 
 function ProductManagement() {
   const [products, setProducts] = useState([]);
@@ -28,6 +29,8 @@ function ProductManagement() {
     description: '',
     barcode_id: '',
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20);
   const [newCategory, setNewCategory] = useState('');
   const [newType, setNewType] = useState('');
   const [newMitra, setNewMitra] = useState('');
@@ -79,6 +82,21 @@ function ProductManagement() {
       return matchesSearch && matchesCategory;
     });
   }, [products, searchQuery, selectedCategory]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory]);
+
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredProducts.slice(start, start + itemsPerPage);
+  }, [filteredProducts, currentPage, itemsPerPage]);
+
+  const totalFilteredProducts = filteredProducts.length;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory]);
 
   const getStatusBadge = (product) => {
     if (product.stock === 0) {
@@ -866,8 +884,8 @@ function ProductManagement() {
                           Tidak ada produk yang ditemukan.
                         </td>
                       </tr>
-                    ) : (
-                      filteredProducts.map((product) => {
+                      ) : (
+                        paginatedProducts.map((product) => {
                         const badge = getStatusBadge(product);
                         return (
                           <tr key={product.id} className="hover:bg-surface-container-low/50 transition-colors">
@@ -939,6 +957,12 @@ function ProductManagement() {
                 </table>
               </div>
             </div>
+            <Pagination
+              totalItems={totalFilteredProducts}
+              itemsPerPage={itemsPerPage}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+            />
           </div>
         )}
       </main>

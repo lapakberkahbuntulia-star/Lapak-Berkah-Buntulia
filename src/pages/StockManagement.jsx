@@ -6,6 +6,7 @@ import {
   pendingStockValidationService,
   mitraService,
 } from '../lib/services';
+import Pagination from '../components/Pagination';
 
 function StockManagement() {
   const [productsList, setProductsList] = useState([]);
@@ -22,6 +23,10 @@ function StockManagement() {
   const [valMitra, setValMitra] = useState('Semua');
   const [formData, setFormData] = useState({ type: 'in', productId: '', quantity: '', note: '' });
   const [toast, setToast] = useState(null);
+  const [movementPage, setMovementPage] = useState(1);
+  const [validationPage, setValidationPage] = useState(1);
+  const [movementsPerPage] = useState(20);
+  const [validationsPerPage] = useState(20);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -209,6 +214,24 @@ function StockManagement() {
 
   const mitraNames = useMemo(() => ['Semua', ...new Set(pendingValidations.map((v) => v.mitraName))], [pendingValidations]);
 
+  const paginatedMovements = useMemo(() => {
+    const start = (movementPage - 1) * movementsPerPage;
+    return filteredMovements.slice(start, start + movementsPerPage);
+  }, [filteredMovements, movementPage, movementsPerPage]);
+
+  const paginatedValidations = useMemo(() => {
+    const start = (validationPage - 1) * validationsPerPage;
+    return filteredPendingValidations.slice(start, start + validationsPerPage);
+  }, [filteredPendingValidations, validationPage, validationsPerPage]);
+
+  useEffect(() => {
+    setMovementPage(1);
+  }, [filterType, filterProduct, startDate, endDate]);
+
+  useEffect(() => {
+    setValidationPage(1);
+  }, [valMitra, valStartDate, valEndDate]);
+
   if (loading) {
     return (
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-full">
@@ -328,7 +351,7 @@ function StockManagement() {
                       </tr>
                     </thead>
                     <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
-                      {filteredPendingValidations.map((validation, idx) => {
+                      {paginatedValidations.map((validation, idx) => {
                         const product = productsList.find((p) => p.id === validation.productId);
                         return (
                           <tr key={validation.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
@@ -363,6 +386,12 @@ function StockManagement() {
                   </table>
                 </div>
               )}
+              <Pagination
+                totalItems={filteredPendingValidations.length}
+                itemsPerPage={validationsPerPage}
+                currentPage={validationPage}
+                onPageChange={setValidationPage}
+              />
             </div>
           </div>
 
@@ -562,7 +591,7 @@ function StockManagement() {
                     </tr>
                   </thead>
                   <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
-                    {filteredMovements.map((movement, idx) => {
+                    {paginatedMovements.map((movement, idx) => {
                       const product = productsList.find((p) => p.id === movement.productId);
                       return (
                         <tr
@@ -606,6 +635,12 @@ function StockManagement() {
                 </table>
               </div>
             )}
+            <Pagination
+              totalItems={filteredMovements.length}
+              itemsPerPage={movementsPerPage}
+              currentPage={movementPage}
+              onPageChange={setMovementPage}
+            />
           </div>
         </div>
       </main>
