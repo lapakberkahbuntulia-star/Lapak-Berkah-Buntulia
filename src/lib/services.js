@@ -236,6 +236,17 @@ export const mitraService = {
     return data;
   },
 
+  async getById(id) {
+    const { data, error } = await supabase
+      .from('mitra')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
   async delete(id) {
     const { error } = await supabase
       .from('mitra')

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { productService, transactionService, transactionItemService, stockMovementService } from '../lib/services';
+import { productService, transactionService, transactionItemService, stockMovementService, mitraService } from '../lib/services';
 
 function createEmptyTransaction(id) {
   return {
@@ -339,6 +339,20 @@ function KasirDesktopCart({ user }) {
         } catch (stockError) {
           console.error('[KasirDesktopCart] Failed to update stock for product:', item.productId, stockError);
           throw stockError;
+        }
+      }
+
+      if (mitraId) {
+        try {
+          const currentMitra = await mitraService.getById(mitraId);
+          if (currentMitra) {
+            await mitraService.update(mitraId, {
+              total_transaction: (currentMitra.total_transaction || 0) + 1,
+              total_omzet: (currentMitra.total_omzet || 0) + total,
+            });
+          }
+        } catch (mitraError) {
+          console.error('[KasirDesktopCart] Failed to update mitra totals:', mitraError);
         }
       }
 
