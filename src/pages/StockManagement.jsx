@@ -33,94 +33,80 @@ function StockManagement() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [productsData, movementsData, validationsData, mitraData] = await Promise.all([
+        productService.getAll(),
+        stockMovementService.getAll(),
+        pendingStockValidationService.getAll(),
+        mitraService.getAll(),
+      ]);
+
+      setProductsList(
+        productsData.map((p) => ({
+          id: p.id,
+          name: p.nama_produk,
+          sku: p.sku,
+          category: p.category?.name,
+          type: p.type?.name,
+          mitraName: p.mitra?.full_name,
+          mitraId: p.mitra_id,
+          stock: p.stock,
+          unit: p.unit,
+        })),
+      );
+
+      setStockMovements(
+        movementsData.map((m) => ({
+          id: m.id,
+          type: m.type,
+          productId: m.product_id,
+          productName: m.product?.nama_produk,
+          quantity: m.quantity,
+          date: m.date || (m.created_at ? m.created_at.split('T')[0] : ''),
+          note: m.note,
+          mitraName: m.mitra?.full_name,
+        })),
+      );
+
+      setPendingValidations(
+        validationsData.map((v) => ({
+          id: v.id,
+          mitraName: v.mitra?.full_name,
+          mitraId: v.mitra_id,
+          productId: v.product_id,
+          productName: v.product?.nama_produk,
+          quantity: v.quantity,
+          date: v.date,
+          note: v.note,
+        })),
+      );
+    } catch (_error) {
+      showToast('Gagal memuat data stok', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [productsData, movementsData, validationsData, mitraData] = await Promise.all([
-          productService.getAll(),
-          stockMovementService.getAll(),
-          pendingStockValidationService.getAll(),
-          mitraService.getAll(),
-        ]);
-
-        setProductsList(
-          productsData.map((p) => ({
-            id: p.id,
-            name: p.nama_produk,
-            sku: p.sku,
-            category: p.category?.name,
-            type: p.type?.name,
-            mitraName: p.mitra?.full_name,
-            mitraId: p.mitra_id,
-            stock: p.stock,
-            unit: p.unit,
-          })),
-        );
-
-        setStockMovements(
-          movementsData.map((m) => ({
-            id: m.id,
-            type: m.type,
-            productId: m.product_id,
-            productName: m.product?.nama_produk,
-            quantity: m.quantity,
-            date: m.date || (m.created_at ? m.created_at.split('T')[0] : ''),
-            note: m.note,
-            mitraName: m.mitra?.full_name,
-          })),
-        );
-
-        setPendingValidations(
-          validationsData.map((v) => ({
-            id: v.id,
-            mitraName: v.mitra?.full_name,
-            mitraId: v.mitra_id,
-            productId: v.product_id,
-            productName: v.product?.nama_produk,
-            quantity: v.quantity,
-            date: v.date,
-            note: v.note,
-          })),
-        );
-      } catch (_error) {
-        showToast('Gagal memuat data stok', 'error');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadData();
   }, []);
 
   const updateProductStock = async (productId, quantity, type) => {
-    const optimisticProduct = productsList.find((p) => p.id === productId);
-    if (!optimisticProduct) return;
-
-    setProductsList((prev) =>
-      prev.map((p) => {
-        if (p.id !== productId) return p;
-        const delta = type === 'in' ? quantity : -quantity;
-        return { ...p, stock: Math.max(0, p.stock + delta) };
-      }),
-    );
-
-    try {
-      if (type === 'out') {
-        const success = await productService.decrementStock(productId, quantity);
-        if (!success) {
-          throw new Error('Stok tidak cukup untuk dikurangi');
-        }
-      } else {
-        const { data: currentProduct } = await supabase
-          .from('products')
-          .select('stock')
-          .eq('id', productId)
-          .single();
-        const updatedStock = Math.max(0, (currentProduct?.stock || 0) + quantity);
-        await productService.update(productId, { stock: updatedStock });
+    if (type === 'out') {
+      const success = await productService.decrementStock(productId, quantity);
+      if (!success) {
+        throw new Error('Stok tidak cukup untuk dikurangi');
       }
-    } catch (_error) {
-      showToast('Gagal memperbarui stok produk di database', 'error');
+    } else {
+      const { data: currentProduct } = await supabase
+        .from('products')
+        .select('stock')
+        .eq('id', productId)
+        .single();
+      const updatedStock = Math.max(0, (currentProduct?.stock || 0) + quantity);
+      await productService.update(productId, { stock: updatedStock });
     }
   };
 
@@ -130,7 +116,7 @@ function StockManagement() {
     if (!product || !formData.quantity || Number(formData.quantity) <= 0) return;
 
     try {
-      const newMovement = await stockMovementService.create({
+      await stockMovementService.create({
         type: formData.type,
         product_id: String(formData.productId),
         quantity: Number(formData.quantity),
@@ -138,23 +124,11 @@ function StockManagement() {
         mitra_id: formData.type === 'in' ? String(product.mitraId) : null,
       });
 
-      setStockMovements((prev) => [
-        {
-          id: newMovement.id,
-          type: newMovement.type,
-          productId: newMovement.product_id,
-          productName: product.name,
-          quantity: newMovement.quantity,
-          date: newMovement.date || (newMovement.created_at ? newMovement.created_at.split('T')[0] : ''),
-          note: newMovement.note,
-          mitraName: newMovement.mitra?.full_name || (formData.type === 'in' ? product.mitraName : '-'),
-        },
-        ...prev,
-      ]);
       await updateProductStock(formData.productId, Number(formData.quantity), formData.type);
       setFormData({ type: 'in', productId: '', quantity: '', note: '' });
       setShowForm(false);
       showToast('Transaksi stok berhasil disimpan!', 'success');
+      await loadData();
     } catch (_error) {
       showToast('Gagal menyimpan transaksi stok', 'error');
     }
@@ -170,7 +144,7 @@ function StockManagement() {
     try {
       await pendingStockValidationService.validate(validationId);
 
-      const newMovement = await stockMovementService.create({
+      await stockMovementService.create({
         type: 'in',
         product_id: String(validation.productId),
         quantity: validation.quantity,
@@ -178,22 +152,9 @@ function StockManagement() {
         mitra_id: validation.mitraId ? String(validation.mitraId) : null,
       });
 
-      setStockMovements((prev) => [
-        {
-          id: newMovement.id,
-          type: 'in',
-          productId: validation.productId,
-          productName: product.name,
-          quantity: validation.quantity,
-          date: validation.date,
-          note: validation.note,
-          mitraName: validation.mitraName,
-        },
-        ...prev,
-      ]);
       await updateProductStock(validation.productId, validation.quantity, 'in');
-      setPendingValidations((prev) => prev.filter((v) => v.id !== validationId));
       showToast('Stok berhasil divalidasi!', 'success');
+      await loadData();
     } catch (_error) {
       showToast('Gagal memvalidasi stok', 'error');
     }
