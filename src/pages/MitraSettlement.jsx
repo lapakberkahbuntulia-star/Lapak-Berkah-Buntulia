@@ -26,13 +26,14 @@ function MitraSettlement({ user }) {
     setLoading(true);
     try {
       const [settlementsData, mitraData, productsData] = await Promise.all([
-        mitraSettlementService.getAll(),
+        mitraSettlementService.getAll().catch(() => []),
         mitraService.getAll(),
         productService.getAll(),
       ]);
-      setSettlements(settlementsData);
-      setMitraList(mitraData);
-      setProducts(productsData);
+      setSettlements(settlementsData || []);
+      setMitraList(mitraData || []);
+      setProducts(productsData || []);
+      console.log('[MitraSettlement] loaded mitra:', mitraData);
     } catch (error) {
       console.error('Failed to load settlement data:', error);
       showToast('Gagal memuat data', 'error');
@@ -45,6 +46,8 @@ function MitraSettlement({ user }) {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
+
+  console.log('[MitraSettlement] render mitraList:', mitraList);
 
   const generateInvoiceNumber = () => {
     const date = new Date();
@@ -254,7 +257,7 @@ function MitraSettlement({ user }) {
                       required
                     >
                       <option value="">Pilih Mitra</option>
-                      {mitraList.filter(m => m.status === 'Aktif').map(mitra => (
+                      {mitraList.map(mitra => (
                         <option key={mitra.id} value={mitra.id}>{mitra.full_name}</option>
                       ))}
                     </select>
