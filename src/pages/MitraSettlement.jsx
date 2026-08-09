@@ -215,12 +215,26 @@ function MitraSettlement({ user }) {
   const handlePrint = (settlement) => {
     setSelectedSettlement(settlement);
     setTimeout(() => {
-      const printArea = document.querySelector('.print-section');
-      if (printArea) {
+      const printContent = document.querySelector('.print-section');
+      if (!printContent) return;
+
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
         window.print();
-      } else {
-        console.error('[MitraSettlement] print area not found');
+        return;
       }
+
+      const styles = Array.from(document.styleSheets)
+        .map(sheet => {
+          try { return Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n'); } catch (e) { return ''; }
+        })
+        .join('\n');
+
+      printWindow.document.write(`<!DOCTYPE html><html><head><title>Invoice ${settlement.invoice_number}</title><style>${styles} @media print { body * { display: none !important; } .print-section, .print-section * { display: block !important; visibility: visible !important; } .print-section { position: fixed; inset: 0; background: white; padding: 20px; z-index: 9999; } .print-section > div { box-shadow: none; border-radius: 0; overflow: visible; padding: 0; max-width: none; } }</style></head><body>${printContent.innerHTML}</body></html>`);
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
     }, 300);
   };
 
