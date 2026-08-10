@@ -37,6 +37,10 @@ function ProductManagement() {
     return categories.find((c) => c.name === selectedCategory)?.id;
   }, [selectedCategory, categories]);
 
+  const activeCategories = useMemo(() => categories.filter((c) => c.name && c.name !== 'Semua').length, [categories]);
+  const lowStock = useMemo(() => products.filter((p) => p.stock > 0 && p.stock <= 10).length, [products]);
+  const outOfStock = useMemo(() => products.filter((p) => p.stock === 0).length, [products]);
+
   useEffect(() => {
     (async () => {
       await Promise.all([loadProducts(), loadCategories(), loadTypes(), loadMitra()]);
