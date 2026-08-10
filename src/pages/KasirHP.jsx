@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { productService } from '../lib/services';
 
-function KasirHP() {
+function KasirHP({ onNavigate }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -11,6 +11,7 @@ function KasirHP() {
     { id: 1, name: 'Nasi Kuning', sku: 'BRP-001', category: 'Perishable', type: 'Makanan Basah', mitraName: 'Toko Makmur', mitraPrice: 14500, sellingPrice: 18000, qty: 1, photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD9S0lXMpRCIso-L8CBlj_U0MUQvoGBrQKhOVgsA54pAt-PbsyTJM5gPW1TDbWseVKIKBbDhf4ZBtI9wMQ3FSzouSGDMY3xbXtIyxirFJxSlk0YSDW7OUkpsvxjNQLl2kWrsF3Q_nFdCLy1SZReZR-SRm3wBB_5OpY9hjjEWFHzgwtfw9gjAbWHi0YbuDlNjGtlO_-LjzIh24qq9oobBsLzLD9oM_y5o3An1VRKRe8fWYF5RiZ30xX89A', description: 'Nasi kuning siap saji', barcodeId: 'BC-001' },
     { id: 4, name: 'Mie Instan Goreng', sku: 'SUS-004', category: 'Non-Perishable', type: 'Makanan Kering', mitraName: 'Grosir Jaya', mitraPrice: 3000, sellingPrice: 4500, qty: 5, photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC5qejlFpuAvF4M0PzqD6tNHnw6z1CjHJelomAYXJWHwCJIMsFaVz4LizVtCJDepveg23kZ1jtsSfCsIZgoL2YHjVkruEf4beb4auqiUQP4BTdIOrcNdPRnhKI3moA-cNa28RClHLo_B-Tr-3AyluWfaAgHALbMmEp6Z9LhFjN18Nfwzl4UblrTmIp1EGoD5YzlVxYofuUezaaJjaQZgJxKGKhGEgPHN77eU21_AVhSJNoszydXrUXxJg', description: 'Mie instan rasa goreng', barcodeId: 'BC-004' },
   ]);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -79,26 +80,93 @@ function KasirHP() {
   }
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-surface-container-lowest">
+    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-surface-container-lowest relative">
       {/* Products Section */}
       <div className="flex-1 flex flex-col w-full h-full border-r border-outline-variant/30 bg-background relative">
         {/* Search & Scan Bar */}
         <div className="p-4 bg-surface shadow-sm z-10 flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-            <input
-              className="w-full h-touch-target-min pl-10 pr-4 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-md text-body-md"
-              placeholder="Cari produk, SKU, atau kategori..."
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <div className="flex gap-2">
+            <button
+              onClick={() => setMenuOpen(true)}
+              className="h-touch-target-min w-10 rounded-xl bg-surface-container flex items-center justify-center border border-outline text-on-surface hover:bg-surface-container-highest transition-colors flex-shrink-0"
+              aria-label="Menu"
+            >
+              <span className="material-symbols-outlined">menu</span>
+            </button>
+            <div className="relative flex-1">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+              <input
+                className="w-full h-touch-target-min pl-10 pr-4 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-md text-body-md"
+                placeholder="Cari produk, SKU, atau kategori..."
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
           </div>
           <button className="h-touch-target-min px-6 rounded-xl bg-surface-container flex items-center justify-center gap-2 border border-outline text-on-surface hover:bg-surface-container-highest transition-colors flex-shrink-0">
             <span className="material-symbols-outlined" data-icon="barcode_scanner">barcode_scanner</span>
             <span className="font-label-md text-label-md">Scan Barcode</span>
           </button>
         </div>
+
+        {/* Categories */}
+        <div className="px-4 py-3 bg-surface-container-lowest border-b border-outline-variant/20 flex gap-2 overflow-x-auto hide-scrollbar shrink-0">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-4 py-2 rounded-full font-label-md text-label-md whitespace-nowrap shrink-0 transition-colors ${
+                selectedCategory === cat
+                  ? 'bg-primary text-on-primary'
+                  : 'bg-surface-container border border-outline-variant text-on-surface-variant hover:bg-surface-container-highest'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Menu Overlay */}
+        {menuOpen && (
+          <>
+            <div className="fixed inset-0 bg-black/40 z-[60]" onClick={() => setMenuOpen(false)} />
+            <div className="fixed top-0 left-0 h-full w-72 bg-surface border-r border-outline-variant shadow-lg z-[70] flex flex-col">
+              <div className="p-6 border-b border-outline-variant/50 flex items-center justify-between">
+                <h2 className="font-headline-md text-headline-md text-primary">Lapak Berkah</h2>
+                <button onClick={() => setMenuOpen(false)} aria-label="Tutup menu" className="w-8 h-8 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-1">
+                {[
+                  { icon: 'dashboard', label: 'Dashboard', page: 'dashboard' },
+                  { icon: 'point_of_sale', label: 'POS Cashier', page: 'pos' },
+                  { icon: 'inventory_2', label: 'Inventory', page: 'inventory' },
+                  { icon: 'handshake', label: 'Mitra Dashboard', page: 'mitra' },
+                  { icon: 'receipt_long', label: 'Nota Penjualan Mitra', page: 'mitra-settlement' },
+                  { icon: 'assessment', label: 'Laporan Penjualan', page: 'sales-recap' },
+                  { icon: 'history', label: 'Riwayat Transaksi', page: 'transaction-history' },
+                  { icon: 'inventory', label: 'Product Management', page: 'product' },
+                  { icon: 'swap_vert', label: 'Manajemen Stok', page: 'stock-management' },
+                  { icon: 'payments', label: 'Financial Reports', page: 'financial' },
+                ].map((item) => (
+                  <button
+                    key={item.page}
+                    onClick={() => {
+                      onNavigate?.(item.page);
+                      setMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors hover:bg-surface-container text-on-surface"
+                  >
+                    <span className="material-symbols-outlined text-[22px]">{item.icon}</span>
+                    <span className="font-label-md text-label-md">{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Categories */}
         <div className="px-4 py-3 bg-surface-container-lowest border-b border-outline-variant/20 flex gap-2 overflow-x-auto hide-scrollbar shrink-0">

@@ -159,6 +159,9 @@ function App() {
     }
   };
 
+  const isPosDesktop = page === 'pos-desktop';
+  const isPos = page === 'pos' || isPosDesktop;
+
   if (!isAuthenticated) {
     return <Login onLogin={handleLogin} />;
   }
@@ -192,10 +195,12 @@ function App() {
           </div>
         </div>
       )}
-      <TopAppBar title={page === 'pos' || page === 'pos-desktop' ? 'Halaman Kasir' : 'Lapak Berkah'} showNotifications={page === 'pos' || page === 'pos-desktop'} onLogout={handleLogout} />
-      <div className="flex h-[calc(100vh-64px)] overflow-hidden">
-        <NavDrawer activePage={page} onNavigate={navigateTo} onLogout={handleLogout} role={role} />
-        <main className={`flex-1 overflow-y-auto bg-surface md:ml-72 pb-24 md:pb-8 ${page === 'pos-desktop' ? 'md:mr-[380px]' : ''}`}>
+      {!isPosDesktop && (
+        <TopAppBar title={isPos ? 'Halaman Kasir' : 'Lapak Berkah'} showNotifications={isPos} onLogout={handleLogout} />
+      )}
+      <div className={`flex h-[calc(100vh-64px)] overflow-hidden ${isPosDesktop ? 'pt-0' : ''}`}>
+        {!isPosDesktop && <NavDrawer activePage={page} onNavigate={navigateTo} onLogout={handleLogout} role={role} />}
+        <main className={`flex-1 overflow-y-auto bg-surface md:ml-72 pb-24 md:pb-8 ${isPosDesktop ? 'md:mr-0' : ''}`}>
           <ErrorBoundary>
             {page === 'financial' && <FinancialReports />}
             {page === 'dashboard' && <Dashboard lowStockCount={lowStockCount} setLowStockCount={setLowStockCount} />}
@@ -206,12 +211,12 @@ function App() {
             {page === 'stock-management' && <StockManagement />}
             {page === 'product' && <ProductManagement />}
             {page === 'mitra-settlement' && <MitraSettlement user={user} />}
-            {page === 'pos' && <KasirHP />}
-            {page === 'pos-desktop' && <KasirDesktop />}
+            {page === 'pos' && <KasirHP onNavigate={navigateTo} />}
+            {page === 'pos-desktop' && <KasirDesktop onNavigate={navigateTo} />}
           </ErrorBoundary>
         </main>
         {page === 'pos-desktop' && <KasirDesktopCart user={user} />}
-        <BottomNav activePage={page} onNavigate={navigateTo} role={role} lowStockCount={lowStockCount} />
+        {!isPosDesktop && <BottomNav activePage={page} onNavigate={navigateTo} role={role} lowStockCount={lowStockCount} />}
       </div>
     </div>
   );

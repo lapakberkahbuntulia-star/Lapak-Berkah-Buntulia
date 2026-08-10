@@ -16,12 +16,13 @@ const initialTransactions = [
   createEmptyTransaction(3),
 ];
 
-function KasirDesktop() {
+function KasirDesktop({ onNavigate }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('Semua');
   const [barcode, setBarcode] = useState('');
   const [flash, setFlash] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const barcodeRef = useRef(null);
 
   const loadProducts = async () => {
@@ -96,27 +97,77 @@ function KasirDesktop() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-surface-container-lowest">
+    <div className="flex-1 flex flex-col h-full bg-surface-container-lowest relative">
       {/* Header */}
       <header className="h-16 bg-surface border-b border-outline-variant flex items-center justify-between px-4 md:px-6 z-10 shrink-0 gap-4">
-        <form onSubmit={handleBarcodeSubmit} className="flex-1 max-w-2xl">
-          <div className="relative">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">barcode_scanner</span>
-            <input
-              ref={barcodeRef}
-              className={`w-full h-11 pl-10 pr-4 rounded-xl border-2 bg-surface-container-lowest font-body-md text-body-md outline-none transition-colors ${flash ? 'border-primary' : 'border-outline-variant focus:border-primary focus:ring-0'}`}
-              placeholder="Scan barcode atau ketik SKU/Barcode ID..."
-              type="text"
-              value={barcode}
-              onChange={(e) => setBarcode(e.target.value)}
-            />
-          </div>
-        </form>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="h-10 w-10 rounded-lg bg-surface-container border border-outline-variant flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors"
+            aria-label="Menu"
+          >
+            <span className="material-symbols-outlined">menu</span>
+          </button>
+          <form onSubmit={handleBarcodeSubmit} className="flex-1 max-w-2xl">
+            <div className="relative">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">barcode_scanner</span>
+              <input
+                ref={barcodeRef}
+                className={`w-full h-11 pl-10 pr-4 rounded-xl border-2 bg-surface-container-lowest font-body-md text-body-md outline-none transition-colors ${flash ? 'border-primary' : 'border-outline-variant focus:border-primary focus:ring-0'}`}
+                placeholder="Scan barcode atau ketik SKU/Barcode ID..."
+                type="text"
+                value={barcode}
+                onChange={(e) => setBarcode(e.target.value)}
+              />
+            </div>
+          </form>
+        </div>
         <div className="text-right hidden sm:block">
           <div className="font-label-sm text-label-sm text-on-surface-variant">Tanggal Aktif</div>
           <div className="font-label-md text-label-md text-on-surface">{new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
         </div>
       </header>
+
+      {/* Menu Overlay */}
+      {menuOpen && (
+        <>
+          <div className="fixed inset-0 bg-black/40 z-[60]" onClick={() => setMenuOpen(false)} />
+          <div className="fixed top-0 left-0 h-full w-72 bg-surface border-r border-outline-variant shadow-lg z-[70] flex flex-col">
+            <div className="p-6 border-b border-outline-variant/50 flex items-center justify-between">
+              <h2 className="font-headline-md text-headline-md text-primary">Lapak Berkah</h2>
+              <button onClick={() => setMenuOpen(false)} aria-label="Tutup menu" className="w-8 h-8 rounded-full hover:bg-surface-container flex items-center justify-center text-on-surface-variant">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-1">
+              {[
+                { icon: 'dashboard', label: 'Dashboard', page: 'dashboard' },
+                { icon: 'point_of_sale', label: 'POS Cashier', page: 'pos-desktop' },
+                { icon: 'inventory_2', label: 'Inventory', page: 'inventory' },
+                { icon: 'handshake', label: 'Mitra Dashboard', page: 'mitra' },
+                { icon: 'receipt_long', label: 'Nota Penjualan Mitra', page: 'mitra-settlement' },
+                { icon: 'assessment', label: 'Laporan Penjualan', page: 'sales-recap' },
+                { icon: 'history', label: 'Riwayat Transaksi', page: 'transaction-history' },
+                { icon: 'inventory', label: 'Product Management', page: 'product' },
+                { icon: 'swap_vert', label: 'Manajemen Stok', page: 'stock-management' },
+                { icon: 'payments', label: 'Financial Reports', page: 'financial' },
+              ].map((item) => (
+                <button
+                  key={item.page}
+                  onClick={() => {
+                    onNavigate?.(item.page);
+                    setMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors hover:bg-surface-container text-on-surface"
+                >
+                  <span className="material-symbols-outlined text-[22px]">{item.icon}</span>
+                  <span className="font-label-md text-label-md">{item.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Filter Tabs */}
       <div className="px-4 md:px-6 py-3 flex gap-3 overflow-x-auto shrink-0 hide-scrollbar border-b border-outline-variant bg-surface">
