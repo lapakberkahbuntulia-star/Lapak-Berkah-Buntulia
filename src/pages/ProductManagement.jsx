@@ -30,16 +30,27 @@ function ProductManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
   const [loading, setLoading] = useState(true);
-  const [totalFilteredProducts, setTotalFilteredProducts] = useState(0);
-
-  const selectedCategoryId = useMemo(() => {
-    if (selectedCategory === 'Semua') return undefined;
-    return categories.find((c) => c.name === selectedCategory)?.id;
-  }, [selectedCategory, categories]);
 
   const activeCategories = useMemo(() => categories.filter((c) => c.name && c.name !== 'Semua').length, [categories]);
   const lowStock = useMemo(() => products.filter((p) => p.stock > 0 && p.stock <= 10).length, [products]);
   const outOfStock = useMemo(() => products.filter((p) => p.stock === 0).length, [products]);
+
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      const matchesSearch = product.nama_produk.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (product.barcode_id && product.barcode_id.toLowerCase().includes(searchQuery.toLowerCase()));
+      const matchesCategory = selectedCategory === 'Semua' || product.category?.name === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [products, searchQuery, selectedCategory]);
+
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredProducts.slice(start, start + itemsPerPage);
+  }, [filteredProducts, currentPage, itemsPerPage]);
+
+  const totalFilteredProducts = filteredProducts.length;
 
   useEffect(() => {
     (async () => {
@@ -50,17 +61,12 @@ function ProductManagement() {
 
   useEffect(() => {
     setCurrentPage(1);
-    loadProducts();
-  }, [searchQuery, selectedCategoryId]);
+  }, [searchQuery, selectedCategory]);
 
   const loadProducts = async () => {
     try {
-      const result = await productService.getAll(
-        { categoryId: selectedCategoryId, search: searchQuery || undefined },
-        { limit: itemsPerPage, offset: (currentPage - 1) * itemsPerPage }
-      );
-      setProducts(result.data);
-      setTotalFilteredProducts(result.count || 0);
+      const data = await productService.getAll();
+      setProducts(data);
     } catch {
       showToast('Gagal memuat produk', 'error');
     }
@@ -691,15 +697,15 @@ function ProductManagement() {
                       <th className="py-3 px-4 text-center">Aksi</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-outline-variant/50 text-sm">
-                     {products.length === 0 ? (
-                      <tr>
-                        <td colSpan="10" className="text-center py-8 text-on-surface-variant">
-                          Tidak ada produk yang ditemukan.
-                        </td>
-                      </tr>
-                        ) : (
-                         products.map((product) => {
+                   <tbody className="divide-y divide-outline-variant/50 text-sm">
+                      {paginatedProducts.length === 0 ? (
+                       <tr>
+                         <td colSpan="10" className="text-center py-8 text-on-surface-variant">
+                           Tidak ada produk yang ditemukan.
+                         </td>
+                       </tr>
+                         ) : (
+                          paginatedProducts.map((product) => {
                            const badge = getStatusBadge(product);
                            return (
                           <tr key={product.id} className="hover:bg-surface-container-low/50 transition-colors">

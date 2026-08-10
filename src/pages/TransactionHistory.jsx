@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { transactionService, returnService, productService, stockMovementService } from '../lib/services';
 import Pagination from '../components/Pagination';
 
@@ -17,67 +17,72 @@ function TransactionHistory() {
   const [toast, setToast] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
-  const [totalTransactions, setTotalTransactions] = useState(0);
-  const [totalOmzet, setTotalOmzet] = useState(0);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
 
+  const filteredHistory = useMemo(() => {
+    return history.filter((h) => {
+      const matchesSearch = h.transactionId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        h.mitraName.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesDate = (!startDate || h.date >= startDate) && (!endDate || h.date >= endDate + ' 23:59');
+      const matchesPayment = selectedPayment === 'Semua' || h.paymentMethod === selectedPayment;
+      return matchesSearch && matchesDate && matchesPayment;
+    });
+  }, [history, searchQuery, startDate, endDate, selectedPayment]);
+
+  const paginatedHistory = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredHistory.slice(start, start + itemsPerPage);
+  }, [filteredHistory, currentPage, itemsPerPage]);
+
+  const totalTransactions = filteredHistory.length;
+  const totalOmzet = useMemo(() => filteredHistory.reduce((sum, h) => sum + h.total, 0), [filteredHistory]);
+
   useEffect(() => {
-    loadTransactions();
+    (async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await transactionService.getHistory();
+
+        const mapped = data.map((tx) => {
+          const txId = tx.transaction_id || `TX-${String(tx.id).padStart(3, '0')}`;
+          const rawDate = tx.created_at || '';
+          const formattedDate = rawDate
+            ? rawDate.replace('T', ' ').replace(/\.\d+Z$/, '').substring(0, 16)
+            : '';
+          const totalQty = tx.items?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
+
+          return {
+            id: tx.id,
+            transactionId: txId,
+            date: formattedDate,
+            mitraName: tx.mitra?.full_name || 'Tidak Diketahui',
+            items: totalQty,
+            rawItems: tx.items || [],
+            total: tx.total || 0,
+            paymentMethod: tx.metode_pembayaran || '-',
+            status: tx.status || '-',
+            paid: tx.paid || 0,
+            change: tx.change || 0,
+          };
+        });
+
+        setHistory(mapped);
+      } catch (err) {
+        setError(err.message || 'Gagal memuat riwayat transaksi');
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   useEffect(() => {
-    loadTransactions();
-  }, [currentPage, startDate, endDate, selectedPayment]);
-
-  const loadTransactions = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await transactionService.getHistory(
-        {
-          startDate: startDate || undefined,
-          endDate: endDate || undefined,
-          paymentMethod: selectedPayment !== 'Semua' ? selectedPayment : undefined,
-        },
-        { limit: itemsPerPage, offset: (currentPage - 1) * itemsPerPage }
-      );
-
-      const mapped = result.data.map((tx) => {
-        const txId = tx.transaction_id || `TX-${String(tx.id).padStart(3, '0')}`;
-        const rawDate = tx.created_at || '';
-        const formattedDate = rawDate
-          ? rawDate.replace('T', ' ').replace(/\.\d+Z$/, '').substring(0, 16)
-          : '';
-        const totalQty = tx.items?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
-
-        return {
-          id: tx.id,
-          transactionId: txId,
-          date: formattedDate,
-          mitraName: tx.mitra?.full_name || 'Tidak Diketahui',
-          items: totalQty,
-          rawItems: tx.items || [],
-          total: tx.total || 0,
-          paymentMethod: tx.metode_pembayaran || '-',
-          status: tx.status || '-',
-          paid: tx.paid || 0,
-          change: tx.change || 0,
-        };
-      });
-
-      setHistory(mapped);
-      setTotalTransactions(result.count || 0);
-      setTotalOmzet(mapped.reduce((sum, h) => sum + h.total, 0));
-    } catch (err) {
-      setError(err.message || 'Gagal memuat riwayat transaksi');
-    } finally {
-      setLoading(false);
-    }
-  };
+    setCurrentPage(1);
+  }, [searchQuery, startDate, endDate, selectedPayment]);
 
   const printReceipt = (transaction) => {
     const receiptWindow = window.open('', '_blank', 'width=320,height=600');
@@ -286,7 +291,7 @@ function TransactionHistory() {
               </div>
               <div>
                 <p className="font-label-md text-label-md text-on-surface-variant mb-1">Total Item</p>
-                <p className="font-display-lg text-display-lg text-on-background tracking-tight">{history.reduce((sum, h) => sum + h.items, 0)}</p>
+                <p className="font-display-lg text-display-lg text-on-background tracking-tight">{filteredHistory.reduce((sum, h) => sum + h.items, 0)}</p>
               </div>
             </div>
 
@@ -374,7 +379,7 @@ function TransactionHistory() {
                <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Menampilkan {totalTransactions} transaksi</p>
             </div>
 
-             {history.length === 0 ? (
+             {paginatedHistory.length === 0 ? (
               <div className="p-12 text-center">
                 <span className="material-symbols-outlined text-6xl text-outline mb-3">receipt_long</span>
                 <p className="font-body-md text-body-md text-on-surface-variant">Tidak ada transaksi yang ditemukan</p>
@@ -395,7 +400,7 @@ function TransactionHistory() {
                     </tr>
                   </thead>
                   <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
-                    {history.map((h, idx) => (
+                     {paginatedHistory.map((h, idx) => (
                       <tr key={h.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
                         <td className="px-6 py-4">
                           <span className="font-mono text-sm bg-surface-container px-2 py-1 rounded-md text-on-surface-variant">#{h.transactionId}</span>

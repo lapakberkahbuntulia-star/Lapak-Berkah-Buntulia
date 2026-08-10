@@ -107,7 +107,6 @@ function MitraDashboard({ role, user }) {
   const [mitraSearch, setMitraSearch] = useState('');
   const [mitraPage, setMitraPage] = useState(1);
   const [mitraPerPage] = useState(10);
-  const [totalMitra, setTotalMitra] = useState(0);
 
   const loadData = async () => {
     setLoading(true);
@@ -191,7 +190,6 @@ function MitraDashboard({ role, user }) {
       }));
 
       setAllMitra(mappedMitra);
-      setTotalMitra(mappedMitra.length);
       setProducts(mappedProducts);
       setStockInputs(mappedPendingStock);
       setStockHistory(mappedStockHistory);
@@ -203,43 +201,26 @@ function MitraDashboard({ role, user }) {
     }
   };
 
-  const loadMitraPage = async () => {
-    const result = await mitraService.getAll({
-      search: mitraSearch || undefined,
-      limit: mitraPerPage,
-      offset: (mitraPage - 1) * mitraPerPage,
-    });
+  const filteredMitra = useMemo(() => {
+    return allMitra.filter((mitra) =>
+      mitra.fullName.toLowerCase().includes(mitraSearch.toLowerCase()) ||
+      mitra.email.toLowerCase().includes(mitraSearch.toLowerCase()) ||
+      mitra.phone.includes(mitraSearch)
+    );
+  }, [allMitra, mitraSearch]);
 
-    const mapped = (result.data || []).map((m) => ({
-      id: m.id,
-      fullName: m.full_name,
-      address: m.address,
-      phone: m.phone,
-      email: m.email,
-      gender: m.gender,
-      photo: m.photo,
-      status: m.status,
-      totalTransaction: m.total_transaction || 0,
-      totalOmzet: m.total_omzet || 0,
-    }));
-
-    setMitraList(mapped);
-    setTotalMitra(result.count || 0);
-  };
+  const paginatedMitra = useMemo(() => {
+    const start = (mitraPage - 1) * mitraPerPage;
+    return filteredMitra.slice(start, start + mitraPerPage);
+  }, [filteredMitra, mitraPage, mitraPerPage]);
 
   useEffect(() => {
     loadData();
-    loadMitraPage();
   }, []);
 
   useEffect(() => {
     setMitraPage(1);
-    loadMitraPage();
   }, [mitraSearch]);
-
-  useEffect(() => {
-    loadMitraPage();
-  }, [mitraPage]);
 
   const activeMitra = allMitra.filter((m) => m.status === 'Aktif').length;
   const totalTransaction = allMitra.reduce((sum, m) => sum + (m.totalTransaction || 0), 0);
@@ -966,15 +947,15 @@ function MitraDashboard({ role, user }) {
                         </tr>
                       </thead>
                       <tbody className="font-body-md text-body-md divide-y divide-outline-variant/50">
-                        {mitraList.length === 0 ? (
-                          <tr>
-                            <td colSpan={6} className="px-6 py-12 text-center">
-                              <span className="material-symbols-outlined text-6xl text-outline mb-3">person_off</span>
-                              <p className="font-body-md text-body-md text-on-surface-variant">Tidak ada mitra yang ditemukan</p>
-                            </td>
-                          </tr>
-                           ) : (
-                             mitraList.map((mitra, idx) => (
+                         {paginatedMitra.length === 0 ? (
+                           <tr>
+                             <td colSpan={6} className="px-6 py-12 text-center">
+                               <span className="material-symbols-outlined text-6xl text-outline mb-3">person_off</span>
+                               <p className="font-body-md text-body-md text-on-surface-variant">Tidak ada mitra yang ditemukan</p>
+                             </td>
+                           </tr>
+                            ) : (
+                              paginatedMitra.map((mitra, idx) => (
                             <tr key={mitra.id} className={`hover:bg-surface-container-low/50 transition-colors duration-150 ${idx % 2 === 1 ? 'bg-surface-container-low/20' : ''}`}>
                               <td className="px-6 py-4">
                                 {editingMitra === mitra.id ? (
@@ -1009,12 +990,12 @@ function MitraDashboard({ role, user }) {
                                       <span className="material-symbols-outlined text-[16px]">mail</span>
                                       <span className="font-body-sm text-body-sm">{mitra.email}</span>
                   </div>
-                  <Pagination
-                    totalItems={totalMitra}
-                    itemsPerPage={mitraPerPage}
-                    currentPage={mitraPage}
-                    onPageChange={setMitraPage}
-                  />
+                   <Pagination
+                     totalItems={filteredMitra.length}
+                     itemsPerPage={mitraPerPage}
+                     currentPage={mitraPage}
+                     onPageChange={setMitraPage}
+                   />
                 </div>
               )}
                               </td>
