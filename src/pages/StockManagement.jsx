@@ -12,7 +12,6 @@ function StockManagement() {
   const [productsList, setProductsList] = useState([]);
   const [stockMovements, setStockMovements] = useState([]);
   const [pendingValidations, setPendingValidations] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [filterType, setFilterType] = useState('Semua');
   const [filterProduct, setFilterProduct] = useState('Semua');
@@ -137,7 +136,6 @@ function StockManagement() {
   useEffect(() => {
     (async () => {
       await Promise.all([loadProducts(), loadMitra(), loadMovements(), loadValidations()]);
-      setLoading(false);
     })();
   }, []);
 
@@ -229,21 +227,6 @@ function StockManagement() {
   useEffect(() => {
     setValidationPage(1);
   }, [valMitra, valStartDate, valEndDate]);
-
-  if (loading) {
-    return (
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-full">
-        <main className="flex-1 overflow-y-auto pb-24 md:pb-8">
-          <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="font-body-md text-body-md text-on-surface-variant">Memuat data stok...</p>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
 
   return (
     <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-full">

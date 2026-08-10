@@ -29,7 +29,6 @@ function ProductManagement() {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
-  const [loading, setLoading] = useState(true);
 
   const activeCategories = useMemo(() => categories.filter((c) => c.name && c.name !== 'Semua').length, [categories]);
   const lowStock = useMemo(() => products.filter((p) => p.stock > 0 && p.stock <= 10).length, [products]);
@@ -55,7 +54,6 @@ function ProductManagement() {
   useEffect(() => {
     (async () => {
       await Promise.all([loadProducts(), loadCategories(), loadTypes(), loadMitra()]);
-      setLoading(false);
     })();
   }, []);
 
@@ -269,12 +267,7 @@ function ProductManagement() {
   return (
     <div className="flex-1 flex flex-col w-full relative z-0 h-full">
       <main className="flex-1 overflow-y-auto pb-24 md:pb-8">
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        ) : (
-          <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
+        <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
             {/* Page Header */}
             <header className="hidden md:flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
@@ -784,7 +777,6 @@ function ProductManagement() {
               onPageChange={setCurrentPage}
             />
           </div>
-        )}
       </main>
 
       {/* Toast Notification */}

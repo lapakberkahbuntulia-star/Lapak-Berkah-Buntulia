@@ -4,8 +4,7 @@ import Pagination from '../components/Pagination';
 
 function TransactionHistory() {
   const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [_error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -44,7 +43,6 @@ function TransactionHistory() {
   useEffect(() => {
     (async () => {
       try {
-        setLoading(true);
         setError(null);
         const data = await transactionService.getHistory();
 
@@ -74,8 +72,6 @@ function TransactionHistory() {
         setHistory(mapped);
       } catch (err) {
         setError(err.message || 'Gagal memuat riwayat transaksi');
-      } finally {
-        setLoading(false);
       }
     })();
   }, []);
@@ -206,47 +202,7 @@ function TransactionHistory() {
     } finally {
       setProcessingReturn(false);
     }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-full">
-        <main className="flex-1 overflow-y-auto pb-24 md:pb-8">
-          <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center">
-                <span className="material-symbols-outlined text-6xl text-outline animate-pulse">receipt_long</span>
-                <p className="font-body-md text-body-md text-on-surface-variant mt-4">Memuat riwayat transaksi...</p>
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-full">
-        <main className="flex-1 overflow-y-auto pb-24 md:pb-8">
-          <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center">
-                <span className="material-symbols-outlined text-6xl text-error">error</span>
-                <p className="font-body-md text-body-md text-on-surface-variant mt-4">{error}</p>
-                <button
-                  onClick={loadTransactions}
-                  className="mt-4 px-4 py-2 rounded-xl bg-primary text-on-primary font-body-md text-body-md hover:bg-primary/90 transition-colors"
-                >
-                  Coba Lagi
-                </button>
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
+   };
 
   return (
     <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-full">
