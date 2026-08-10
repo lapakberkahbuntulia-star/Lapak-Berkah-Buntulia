@@ -30,6 +30,7 @@ function ProductManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
   const [loading, setLoading] = useState(true);
+  const [totalFilteredProducts, setTotalFilteredProducts] = useState(0);
 
   const selectedCategoryId = useMemo(() => {
     if (selectedCategory === 'Semua') return undefined;
