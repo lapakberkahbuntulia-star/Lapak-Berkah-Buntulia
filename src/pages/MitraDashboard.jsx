@@ -559,8 +559,8 @@ function MitraDashboard({ role, user }) {
     </div>
   ) : (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <StatCard icon="group" label="Total Mitra" value={totalMitra} subtitle="Semua mitra terdaftar" colorClass="bg-primary-fixed text-on-primary-fixed" />
-      <StatCard icon="check_circle" label="Mitra Aktif" value={activeMitra} subtitle={`${totalMitra > 0 ? Math.round((activeMitra / totalMitra) * 100) : 0}% dari total`} trend={`${totalMitra > 0 ? Math.round((activeMitra / totalMitra) * 100) : 0}%`} trendUp colorClass="bg-tertiary-fixed text-on-tertiary-fixed" />
+      <StatCard icon="group" label="Total Mitra" value={allMitra.length} subtitle="Semua mitra terdaftar" colorClass="bg-primary-fixed text-on-primary-fixed" />
+      <StatCard icon="check_circle" label="Mitra Aktif" value={activeMitra} subtitle={`${allMitra.length > 0 ? Math.round((activeMitra / allMitra.length) * 100) : 0}% dari total`} trend={`${allMitra.length > 0 ? Math.round((activeMitra / allMitra.length) * 100) : 0}%`} trendUp colorClass="bg-tertiary-fixed text-on-tertiary-fixed" />
       <StatCard icon="receipt_long" label="Total Transaksi" value={totalTransaction.toLocaleString('id-ID')} subtitle="Bulan ini" colorClass="bg-secondary-fixed text-on-secondary-fixed" />
       <StatCard icon="payments" label="Total Omzet" value={`Rp ${totalOmzet.toLocaleString('id-ID')}`} subtitle="Bulan ini" colorClass="bg-primary-fixed text-on-primary-fixed" />
     </div>

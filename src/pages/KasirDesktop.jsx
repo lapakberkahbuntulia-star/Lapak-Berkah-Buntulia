@@ -542,7 +542,10 @@ function KasirDesktopCart({ user }) {
       </html>
     `);
     receiptWindow.document.close();
-    receiptWindow.print();
+    receiptWindow.onload = () => {
+      receiptWindow.focus();
+      receiptWindow.print();
+    };
   };
 
   const subtotal = activeTransaction.items.reduce((sum, item) => sum + item.sellingPrice * item.qty, 0);

@@ -140,7 +140,10 @@ function TransactionHistory() {
       </html>
     `);
     receiptWindow.document.close();
-    receiptWindow.print();
+    receiptWindow.onload = () => {
+      receiptWindow.focus();
+      receiptWindow.print();
+    };
   };
 
   const openReturnModal = (transaction) => {
