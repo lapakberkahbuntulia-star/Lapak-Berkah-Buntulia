@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { productService, transactionService, transactionItemService, stockMovementService, mitraService, heldTransactionService } from '../lib/services';
-import { printReceipt } from '../lib/bluetoothPrinter';
+import { printReceipt, connectPrinter, clearPrinterCache } from '../lib/bluetoothPrinter';
 
 function createEmptyTransaction(id) {
   return {
@@ -30,7 +30,6 @@ function KasirDesktop({ onNavigate }) {
 
   const handleConnectPrinter = async () => {
     try {
-      const { connectPrinter } = await import('../lib/bluetoothPrinter');
       await connectPrinter();
       setPrinterConnected(true);
       setToast({ message: 'Printer berhasil terhubung', type: 'success' });
@@ -42,7 +41,6 @@ function KasirDesktop({ onNavigate }) {
 
   const handleDisconnectPrinter = async () => {
     try {
-      const { clearPrinterCache } = await import('../lib/bluetoothPrinter');
       clearPrinterCache();
       setPrinterConnected(false);
       setToast({ message: 'Printer disconnected', type: 'success' });
