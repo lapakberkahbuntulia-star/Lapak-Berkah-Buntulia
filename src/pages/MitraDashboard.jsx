@@ -376,7 +376,7 @@ function MitraDashboard({ role, user }) {
         type: 'success',
       });
     } catch {
-      setToast({ message: 'Gagal menambahkan mitra: ' + (error?.message || ''), type: 'error' });
+      setToast({ message: 'Gagal menambahkan mitra', type: 'error' });
     }
   };
 

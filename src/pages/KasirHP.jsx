@@ -196,11 +196,11 @@ function KasirHP({ onNavigate }) {
                 }`}
               >
                 <div className="aspect-square bg-surface-container-highest relative overflow-hidden">
-                  {product.image ? (
+                  {product.photo ? (
                     <img
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       alt={product.name}
-                      src={product.image}
+                       src={product.photo}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-surface-container-low text-outline">

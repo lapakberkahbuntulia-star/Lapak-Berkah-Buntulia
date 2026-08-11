@@ -3,7 +3,7 @@ const SERVICE_UUID = '000018f0-0000-1000-8000-00805f9b34fb';
 const CHARACTERISTIC_UUID = '00002af1-0000-1000-8000-00805f9b34fb';
 
 const ESC = 0x1b;
-const GS = 0x1d;
+const _GS = 0x1d;
 const LF = 0x0a;
 
 function bytesToUint8Array(bytes) {

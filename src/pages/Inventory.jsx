@@ -7,6 +7,12 @@ function Inventory() {
   const [selectedCategory, setSelectedCategory] = useState('Semua');
   const [selectedStatus, setSelectedStatus] = useState('Semua');
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     loadProducts();
@@ -270,6 +276,18 @@ function Inventory() {
           )}
         </div>
       </main>
+      {toast && (
+        <div className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl shadow-lg border text-sm flex items-center gap-2 animate-bounce ${
+          toast.type === 'error'
+            ? 'bg-error-container text-error border-error/30'
+            : 'bg-surface-container-high text-on-background border-outline-variant'
+        }`}>
+          <span className="material-symbols-outlined text-[18px]">
+            {toast.type === 'error' ? 'error' : 'check_circle'}
+          </span>
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 }

@@ -167,7 +167,7 @@ function MitraSettlement({ user }) {
       resetForm();
       await loadData();
     } catch {
-      showToast('Gagal menyimpan invoice: ' + (error?.message || ''), 'error');
+      showToast('Gagal menyimpan invoice', 'error');
     }
   };
 

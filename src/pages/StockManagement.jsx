@@ -4,7 +4,6 @@ import {
   productService,
   stockMovementService,
   pendingStockValidationService,
-  mitraService,
 } from '../lib/services';
 import Pagination from '../components/Pagination';
 
@@ -50,15 +49,6 @@ function StockManagement() {
       );
     } catch {
       showToast('Gagal memuat produk', 'error');
-    }
-  };
-
-  const loadMitra = async () => {
-    try {
-      const data = await mitraService.getAll();
-      setMitraList(data);
-    } catch {
-      showToast('Gagal memuat data mitra', 'error');
     }
   };
 
@@ -135,7 +125,7 @@ function StockManagement() {
 
   useEffect(() => {
     (async () => {
-      await Promise.all([loadProducts(), loadMitra(), loadMovements(), loadValidations()]);
+      await Promise.all([loadProducts(), loadMovements(), loadValidations()]);
     })();
   }, []);
 

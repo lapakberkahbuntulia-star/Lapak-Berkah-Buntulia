@@ -32,7 +32,7 @@ function KasirDesktop({ onNavigate }) {
       const { connectPrinter } = await import('../lib/bluetoothPrinter');
       await connectPrinter();
       setPrinterConnected(true);
-    } catch (error) {
+    } catch {
       setPrinterConnected(false);
     }
   };
@@ -296,7 +296,7 @@ function KasirDesktop({ onNavigate }) {
   );
 }
 
-function KasirDesktopCart({ user }) {
+function KasirDesktopCart({ user, isPosDesktop }) {
   const [transactions, setTransactions] = useState(initialTransactions);
   const [activeTransactionId, setActiveTransactionId] = useState(initialTransactions[0].id);
   const [paymentAmount, setPaymentAmount] = useState('');
@@ -585,7 +585,7 @@ function KasirDesktopCart({ user }) {
   }, [activeTransactionId]);
 
   return (
-    <aside className="fixed right-0 top-16 h-[calc(100vh-4rem)] w-[380px] bg-surface-container-lowest border-l border-outline-variant shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] flex flex-col z-30">
+    <aside className={`fixed right-0 ${isPosDesktop ? 'top-0 h-screen' : 'top-16 h-[calc(100vh-4rem)]'} w-[380px] bg-surface-container-lowest border-l border-outline-variant shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] flex flex-col z-30`}>
       {/* Transaction Tabs */}
       <div className="border-b border-outline-variant bg-surface px-3 pt-3">
         <div className="flex items-center justify-between mb-2">

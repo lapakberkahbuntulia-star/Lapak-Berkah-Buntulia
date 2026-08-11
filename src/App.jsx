@@ -198,7 +198,7 @@ function App() {
       {!isPosDesktop && (
         <TopAppBar title={isPos ? 'Halaman Kasir' : 'Lapak Berkah'} showNotifications={isPos} onLogout={handleLogout} />
       )}
-      <div className={`flex h-[calc(100vh-64px)] overflow-hidden ${isPosDesktop ? 'pt-0' : ''}`}>
+      <div className={`flex overflow-hidden ${isPosDesktop ? 'h-screen' : 'h-[calc(100vh-64px)]'}`}>
         {!isPosDesktop && <NavDrawer activePage={page} onNavigate={navigateTo} onLogout={handleLogout} role={role} />}
         <main className={`flex-1 overflow-y-auto bg-surface pb-24 md:pb-8 ${isPosDesktop ? '' : 'md:ml-72'}`}>
           <ErrorBoundary>
@@ -215,7 +215,7 @@ function App() {
             {page === 'pos-desktop' && <KasirDesktop onNavigate={navigateTo} />}
           </ErrorBoundary>
         </main>
-        {page === 'pos-desktop' && <KasirDesktopCart user={user} />}
+        {page === 'pos-desktop' && <KasirDesktopCart user={user} isPosDesktop={isPosDesktop} />}
         {!isPosDesktop && <BottomNav activePage={page} onNavigate={navigateTo} role={role} lowStockCount={lowStockCount} />}
       </div>
     </div>
