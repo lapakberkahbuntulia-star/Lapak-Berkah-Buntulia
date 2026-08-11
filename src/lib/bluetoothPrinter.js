@@ -152,7 +152,14 @@ export async function printReceiptBluetooth(transaction) {
     console.log('Attempting Bluetooth print...');
     const { characteristic } = await connectPrinter();
     console.log('Writing payload:', payload.length, 'bytes');
-    await characteristic.writeValue(payload);
+
+    const CHUNK_SIZE = 200;
+    for (let i = 0; i < payload.length; i += CHUNK_SIZE) {
+      const chunk = payload.slice(i, i + CHUNK_SIZE);
+      await characteristic.writeValue(chunk);
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
     console.log('Print success');
     return { success: true, method: 'bluetooth' };
   } catch (error) {
@@ -168,7 +175,14 @@ export async function printReturnReceiptBluetooth(transaction, returnReason) {
 
   try {
     const { characteristic } = await connectPrinter();
-    await characteristic.writeValue(payload);
+    
+    const CHUNK_SIZE = 200;
+    for (let i = 0; i < payload.length; i += CHUNK_SIZE) {
+      const chunk = payload.slice(i, i + CHUNK_SIZE);
+      await characteristic.writeValue(chunk);
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    
     return { success: true, method: 'bluetooth' };
   } catch (error) {
     console.error('Bluetooth return print failed:', error);
