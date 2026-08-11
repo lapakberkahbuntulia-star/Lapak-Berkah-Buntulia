@@ -200,7 +200,7 @@ function App() {
       )}
       <div className={`flex h-[calc(100vh-64px)] overflow-hidden ${isPosDesktop ? 'pt-0' : ''}`}>
         {!isPosDesktop && <NavDrawer activePage={page} onNavigate={navigateTo} onLogout={handleLogout} role={role} />}
-        <main className={`flex-1 overflow-y-auto bg-surface md:ml-72 pb-24 md:pb-8 ${isPosDesktop ? 'md:mr-0' : ''}`}>
+        <main className={`flex-1 overflow-y-auto bg-surface pb-24 md:pb-8 ${isPosDesktop ? '' : 'md:ml-72'}`}>
           <ErrorBoundary>
             {page === 'financial' && <FinancialReports />}
             {page === 'dashboard' && <Dashboard lowStockCount={lowStockCount} setLowStockCount={setLowStockCount} />}

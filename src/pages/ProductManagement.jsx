@@ -64,7 +64,8 @@ function ProductManagement() {
   const loadProducts = async () => {
     try {
       const data = await productService.getAll();
-      setProducts(data);
+      const productsArray = Array.isArray(data) ? data : [];
+      setProducts(productsArray);
     } catch {
       showToast('Gagal memuat produk', 'error');
     }
