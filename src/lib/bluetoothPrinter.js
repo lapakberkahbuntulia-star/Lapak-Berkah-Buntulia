@@ -47,11 +47,9 @@ export function buildReceiptPayload(transaction) {
     payload.push(`Kembali: Rp ${transaction.change.toLocaleString('id-ID')}`);
   }
 
-  payload.push('--------------------');
   payload.push('Terima kasih');
   payload.push([LF]);
-  payload.push([LF]);
-  payload.push([ESC, 0x64, 0x03]);
+  payload.push('--------------------');
   payload.push([GS, 0x56, 0x00]);
 
   const bytes = [];
@@ -87,11 +85,9 @@ export function buildReturnReceiptPayload(transaction, returnReason) {
     payload.push(`Alasan: ${returnReason}`);
   }
 
-  payload.push('--------------------');
   payload.push('Terima kasih');
   payload.push([LF]);
-  payload.push([LF]);
-  payload.push([ESC, 0x64, 0x03]);
+  payload.push('--------------------');
   payload.push([GS, 0x56, 0x00]);
 
   const bytes = [];
