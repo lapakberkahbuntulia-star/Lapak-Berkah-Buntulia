@@ -66,7 +66,7 @@ function KasirDesktop({ onNavigate }) {
       }));
       setProducts(mapped);
     } catch {
-      // Handle error
+      // silent catch
     } finally {
       setLoading(false);
     }
@@ -95,6 +95,7 @@ function KasirDesktop({ onNavigate }) {
     return () => window.removeEventListener('kasir:stock-updated', handler);
   }, []);
 
+  // Optimasi Memoization Kategori & Produk
   const categories = useMemo(() => ['Semua', ...new Set(products.map((p) => p.category?.name).filter(Boolean))], [products]);
 
   const filteredProducts = useMemo(() => {
@@ -234,7 +235,7 @@ function KasirDesktop({ onNavigate }) {
               </div>
             )}
 
-            {/* Compact Product Grid */}
+            {/* Grid Kompak */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {filteredProducts.map((product) => (
                 <button
@@ -249,7 +250,6 @@ function KasirDesktop({ onNavigate }) {
                   } ${flash === product.id ? 'ring-2 ring-primary' : ''}`}
                   disabled={product.stock === 0}
                 >
-                  {/* Reduced Image Container */}
                   <div className="h-28 sm:h-32 w-full rounded-lg bg-surface-container overflow-hidden relative">
                     {product.photo ? (
                       <img
@@ -293,6 +293,487 @@ function KasirDesktop({ onNavigate }) {
         )}
       </div>
     </div>
+  );
+}
+
+function KasirDesktopCart({ user }) {
+  const [transactions, setTransactions] = useState(initialTransactions);
+  const [activeTransactionId, setActiveTransactionId] = useState(initialTransactions[0].id);
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('Tunai');
+  const [toast, setToast] = useState(null);
+  const [_completedTransactions, setCompletedTransactions] = useState([]);
+  const [checkingOut, setCheckingOut] = useState(false);
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const activeTransaction = transactions.find((t) => t.id === activeTransactionId) || transactions[0];
+
+  useEffect(() => {
+    const loadHeldTransactions = async () => {
+      if (!user?.id) return;
+      try {
+        const held = await heldTransactionService.getAllByUser(user.id);
+        if (held.length > 0) {
+          const heldTransactions = held.map((h) => ({
+            id: h.local_id,
+            items: h.items || [],
+            status: 'held',
+            createdAt: new Date(h.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+            heldDbId: h.id,
+          }));
+          setTransactions((prev) => {
+            const existingIds = new Set(prev.map((t) => t.id));
+            const newTransactions = heldTransactions.filter((t) => !existingIds.has(t.id));
+            return [...prev, ...newTransactions];
+          });
+        }
+      } catch {
+        showToast('Gagal memuat transaksi sementara', 'error');
+      }
+    };
+
+    loadHeldTransactions();
+  }, [user]);
+
+  const updateQty = (transactionId, productId, delta) => {
+    setTransactions((prev) =>
+      prev.map((t) => {
+        if (t.id !== transactionId) return t;
+        const updatedItems = t.items
+          .map((item) => {
+            if (item.productId !== productId) return item;
+            const newQty = item.qty + delta;
+            if (newQty > (item.currentStock || 99)) {
+              setToast({ message: 'Jumlah melebihi stok tersedia', type: 'error' });
+              return item;
+            }
+            return { ...item, qty: Math.max(0, newQty) };
+          })
+          .filter((item) => item.qty > 0);
+        return { ...t, items: updatedItems };
+      }),
+    );
+  };
+
+  const removeItem = (transactionId, productId) => {
+    setTransactions((prev) =>
+      prev.map((t) => {
+        if (t.id !== transactionId) return t;
+        return { ...t, items: t.items.filter((item) => item.productId !== productId) };
+      }),
+    );
+  };
+
+  const addProductToTransaction = ({ productId, product }) => {
+    if (!product) return;
+    if ((product.stock || 0) <= 0) {
+      setToast({ message: 'Stok habis, tidak dapat menambahkan', type: 'error' });
+      return;
+    }
+
+    setTransactions((prev) =>
+      prev.map((t) => {
+        if (t.id !== activeTransactionId) return t;
+        const existing = t.items.find((item) => item.productId === productId);
+        if (existing && existing.qty >= (existing.currentStock || 99)) {
+          setToast({ message: 'Stok tidak cukup untuk menambahkan lagi', type: 'error' });
+          return t;
+        }
+        const updatedItems = existing
+          ? t.items.map((item) => (item.productId === productId ? { ...item, qty: item.qty + 1 } : item))
+          : [
+              ...t.items,
+              {
+                productId: product.id,
+                name: product.name,
+                sku: product.sku,
+                barcodeId: product.barcodeId,
+                sellingPrice: product.sellingPrice,
+                unit: product.unit,
+                mitraId: product.mitraId,
+                currentStock: product.stock,
+                qty: 1,
+              },
+            ];
+        return { ...t, items: updatedItems };
+      }),
+    );
+  };
+
+  const holdTransaction = async () => {
+    if (activeTransaction.items.length === 0) return;
+    const newTransaction = createEmptyTransaction(Date.now());
+    const updatedTransactions = [...transactions, newTransaction];
+    setTransactions(updatedTransactions);
+    setActiveTransactionId(newTransaction.id);
+    setPaymentAmount('');
+
+    try {
+      const heldRecord = await heldTransactionService.create({
+        user_id: user?.id || null,
+        local_id: newTransaction.id,
+        items: newTransaction.items,
+        payment_method: paymentMethod,
+        status: 'held',
+      });
+      setTransactions((prev) =>
+        prev.map((t) => (t.id === newTransaction.id ? { ...t, heldDbId: heldRecord.id } : t)),
+      );
+    } catch {
+      showToast('Gagal menyimpan transaksi sementara', 'error');
+    }
+  };
+
+  const resumeTransaction = async (id) => {
+    setActiveTransactionId(id);
+    setPaymentAmount('');
+  };
+
+  const deleteTransaction = async (id, e) => {
+    e.stopPropagation();
+    const transaction = transactions.find((t) => t.id === id);
+    setTransactions((prev) => prev.filter((t) => t.id !== id));
+    if (activeTransactionId === id) {
+      const remaining = transactions.filter((t) => t.id !== id);
+      setActiveTransactionId(remaining[0]?.id || null);
+    }
+
+    try {
+      if (transaction?.heldDbId) {
+        await heldTransactionService.delete(transaction.heldDbId);
+      } else {
+        await heldTransactionService.deleteByLocalId(id);
+      }
+    } catch {
+      showToast('Gagal menghapus transaksi sementara', 'error');
+    }
+  };
+
+  const handleCheckout = async () => {
+    if (checkingOut) return;
+    const total = activeTransaction.items.reduce((sum, item) => sum + item.sellingPrice * item.qty, 0);
+    const paid = Number(paymentAmount);
+    if (!paymentMethod || total <= 0) return;
+    if (paymentMethod === 'Tunai' && (isNaN(paid) || paid < total)) {
+      setToast({ message: 'Jumlah pembayaran kurang', type: 'error' });
+      return;
+    }
+
+    setCheckingOut(true);
+    try {
+      const mitraId = activeTransaction.items.find((item) => item.mitraId)?.mitraId || null;
+      const transactionData = {
+        user_id: user?.id || null,
+        mitra_id: mitraId,
+        total,
+        paid: paymentMethod === 'Tunai' ? paid : total,
+        change: paymentMethod === 'Tunai' ? Math.max(0, paid - total) : 0,
+        metode_pembayaran: paymentMethod,
+        status: 'Selesai',
+      };
+
+      const createdTransaction = await transactionService.create(transactionData);
+
+      const items = activeTransaction.items.map((item) => ({
+        transaction_id: createdTransaction.id,
+        product_id: item.productId,
+        quantity: item.qty,
+        harga_satuan: item.sellingPrice,
+        subtotal: item.sellingPrice * item.qty,
+      }));
+
+      await transactionItemService.createBatch(items);
+
+      const stockUpdates = activeTransaction.items.map(async (item) => {
+        await stockMovementService.create({
+          type: 'out',
+          product_id: item.productId,
+          quantity: item.qty,
+          note: `Transaksi #${createdTransaction.id.toString().slice(-2)}`,
+          mitra_id: item.mitraId || null,
+        });
+
+        const success = await productService.decrementStock(item.productId, item.qty);
+        if (!success) {
+          throw new Error(`Stok tidak cukup untuk ${item.name}`);
+        }
+      });
+
+      await Promise.all(stockUpdates);
+
+      if (mitraId) {
+        try {
+          const currentMitra = await mitraService.getById(mitraId);
+          if (currentMitra) {
+            await mitraService.update(mitraId, {
+              total_transaction: (currentMitra.total_transaction || 0) + 1,
+              total_omzet: (currentMitra.total_omzet || 0) + total,
+            });
+          }
+        } catch {
+          // silently continue
+        }
+      }
+
+      const updatedProducts = await productService.getAll();
+      const mappedUpdatedProducts = updatedProducts.map((p) => ({
+        id: p.id,
+        name: p.nama_produk,
+        sku: p.sku,
+        category: p.category ? { name: p.category.name } : null,
+        type: p.type ? { name: p.type.name } : null,
+        mitra: p.mitra ? { full_name: p.mitra.full_name } : null,
+        mitraId: p.mitra_id,
+        mitraPrice: p.mitra_price,
+        sellingPrice: p.selling_price,
+        stock: p.stock,
+        unit: p.unit,
+        photo: p.photo,
+        barcodeId: p.barcode_id,
+        description: p.description,
+      }));
+      window.dispatchEvent(new CustomEvent('kasir:stock-updated', { detail: { products: mappedUpdatedProducts } }));
+
+      const completed = {
+        ...activeTransaction,
+        total,
+        paid: paymentMethod === 'Tunai' ? paid : total,
+        change: paymentMethod === 'Tunai' ? Math.max(0, paid - total) : 0,
+        paymentMethod,
+        completedAt: new Date().toLocaleString('id-ID'),
+      };
+      setCompletedTransactions((prev) => [completed, ...prev]);
+      if (activeTransaction.heldDbId) {
+        heldTransactionService.delete(activeTransaction.heldDbId).catch(() => {});
+      }
+      setToast({ message: `Pembayaran ${paymentMethod} berhasil`, type: 'success' });
+      setPaymentAmount('');
+      setTransactions((prev) => prev.filter((t) => t.id !== activeTransactionId));
+      const remaining = transactions.filter((t) => t.id !== activeTransactionId);
+      setActiveTransactionId(remaining[0]?.id || null);
+      printReceipt(completed).then((result) => {
+        if (result && result.method === 'bluetooth') {
+          setToast({ message: 'Struk dikirim ke printer', type: 'success' });
+        } else if (result && result.error) {
+          setToast({ message: 'Gagal print Bluetooth: ' + result.error + '. Gunakan print browser.', type: 'error' });
+        }
+      }).catch(() => {
+        setToast({ message: 'Gagal print struk', type: 'error' });
+      });
+    } catch (error) {
+      setToast({ message: 'Gagal memproses pembayaran: ' + (error?.message || ''), type: 'error' });
+    } finally {
+      setCheckingOut(false);
+    }
+  };
+
+  const subtotal = activeTransaction.items.reduce((sum, item) => sum + item.sellingPrice * item.qty, 0);
+  const tax = 0;
+  const total = subtotal - tax;
+  const change = paymentMethod === 'Tunai' ? Number(paymentAmount || 0) - total : 0;
+
+  useEffect(() => {
+    const handler = (e) => {
+      addProductToTransaction(e.detail);
+    };
+    window.addEventListener('kasir:add-product', handler);
+    return () => window.removeEventListener('kasir:add-product', handler);
+  }, [activeTransactionId]);
+
+  return (
+    <aside className="fixed right-0 top-16 h-[calc(100vh-4rem)] w-[380px] bg-surface-container-lowest border-l border-outline-variant shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] flex flex-col z-30">
+      {/* Transaction Tabs */}
+      <div className="border-b border-outline-variant bg-surface px-3 pt-3">
+        <div className="flex items-center justify-between mb-2">
+          <span className="font-label-sm text-label-sm text-on-surface-variant">Transaksi Aktif</span>
+          <span className="font-label-sm text-label-sm text-on-surface-variant">{transactions.length}/3</span>
+        </div>
+        <div className="flex gap-2 overflow-x-auto hide-scrollbar">
+          {transactions.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => resumeTransaction(t.id)}
+              className={`flex items-center gap-2 h-10 px-3 rounded-lg border text-label-sm font-label-sm whitespace-nowrap transition-colors ${
+                activeTransactionId === t.id
+                  ? 'bg-secondary-container border-secondary text-on-secondary-container shadow-sm'
+                  : 'bg-surface-container-lowest border-outline-variant text-on-surface-variant hover:bg-surface-container-high'
+              }`}
+            >
+              <span>#{t.id.toString().slice(-2)}</span>
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${activeTransactionId === t.id ? 'bg-on-secondary-container/20 text-on-secondary-container' : 'bg-surface-container-high text-on-surface-variant'}`}>
+                {t.items.reduce((sum, item) => sum + item.qty, 0)}
+              </span>
+              <span
+                onClick={(e) => deleteTransaction(t.id, e)}
+                className="material-symbols-outlined text-[16px] hover:text-error cursor-pointer"
+              >
+                close
+              </span>
+            </button>
+          ))}
+          <button
+            onClick={holdTransaction}
+            className="h-10 px-4 rounded-lg border-2 border-dashed border-outline-variant text-label-sm font-label-sm text-on-surface-variant hover:border-primary hover:text-primary whitespace-nowrap transition-colors"
+          >
+            + Tab
+          </button>
+        </div>
+      </div>
+
+      {/* Cart Header */}
+      <div className="px-6 py-4 border-b border-outline-variant flex items-center justify-between bg-surface">
+        <div>
+          <h2 className="font-headline-md text-headline-md text-on-surface">Transaksi #{activeTransactionId.toString().slice(-2)}</h2>
+          <p className="font-label-sm text-label-sm text-on-surface-variant">{activeTransaction.createdAt}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {activeTransaction.items.length > 0 && (
+            <button
+              onClick={() => printReceipt(activeTransaction)}
+              className="text-primary hover:bg-primary-container p-2 rounded-full transition-colors"
+              title="Cetak Struk"
+              aria-label="Cetak struk"
+            >
+              <span className="material-symbols-outlined">print</span>
+            </button>
+          )}
+          <button
+            onClick={() => {
+              setTransactions((prev) => prev.filter((t) => t.id !== activeTransactionId));
+              const remaining = transactions.filter((t) => t.id !== activeTransactionId);
+              setActiveTransactionId(remaining[0]?.id || null);
+            }}
+            className="text-error hover:bg-error-container p-2 rounded-full transition-colors"
+            title="Tutup transaksi"
+            aria-label="Tutup transaksi"
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Cart Items */}
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 hide-scrollbar">
+        {activeTransaction.items.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-on-surface-variant gap-2">
+            <span className="material-symbols-outlined text-4xl">shopping_cart</span>
+            <p className="font-body-md text-body-md">Belum ada produk</p>
+            <p className="font-label-sm text-label-sm">Scan barcode atau pilih produk</p>
+          </div>
+        ) : (
+          activeTransaction.items.map((item) => (
+            <div key={item.productId} className="flex gap-3 p-3 bg-surface rounded-xl border border-outline-variant">
+              <div className="w-16 h-16 rounded-lg bg-surface-container-highest flex items-center justify-center flex-shrink-0">
+                <span className="material-symbols-outlined text-outline text-2xl">image</span>
+              </div>
+              <div className="flex-1 flex flex-col justify-between">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1">
+                    <h4 className="font-label-md text-label-md text-on-surface line-clamp-2 leading-tight">{item.name}</h4>
+                    <p className="font-label-sm text-label-sm text-on-surface-variant mt-0.5">{item.sku} · {item.barcodeId}</p>
+                  </div>
+                  <button onClick={() => removeItem(activeTransaction.id, item.productId)} aria-label="Hapus item" className="text-on-surface-variant hover:text-error p-1 -mr-1 -mt-1">
+                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                  </button>
+                </div>
+                <div className="flex justify-between items-center mt-2">
+                  <p className="font-numeric-data text-numeric-data text-primary text-sm">Rp {item.sellingPrice.toLocaleString('id-ID')}</p>
+                  <div className="flex items-center gap-2 bg-surface-container-highest rounded-lg h-8">
+                    <button onClick={() => updateQty(activeTransaction.id, item.productId, -1)} className="w-8 h-8 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">-</button>
+                    <span className="font-numeric-data text-label-md w-8 text-center">{item.qty}</span>
+                    <button onClick={() => updateQty(activeTransaction.id, item.productId, 1)} className="w-8 h-8 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">+</button>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center mt-1">
+                  <span className="font-label-sm text-label-sm text-on-surface-variant">Total</span>
+                  <span className="font-numeric-data text-numeric-data text-on-surface font-semibold">Rp {(item.sellingPrice * item.qty).toLocaleString('id-ID')}</span>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Totals & Actions */}
+      {activeTransaction.items.length > 0 && (
+        <div className="border-t border-outline-variant bg-surface p-4 flex flex-col gap-3">
+          <div className="flex justify-between items-center text-on-surface-variant font-body-md text-body-md">
+            <span>Subtotal ({activeTransaction.items.reduce((sum, item) => sum + item.qty, 0)} item)</span>
+            <span className="font-numeric-data">Rp {subtotal.toLocaleString('id-ID')}</span>
+          </div>
+          {tax > 0 && (
+            <div className="flex justify-between items-center text-on-surface-variant font-body-md text-body-md">
+              <span>Pajak</span>
+              <span className="font-numeric-data">Rp {tax.toLocaleString('id-ID')}</span>
+            </div>
+          )}
+          <div className="h-px w-full bg-outline-variant/50" />
+          <div className="flex justify-between items-center">
+            <span className="font-headline-sm text-headline-sm text-on-surface">Total</span>
+            <span className="font-display-lg text-display-lg text-primary">Rp {total.toLocaleString('id-ID')}</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={holdTransaction} className="h-11 rounded-xl bg-surface-container-lowest border border-outline-variant text-on-surface-variant font-label-md text-label-md hover:bg-surface-container transition-colors">
+              Tahan
+            </button>
+            <button onClick={() => setPaymentMethod('Tunai')} className={`h-11 rounded-xl border font-label-md text-label-md transition-colors ${paymentMethod === 'Tunai' ? 'bg-primary text-on-primary border-primary' : 'bg-surface-container-lowest border-outline-variant text-on-surface-variant hover:bg-surface-container'}`}>
+              Tunai
+            </button>
+          </div>
+          {paymentMethod === 'Tunai' && (
+            <div className="space-y-2">
+              <label className="block font-label-md text-label-md text-on-surface">Jumlah Bayar</label>
+              <input
+                className="w-full h-12 px-4 rounded-xl border border-outline bg-surface-container-low focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-numeric-data text-numeric-data text-body-md"
+                type="number"
+                placeholder="0"
+                value={paymentAmount}
+                onChange={(e) => setPaymentAmount(e.target.value)}
+              />
+              <div className="grid grid-cols-4 gap-2">
+                {[50000, 100000, 200000, 500000].map((amount) => (
+                  <button
+                    key={amount}
+                    onClick={() => setPaymentAmount(String(amount))}
+                    className="h-9 rounded-lg border border-outline bg-surface-container-low hover:bg-surface-container-high font-label-sm text-label-sm text-on-surface-variant transition-colors"
+                  >
+                    {amount >= 1000 ? `${(amount / 1000)}K` : amount}
+                  </button>
+                ))}
+              </div>
+              {Number(paymentAmount) >= total && (
+                <div className="flex justify-between items-center text-body-md font-body-md">
+                  <span className="text-on-surface-variant">Kembali</span>
+                  <span className="font-numeric-data text-numeric-data text-tertiary-container font-semibold">Rp {change.toLocaleString('id-ID')}</span>
+                </div>
+              )}
+            </div>
+          )}
+          <button
+            onClick={handleCheckout}
+            disabled={checkingOut || activeTransaction.items.length === 0 || (paymentMethod === 'Tunai' && (Number(paymentAmount) < total || Number(paymentAmount) === 0))}
+            className="w-full h-12 bg-secondary-container hover:bg-[#f4a7b9] text-on-secondary-container font-headline-sm text-headline-sm rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {checkingOut ? (
+              <span className="material-symbols-outlined animate-spin">progress_activity</span>
+            ) : (
+              <span className="material-symbols-outlined">point_of_sale</span>
+            )}
+            {checkingOut ? 'Memproses...' : 'Bayar'}
+          </button>
+        </div>
+      )}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-xl shadow-lg flex items-center gap-3 ${toast.type === 'success' ? 'bg-tertiary-fixed text-on-tertiary-fixed' : 'bg-error-container text-on-error-container'}`}>
+          <span className="material-symbols-outlined">{toast.type === 'success' ? 'check_circle' : 'error'}</span>
+          <span className="font-label-md text-label-md">{toast.message}</span>
+        </div>
+      )}
+    </aside>
   );
 }
 
