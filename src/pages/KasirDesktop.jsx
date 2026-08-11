@@ -24,7 +24,31 @@ function KasirDesktop({ onNavigate }) {
   const [barcode, setBarcode] = useState('');
   const [flash, setFlash] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [printerConnected, setPrinterConnected] = useState(false);
   const barcodeRef = useRef(null);
+
+  const handleConnectPrinter = async () => {
+    try {
+      const { connectPrinter } = await import('../lib/bluetoothPrinter');
+      await connectPrinter();
+      setPrinterConnected(true);
+      setToast({ message: 'Printer berhasil terhubung', type: 'success' });
+    } catch (error) {
+      setPrinterConnected(false);
+      setToast({ message: 'Gagal hubungkan printer: ' + error.message, type: 'error' });
+    }
+  };
+
+  const handleDisconnectPrinter = async () => {
+    try {
+      const { clearPrinterCache } = await import('../lib/bluetoothPrinter');
+      clearPrinterCache();
+      setPrinterConnected(false);
+      setToast({ message: 'Printer disconnected', type: 'success' });
+    } catch {
+      setToast({ message: 'Gagal putuskan printer', type: 'error' });
+    }
+  };
 
   const loadProducts = async () => {
     try {
@@ -108,6 +132,18 @@ function KasirDesktop({ onNavigate }) {
             aria-label="Menu"
           >
             <span className="material-symbols-outlined">menu</span>
+          </button>
+          <button
+            onClick={printerConnected ? handleDisconnectPrinter : handleConnectPrinter}
+            className={`h-10 px-3 rounded-lg border flex items-center gap-2 text-label-sm font-label-sm transition-colors ${
+              printerConnected
+                ? 'bg-tertiary-fixed/15 text-tertiary-container border-tertiary-fixed/30'
+                : 'bg-surface-container border-outline-variant text-on-surface hover:bg-surface-container-high'
+            }`}
+            aria-label={printerConnected ? 'Printer terhubung' : 'Hubungkan printer'}
+          >
+            <span className="material-symbols-outlined text-[18px]">{printerConnected ? 'print' : 'print_disabled'}</span>
+            <span className="hidden sm:inline">{printerConnected ? 'Printer OK' : 'Connect Printer'}</span>
           </button>
           <form onSubmit={handleBarcodeSubmit} className="flex-1 max-w-2xl">
             <div className="relative">
@@ -519,7 +555,15 @@ function KasirDesktopCart({ user }) {
       setTransactions((prev) => prev.filter((t) => t.id !== activeTransactionId));
       const remaining = transactions.filter((t) => t.id !== activeTransactionId);
       setActiveTransactionId(remaining[0]?.id || null);
-      setTimeout(() => printReceipt(completed), 300);
+      printReceipt(completed).then((result) => {
+        if (result && result.method === 'bluetooth') {
+          setToast({ message: 'Struk dikirim ke printer', type: 'success' });
+        } else if (result && result.error) {
+          setToast({ message: 'Gagal print Bluetooth: ' + result.error + '. Gunakan print browser.', type: 'error' });
+        }
+      }).catch(() => {
+        setToast({ message: 'Gagal print struk', type: 'error' });
+      });
     } catch (error) {
       setToast({ message: 'Gagal memproses pembayaran: ' + (error?.message || ''), type: 'error' });
     } finally {

@@ -68,43 +68,64 @@ export function buildReceiptPayload(transaction) {
   return bytesToUint8Array(payload);
 }
 
+let cachedDevice = null;
+let cachedCharacteristic = null;
+
+export function clearPrinterCache() {
+  cachedDevice = null;
+  cachedCharacteristic = null;
+}
+
 export async function connectPrinter() {
   if (!navigator.bluetooth) {
     throw new Error('Web Bluetooth tidak didukung di browser ini.');
   }
 
+  if (cachedCharacteristic) {
+    try {
+      await cachedCharacteristic.writeValue(new Uint8Array([]));
+      return { device: cachedDevice, characteristic: cachedCharacteristic };
+    } catch {
+      cachedDevice = null;
+      cachedCharacteristic = null;
+    }
+  }
+
+  console.log('Requesting Bluetooth device:', PRINTER_NAME);
   const device = await navigator.bluetooth.requestDevice({
     filters: [{ name: PRINTER_NAME }],
     optionalServices: [SERVICE_UUID],
   });
+  console.log('Device selected:', device.name);
 
   const server = await device.gatt.connect();
+  console.log('GATT connected');
   const service = await server.getPrimaryService(SERVICE_UUID);
+  console.log('Service found');
   const characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+  console.log('Characteristic found');
+
+  cachedDevice = device;
+  cachedCharacteristic = characteristic;
 
   return { device, characteristic };
 }
 
 export async function printReceiptBluetooth(transaction) {
   const payload = buildReceiptPayload(transaction);
-  let printerCharacteristic = null;
 
   try {
+    console.log('Attempting Bluetooth print...');
     const { characteristic } = await connectPrinter();
-    printerCharacteristic = characteristic;
+    console.log('Writing payload:', payload.length, 'bytes');
     await characteristic.writeValue(payload);
+    console.log('Print success');
     return { success: true, method: 'bluetooth' };
   } catch (error) {
     console.error('Bluetooth print failed:', error);
+    cachedDevice = null;
+    cachedCharacteristic = null;
     return { success: false, method: 'bluetooth', error: error.message };
-  } finally {
-    if (printerCharacteristic?.service?.device?.gatt?.connected) {
-      try {
-        await printerCharacteristic.service.device.gatt.disconnect();
-      } catch {
-        // ignore disconnect error
-      }
-    }
   }
 }
 
