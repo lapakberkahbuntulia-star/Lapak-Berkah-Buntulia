@@ -27,6 +27,7 @@ export function buildReceiptPayload(transaction) {
   payload.push([ESC, 0x61, 0x01]);
   payload.push('Lapak Berkah Buntulia');
   payload.push('Struk Pembelian');
+  payload.push([ESC, 0x61, 0x00]);
   payload.push(`No. Transaksi: #${transaction.id.toString().slice(-2)}`);
   payload.push(`Tanggal: ${transaction.completedAt || now}`);
   payload.push(`Metode: ${transaction.paymentMethod || 'Tunai'}`);
@@ -35,18 +36,18 @@ export function buildReceiptPayload(transaction) {
   for (const item of transaction.items) {
     const itemTotal = item.sellingPrice * item.qty;
     payload.push(item.name);
-    payload.push(`${item.qty} x ${item.sellingPrice.toLocaleString('id-ID')}`);
-    payload.push(`Rp ${itemTotal.toLocaleString('id-ID')}`);
-    payload.push('--------------------');
+    payload.push(`${item.qty} x ${item.sellingPrice.toLocaleString('id-ID')} = Rp ${itemTotal.toLocaleString('id-ID')}`);
   }
 
-  payload.push(`Total Rp ${total.toLocaleString('id-ID')}`);
+  payload.push('--------------------');
+  payload.push(`Total: Rp ${total.toLocaleString('id-ID')}`);
 
   if (transaction.paid > 0) {
-    payload.push(`Bayar Rp ${transaction.paid.toLocaleString('id-ID')}`);
-    payload.push(`Kembali Rp ${transaction.change.toLocaleString('id-ID')}`);
+    payload.push(`Bayar: Rp ${transaction.paid.toLocaleString('id-ID')}`);
+    payload.push(`Kembali: Rp ${transaction.change.toLocaleString('id-ID')}`);
   }
 
+  payload.push('--------------------');
   payload.push('Terima kasih');
   payload.push([LF]);
   payload.push([LF]);
@@ -86,6 +87,7 @@ export function buildReturnReceiptPayload(transaction, returnReason) {
     payload.push(`Alasan: ${returnReason}`);
   }
 
+  payload.push('--------------------');
   payload.push('Terima kasih');
   payload.push([LF]);
   payload.push([LF]);
@@ -219,8 +221,8 @@ export function printReceiptFallback(transaction) {
           </style>
         </head>
         <body>
-          <div class="text-center">
-            <div class="font-bold" style="font-size: 13px;">Lapak Berkah Buntulia</div>
+          <div class="text-center" style="margin-top: 4px;">
+            <div style="font-weight: bold; font-size: 12px;">Lapak Berkah Buntulia</div>
             <div style="font-size: 10px; color: #666;">Struk Pembelian</div>
           </div>
           <div style="margin-top: 4px;">
@@ -228,26 +230,14 @@ export function printReceiptFallback(transaction) {
             <div>Tanggal: ${transaction.completedAt || now}</div>
             <div>Metode: ${transaction.paymentMethod || 'Tunai'}</div>
           </div>
-          <table style="margin-top: 6px;">
-            <thead>
-              <tr>
-                <th style="text-align: left; border-bottom: 1px dashed #ccc;">Item</th>
-                <th style="text-align: center; border-bottom: 1px dashed #ccc;">Qty</th>
-                <th style="text-align: right; border-bottom: 1px dashed #ccc;">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${transaction.items.map(item => `
-                <tr>
-                  <td style="padding: 2px 0; font-size: 10px;">${item.name}</td>
-                  <td style="text-align: center; padding: 2px 0; font-size: 10px;">${item.qty} x ${item.sellingPrice.toLocaleString('id-ID')}</td>
-                  <td style="text-align: right; padding: 2px 0; font-size: 10px;">Rp ${(item.sellingPrice * item.qty).toLocaleString('id-ID')}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-          <div style="margin-top: 6px; border-top: 1px dashed #ccc; padding-top: 4px;">
-            <div style="display: flex; justify-content: space-between; font-weight: bold;">
+          <div style="margin-top: 4px; border-top: 1px dashed #ccc; padding-top: 4px;">
+            ${transaction.items.map(item => `
+              <div style="font-size: 10px; margin-bottom: 2px;">${item.name}</div>
+              <div style="font-size: 10px; margin-bottom: 2px;">${item.qty} x ${item.sellingPrice.toLocaleString('id-ID')} = Rp ${(item.sellingPrice * item.qty).toLocaleString('id-ID')}</div>
+            `).join('')}
+          </div>
+          <div style="margin-top: 4px; border-top: 1px dashed #ccc; padding-top: 4px;">
+            <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 11px;">
               <span>Total</span>
               <span>Rp ${total.toLocaleString('id-ID')}</span>
             </div>
@@ -262,7 +252,7 @@ export function printReceiptFallback(transaction) {
               </div>
             ` : ''}
           </div>
-          <div class="text-center" style="margin-top: 8px; font-size: 10px; color: #666;">
+          <div style="margin-top: 6px; border-top: 1px dashed #ccc; padding-top: 4px; text-align: center; font-size: 10px; color: #666;">
             Terima kasih telah berbelanja
           </div>
         </body>
