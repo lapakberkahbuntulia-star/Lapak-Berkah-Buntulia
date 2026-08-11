@@ -23,10 +23,10 @@ export function buildReceiptPayload(transaction) {
   const now = new Date().toLocaleString('id-ID');
   const payload = [];
 
-  // Reset printer
+  // Reset printer (tanpa Line Feed tambahan di awal)
   payload.push([ESC, 0x40]);
   
-  // Header Center
+  // Header Center - Langsung cetak judul di baris paling atas
   payload.push([ESC, 0x61, 0x01]);
   payload.push('Lapak Berkah Buntulia');
   payload.push('Struk Pembelian');
@@ -57,8 +57,8 @@ export function buildReceiptPayload(transaction) {
   payload.push('--------------------');
   payload.push('Terima kasih');
 
-  // Feed minimal 1 baris agar teks terlihat lengkap tepat di garis pemotong
-  payload.push([ESC, 0x64, 0x01]);
+  // Feed 2 baris setelah "Terima kasih" agar kertas terdorong tepat untuk disobek
+  payload.push([ESC, 0x64, 0x02]);
 
   const bytes = [];
   for (const line of payload) {
@@ -100,8 +100,8 @@ export function buildReturnReceiptPayload(transaction, returnReason) {
 
   payload.push('Terima kasih');
   
-  // Feed minimal 1 baris
-  payload.push([ESC, 0x64, 0x01]);
+  // Feed 2 baris setelah "Terima kasih"
+  payload.push([ESC, 0x64, 0x02]);
 
   const bytes = [];
   for (const line of payload) {
@@ -249,7 +249,7 @@ export function printReceiptFallback(transaction) {
             * { box-sizing: border-box; }
             body {
               margin: 0;
-              padding: 2mm 2mm 0mm 2mm;
+              padding: 0mm 2mm 3mm 2mm;
               font-family: Arial, sans-serif;
               font-size: 11px;
               color: #000;
@@ -264,7 +264,7 @@ export function printReceiptFallback(transaction) {
           </style>
         </head>
         <body>
-          <div class="text-center" style="margin-top: 2px;">
+          <div class="text-center" style="margin-top: 0px;">
             <div style="font-weight: bold; font-size: 12px;">Lapak Berkah Buntulia</div>
             <div style="font-size: 10px; color: #666;">Struk Pembelian</div>
           </div>
