@@ -25,6 +25,7 @@ function KasirDesktop({ onNavigate }) {
   const [flash, setFlash] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [printerConnected, setPrinterConnected] = useState(false);
+  const [toast, setToast] = useState(null);
   const barcodeRef = useRef(null);
 
   const handleConnectPrinter = async () => {
@@ -70,7 +71,7 @@ function KasirDesktop({ onNavigate }) {
         description: p.description,
       }));
       setProducts(mapped);
-      } catch {
+    } catch {
       setToast({ message: 'Gagal memuat produk', type: 'error' });
     } finally {
       setLoading(false);
@@ -122,20 +123,20 @@ function KasirDesktop({ onNavigate }) {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-surface-container-lowest relative">
+    <div className="flex-1 flex flex-col h-screen bg-surface-container-lowest relative xl:pr-[380px] lg:pr-[340px]">
       {/* Header */}
       <header className="h-16 bg-surface border-b border-outline-variant flex items-center justify-between px-4 md:px-6 z-10 shrink-0 gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-1">
           <button
             onClick={() => setMenuOpen(true)}
-            className="h-10 w-10 rounded-lg bg-surface-container border border-outline-variant flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors"
+            className="h-10 w-10 rounded-lg bg-surface-container border border-outline-variant flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors shrink-0"
             aria-label="Menu"
           >
             <span className="material-symbols-outlined">menu</span>
           </button>
           <button
             onClick={printerConnected ? handleDisconnectPrinter : handleConnectPrinter}
-            className={`h-10 px-3 rounded-lg border flex items-center gap-2 text-label-sm font-label-sm transition-colors ${
+            className={`h-10 px-3 rounded-lg border flex items-center gap-2 text-label-sm font-label-sm transition-colors shrink-0 ${
               printerConnected
                 ? 'bg-tertiary-fixed/15 text-tertiary-container border-tertiary-fixed/30'
                 : 'bg-surface-container border-outline-variant text-on-surface hover:bg-surface-container-high'
@@ -159,7 +160,7 @@ function KasirDesktop({ onNavigate }) {
             </div>
           </form>
         </div>
-        <div className="text-right hidden sm:block">
+        <div className="text-right hidden sm:block shrink-0">
           <div className="font-label-sm text-label-sm text-on-surface-variant">Tanggal Aktif</div>
           <div className="font-label-md text-label-md text-on-surface">{new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
         </div>
@@ -242,56 +243,63 @@ function KasirDesktop({ onNavigate }) {
                 </div>
               </div>
             )}
-            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredProducts.map((product) => (
-              <button
-                key={product.id}
-                onClick={() => {
-                  setFlash(product.id);
-                  setTimeout(() => setFlash(null), 600);
-                  window.dispatchEvent(new CustomEvent('kasir:add-product', { detail: { productId: product.id, product } }));
-                }}
-                className={`bg-surface border rounded-xl p-3 flex flex-col gap-2 hover:shadow-md transition-all text-left relative overflow-hidden ${
-                  product.stock === 0 ? 'border-error-container opacity-75 cursor-not-allowed' : 'border-outline-variant cursor-pointer active:scale-95'
-                } ${flash === product.id ? 'ring-2 ring-primary' : ''}`}
-                disabled={product.stock === 0}
-              >
-                <div className="aspect-square w-full rounded-lg bg-surface-container overflow-hidden relative">
-                  {product.photo ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredProducts.map((product) => (
+                <button
+                  key={product.id}
+                  onClick={() => {
+                    setFlash(product.id);
+                    setTimeout(() => setFlash(null), 600);
+                    window.dispatchEvent(new CustomEvent('kasir:add-product', { detail: { productId: product.id, product } }));
+                  }}
+                  className={`bg-surface border rounded-xl p-3 flex flex-col gap-2 hover:shadow-md transition-all text-left relative overflow-hidden ${
+                    product.stock === 0 ? 'border-error-container opacity-75 cursor-not-allowed' : 'border-outline-variant cursor-pointer active:scale-95'
+                  } ${flash === product.id ? 'ring-2 ring-primary' : ''}`}
+                  disabled={product.stock === 0}
+                >
+                  <div className="aspect-square w-full rounded-lg bg-surface-container overflow-hidden relative">
+                    {product.photo ? (
                       <img className="w-full h-full object-cover" alt={product.name} width="80" height="80" loading="lazy" decoding="async" src={product.photo} />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <span className="material-symbols-outlined text-4xl text-outline">image</span>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <span className="material-symbols-outlined text-4xl text-outline">image</span>
+                      </div>
+                    )}
+                    <div
+                      className={`absolute top-2 right-2 px-2 py-1 rounded-md font-label-sm text-label-sm border ${
+                        product.stock === 0
+                          ? 'bg-error-container text-on-error-container border-error/20 font-bold'
+                          : product.stock <= 5
+                            ? 'bg-[#fdf2d5] text-[#7a590c] border-[#ebd083]'
+                            : 'bg-[#d1f4e0] text-[#0d592a] border-[#93d8b5]'
+                      }`}
+                    >
+                      {product.stock === 0 ? 'Habis' : product.stock <= 5 ? `Sisa ${product.stock}` : `Stok: ${product.stock}`}
                     </div>
-                  )}
-                  <div
-                    className={`absolute top-2 right-2 px-2 py-1 rounded-md font-label-sm text-label-sm border ${
-                      product.stock === 0
-                        ? 'bg-error-container text-on-error-container border-error/20 font-bold'
-                        : product.stock <= 5
-                          ? 'bg-[#fdf2d5] text-[#7a590c] border-[#ebd083]'
-                          : 'bg-[#d1f4e0] text-[#0d592a] border-[#93d8b5]'
-                    }`}
-                  >
-                    {product.stock === 0 ? 'Habis' : product.stock <= 5 ? `Sisa ${product.stock}` : `Stok: ${product.stock}`}
                   </div>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <h3 className="font-headline-sm text-headline-sm text-on-surface line-clamp-2 leading-tight">{product.name}</h3>
-                  <p className={`font-numeric-data text-numeric-data ${product.stock === 0 ? 'text-on-surface-variant line-through' : 'text-primary'}`}>
-                    Rp {product.sellingPrice.toLocaleString('id-ID')}
-                  </p>
-                  <p className="font-label-sm text-label-sm text-on-surface-variant">{product.barcodeId}</p>
-                </div>
-                {product.stock === 0 && (
-                  <div className="absolute inset-0 bg-error/5 z-10 pointer-events-none" />
-                )}
-              </button>
-            ))}
-          </div>
+                  <div className="flex flex-col gap-1">
+                    <h3 className="font-headline-sm text-headline-sm text-on-surface line-clamp-2 leading-tight">{product.name}</h3>
+                    <p className={`font-numeric-data text-numeric-data ${product.stock === 0 ? 'text-on-surface-variant line-through' : 'text-primary'}`}>
+                      Rp {product.sellingPrice.toLocaleString('id-ID')}
+                    </p>
+                    <p className="font-label-sm text-label-sm text-on-surface-variant">{product.barcodeId}</p>
+                  </div>
+                  {product.stock === 0 && (
+                    <div className="absolute inset-0 bg-error/5 z-10 pointer-events-none" />
+                  )}
+                </button>
+              ))}
+            </div>
           </>
         )}
       </div>
+
+      {toast && (
+        <div className={`fixed top-4 left-4 z-50 px-6 py-3 rounded-xl shadow-lg flex items-center gap-3 ${toast.type === 'success' ? 'bg-tertiary-fixed text-on-tertiary-fixed' : 'bg-error-container text-on-error-container'}`}>
+          <span className="material-symbols-outlined">{toast.type === 'success' ? 'check_circle' : 'error'}</span>
+          <span className="font-label-md text-label-md">{toast.message}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -586,7 +594,7 @@ function KasirDesktopCart({ user }) {
   }, [activeTransactionId]);
 
   return (
-    <aside className="fixed right-0 top-16 h-[calc(100vh-4rem)] w-[380px] bg-surface-container-lowest border-l border-outline-variant shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] flex flex-col z-30">
+    <aside className="fixed right-0 top-0 h-screen w-[340px] xl:w-[380px] bg-surface-container-lowest border-l border-outline-variant shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] flex flex-col z-30">
       {/* Transaction Tabs */}
       <div className="border-b border-outline-variant bg-surface px-3 pt-3">
         <div className="flex items-center justify-between mb-2">

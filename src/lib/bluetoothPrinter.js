@@ -25,45 +25,30 @@ export function buildReceiptPayload(transaction) {
 
   payload.push([ESC, 0x40]);
   payload.push([ESC, 0x61, 0x01]);
-  payload.push([ESC, 0x21, 0x10]);
   payload.push('Lapak Berkah Buntulia');
-  payload.push([ESC, 0x21, 0x00]);
-  payload.push([ESC, 0x61, 0x00]);
   payload.push('Struk Pembelian');
   payload.push(`No. Transaksi: #${transaction.id.toString().slice(-2)}`);
   payload.push(`Tanggal: ${transaction.completedAt || now}`);
   payload.push(`Metode: ${transaction.paymentMethod || 'Tunai'}`);
-  payload.push([ESC, 0x61, 0x01]);
-  payload.push([ESC, 0x21, 0x10]);
   payload.push('--------------------');
-  payload.push([ESC, 0x21, 0x00]);
-  payload.push([ESC, 0x61, 0x00]);
 
   for (const item of transaction.items) {
     const itemTotal = item.sellingPrice * item.qty;
     payload.push(item.name);
     payload.push(`${item.qty} x ${item.sellingPrice.toLocaleString('id-ID')}`);
     payload.push(`Rp ${itemTotal.toLocaleString('id-ID')}`);
-    payload.push([ESC, 0x61, 0x01]);
     payload.push('--------------------');
-    payload.push([ESC, 0x61, 0x00]);
   }
 
-  payload.push([ESC, 0x61, 0x01]);
-  payload.push([ESC, 0x21, 0x10]);
   payload.push(`Total Rp ${total.toLocaleString('id-ID')}`);
-  payload.push([ESC, 0x21, 0x00]);
-  payload.push([ESC, 0x61, 0x00]);
 
   if (transaction.paid > 0) {
     payload.push(`Bayar Rp ${transaction.paid.toLocaleString('id-ID')}`);
     payload.push(`Kembali Rp ${transaction.change.toLocaleString('id-ID')}`);
   }
 
-  payload.push([ESC, 0x61, 0x01]);
-  payload.push('--------------------');
-  payload.push([ESC, 0x61, 0x00]);
   payload.push('Terima kasih');
+  payload.push([LF]);
   payload.push([LF]);
   payload.push([ESC, 0x64, 0x03]);
   payload.push([GS, 0x56, 0x00]);
@@ -81,42 +66,28 @@ export function buildReturnReceiptPayload(transaction, returnReason) {
 
   payload.push([ESC, 0x40]);
   payload.push([ESC, 0x61, 0x01]);
-  payload.push([ESC, 0x21, 0x10]);
   payload.push('Struk Retur');
-  payload.push([ESC, 0x21, 0x00]);
   payload.push([ESC, 0x61, 0x00]);
   payload.push(`No. Transaksi: #${transaction.transactionId}`);
   payload.push(`Tanggal: ${transaction.date}`);
   payload.push(`Mitra: ${transaction.mitraName}`);
   payload.push(`Metode: ${transaction.paymentMethod}`);
-  payload.push([ESC, 0x61, 0x01]);
-  payload.push([ESC, 0x21, 0x10]);
   payload.push('--------------------');
-  payload.push([ESC, 0x21, 0x00]);
-  payload.push([ESC, 0x61, 0x00]);
 
   for (const item of transaction.rawItems || []) {
     payload.push(item.product?.nama_produk || 'Produk');
     payload.push(`Qty: ${item.quantity}`);
-    payload.push([ESC, 0x61, 0x01]);
     payload.push('--------------------');
-    payload.push([ESC, 0x61, 0x00]);
   }
 
-  payload.push([ESC, 0x61, 0x01]);
-  payload.push([ESC, 0x21, 0x10]);
   payload.push(`Total Retur: ${transaction.total.toLocaleString('id-ID')}`);
-  payload.push([ESC, 0x21, 0x00]);
-  payload.push([ESC, 0x61, 0x00]);
 
   if (returnReason) {
     payload.push(`Alasan: ${returnReason}`);
   }
 
-  payload.push([ESC, 0x61, 0x01]);
-  payload.push('--------------------');
-  payload.push([ESC, 0x61, 0x00]);
   payload.push('Terima kasih');
+  payload.push([LF]);
   payload.push([LF]);
   payload.push([ESC, 0x64, 0x03]);
   payload.push([GS, 0x56, 0x00]);
