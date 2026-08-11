@@ -134,6 +134,16 @@ export async function connectPrinter() {
 
   const server = await device.gatt.connect();
   console.log('GATT connected');
+  
+  if (device.gatt?.requestMTU) {
+    try {
+      await device.gatt.requestMTU(517);
+      console.log('MTU negotiated');
+    } catch {
+      console.log('MTU negotiation skipped');
+    }
+  }
+  
   const service = await server.getPrimaryService(SERVICE_UUID);
   console.log('Service found');
   const characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
@@ -153,11 +163,16 @@ export async function printReceiptBluetooth(transaction) {
     const { characteristic } = await connectPrinter();
     console.log('Writing payload:', payload.length, 'bytes');
 
-    const CHUNK_SIZE = 200;
+    const CHUNK_SIZE = 50;
     for (let i = 0; i < payload.length; i += CHUNK_SIZE) {
       const chunk = payload.slice(i, i + CHUNK_SIZE);
+      
+      if (!cachedDevice?.gatt?.connected) {
+        throw new Error('Koneksi Bluetooth terputus');
+      }
+      
       await characteristic.writeValue(chunk);
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise(resolve => setTimeout(resolve, 150));
     }
 
     console.log('Print success');
@@ -176,11 +191,16 @@ export async function printReturnReceiptBluetooth(transaction, returnReason) {
   try {
     const { characteristic } = await connectPrinter();
     
-    const CHUNK_SIZE = 200;
+    const CHUNK_SIZE = 50;
     for (let i = 0; i < payload.length; i += CHUNK_SIZE) {
       const chunk = payload.slice(i, i + CHUNK_SIZE);
+      
+      if (!cachedDevice?.gatt?.connected) {
+        throw new Error('Koneksi Bluetooth terputus');
+      }
+      
       await characteristic.writeValue(chunk);
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise(resolve => setTimeout(resolve, 150));
     }
     
     return { success: true, method: 'bluetooth' };
