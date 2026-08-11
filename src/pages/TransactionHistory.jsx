@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { transactionService, returnService, productService, stockMovementService } from '../lib/services';
+import { printReceipt as printReceiptBluetooth, printReturnReceiptBluetooth } from '../lib/bluetoothPrinter';
 import Pagination from '../components/Pagination';
 
 function TransactionHistory() {
@@ -79,68 +80,6 @@ function TransactionHistory() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, startDate, endDate, selectedPayment]);
-
-  const printReceipt = (transaction) => {
-    const receiptWindow = window.open('', '_blank', 'width=320,height=600');
-    if (!receiptWindow) return;
-    receiptWindow.document.write(`
-      <html>
-        <head>
-          <title>Struk #${transaction.transactionId}</title>
-          <style>
-            body { font-family: 'Hanken Grotesk', sans-serif; padding: 16px; color: #000; }
-            table { width: 100%; border-collapse: collapse; }
-            td, th { padding: 4px; }
-          </style>
-        </head>
-        <body>
-          <h3 style="margin: 0 0 4px 0; font-size: 16px; font-weight: 700;">Lapak Berkah Buntulia</h3>
-          <p style="margin: 0 0 12px 0; font-size: 12px; color: #424750;">Struk Pembelian</p>
-          <p style="margin: 0 0 4px 0; font-size: 12px;">No. Transaksi: #${transaction.transactionId}</p>
-          <p style="margin: 0 0 4px 0; font-size: 12px;">Tanggal: ${transaction.date}</p>
-          <p style="margin: 0 0 4px 0; font-size: 12px;">Mitra: ${transaction.mitraName}</p>
-          <p style="margin: 0 0 4px 0; font-size: 12px;">Metode: ${transaction.paymentMethod}</p>
-          <p style="margin: 0 0 12px 0; font-size: 12px;">Status: ${transaction.status}</p>
-          <table>
-            <thead>
-              <tr>
-                <th style="text-align: left; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">Item</th>
-                <th style="text-align: center; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">Qty</th>
-                <th style="text-align: right; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td style="padding: 4px 0; font-size: 12px;">Total Item</td>
-                <td style="padding: 4px 0; font-size: 12px; text-align: center;">${transaction.items}</td>
-                <td style="padding: 4px 0; font-size: 12px; text-align: right;">Rp ${transaction.total.toLocaleString('id-ID')}</td>
-              </tr>
-            </tbody>
-          </table>
-          <div style="margin-top: 12px; border-top: 1px dashed #ccc; padding-top: 8px;">
-            <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 700;">
-              <span>Total</span>
-              <span>Rp ${transaction.total.toLocaleString('id-ID')}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-top: 4px;">
-              <span>Bayar</span>
-              <span>Rp ${transaction.paid.toLocaleString('id-ID')}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-top: 4px;">
-              <span>Kembali</span>
-              <span>Rp ${transaction.change.toLocaleString('id-ID')}</span>
-            </div>
-          </div>
-          <p style="margin-top: 16px; font-size: 12px; text-align: center; color: #424750;">Terima kasih telah berbelanja</p>
-        </body>
-      </html>
-    `);
-    receiptWindow.document.close();
-    receiptWindow.onload = () => {
-      receiptWindow.focus();
-      receiptWindow.print();
-    };
-  };
 
   const openReturnModal = (transaction) => {
     setReturnModal({ open: true, transaction });
@@ -398,7 +337,20 @@ function TransactionHistory() {
                               <span className="material-symbols-outlined text-[18px]">undo</span>
                             </button>
                             <button
-                              onClick={() => printReceipt(h)}
+                              onClick={async () => {
+                                const receiptItems = (h.rawItems || []).map((item) => ({
+                                  name: item.product?.nama_produk || 'Produk',
+                                  qty: item.quantity || 0,
+                                  sellingPrice: item.harga_satuan || 0,
+                                }));
+                                const receipt = { ...h, items: receiptItems, sellingPrice: h.total };
+                                const result = await printReceiptBluetooth(receipt);
+                                if (result && result.success) {
+                                  setToast({ message: 'Struk berhasil dikirim ke printer', type: 'success' });
+                                } else if (result && result.error) {
+                                  setToast({ message: 'Gagal print Bluetooth: ' + result.error, type: 'error' });
+                                }
+                              }}
                               className="w-8 h-8 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-on-primary flex items-center justify-center transition-all duration-200"
                               title="Cetak Struk"
                               aria-label="Cetak struk"
@@ -490,6 +442,19 @@ function TransactionHistory() {
                 className="flex-1 h-10 px-4 bg-surface border border-outline-variant text-on-surface rounded-lg font-label-md text-label-md hover:bg-surface-container transition-colors"
               >
                 Batal
+              </button>
+              <button
+                onClick={async () => {
+                  const result = await printReturnReceiptBluetooth(returnModal.transaction, returnReason);
+                  if (result && result.success) {
+                    setToast({ message: 'Struk retur berhasil dikirim ke printer', type: 'success' });
+                  } else if (result && result.error) {
+                    setToast({ message: 'Gagal print Bluetooth: ' + result.error, type: 'error' });
+                  }
+                }}
+                className="h-10 px-4 bg-surface border border-outline-variant text-on-surface rounded-lg font-label-md text-label-md hover:bg-surface-container transition-colors"
+              >
+                Print Struk Retur
               </button>
               <button
                 onClick={handleSubmitReturn}

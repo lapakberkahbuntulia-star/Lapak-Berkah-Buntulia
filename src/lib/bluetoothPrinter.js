@@ -9,7 +9,11 @@ const LF = 0x0a;
 function bytesToUint8Array(bytes) {
   if (typeof bytes === 'string') {
     const encoder = new TextEncoder();
-    return encoder.encode(bytes);
+    const lineBytes = encoder.encode(bytes);
+    const result = new Uint8Array(lineBytes.length + 1);
+    result.set(lineBytes);
+    result[lineBytes.length] = LF;
+    return result;
   }
   return new Uint8Array(bytes);
 }
@@ -17,55 +21,112 @@ function bytesToUint8Array(bytes) {
 export function buildReceiptPayload(transaction) {
   const total = transaction.items.reduce((sum, item) => sum + item.sellingPrice * item.qty, 0);
   const now = new Date().toLocaleString('id-ID');
-  const lines = [];
+  const payload = [];
 
-  lines.push([ESC, 0x40]);
-  lines.push([ESC, 0x61, 0x01]);
-  lines.push([ESC, 0x21, 0x10]);
-  lines.push('Lapak Berkah Buntulia');
-  lines.push([ESC, 0x21, 0x00]);
-  lines.push('Struk Pembelian');
-  lines.push([ESC, 0x61, 0x00]);
-  lines.push(`No. Transaksi: #${transaction.id.toString().slice(-2)}`);
-  lines.push(`Tanggal: ${transaction.completedAt || now}`);
-  lines.push(`Metode: ${transaction.paymentMethod || 'Tunai'}`);
-  lines.push([ESC, 0x61, 0x01]);
-  lines.push([GS, 0x21, 0x01]);
-  lines.push('Item');
-  lines.push('Qty x Harga');
-  lines.push('Total');
-  lines.push([GS, 0x21, 0x00]);
-  lines.push([ESC, 0x61, 0x00]);
+  payload.push([ESC, 0x40]);
+  payload.push([ESC, 0x61, 0x01]);
+  payload.push([ESC, 0x21, 0x10]);
+  payload.push('Lapak Berkah Buntulia');
+  payload.push([ESC, 0x21, 0x00]);
+  payload.push([ESC, 0x61, 0x00]);
+  payload.push('Struk Pembelian');
+  payload.push(`No. Transaksi: #${transaction.id.toString().slice(-2)}`);
+  payload.push(`Tanggal: ${transaction.completedAt || now}`);
+  payload.push(`Metode: ${transaction.paymentMethod || 'Tunai'}`);
+  payload.push([ESC, 0x61, 0x01]);
+  payload.push([ESC, 0x21, 0x10]);
+  payload.push('--------------------');
+  payload.push([ESC, 0x21, 0x00]);
+  payload.push([ESC, 0x61, 0x00]);
 
   for (const item of transaction.items) {
     const itemTotal = item.sellingPrice * item.qty;
-    lines.push(`${item.name}`);
-    lines.push(`${item.qty} x ${item.sellingPrice.toLocaleString('id-ID')}`);
-    lines.push(`Rp ${itemTotal.toLocaleString('id-ID')}`);
+    payload.push(item.name);
+    payload.push(`${item.qty} x ${item.sellingPrice.toLocaleString('id-ID')}`);
+    payload.push(`Rp ${itemTotal.toLocaleString('id-ID')}`);
+    payload.push([ESC, 0x61, 0x01]);
+    payload.push('--------------------');
+    payload.push([ESC, 0x61, 0x00]);
   }
 
-  lines.push([ESC, 0x61, 0x01]);
-  lines.push([GS, 0x21, 0x10]);
-  lines.push(`Total Rp ${total.toLocaleString('id-ID')}`);
-  lines.push([ESC, 0x21, 0x00]);
+  payload.push([ESC, 0x61, 0x01]);
+  payload.push([ESC, 0x21, 0x10]);
+  payload.push(`Total Rp ${total.toLocaleString('id-ID')}`);
+  payload.push([ESC, 0x21, 0x00]);
+  payload.push([ESC, 0x61, 0x00]);
 
   if (transaction.paid > 0) {
-    lines.push(`Bayar Rp ${transaction.paid.toLocaleString('id-ID')}`);
-    lines.push(`Kembali Rp ${transaction.change.toLocaleString('id-ID')}`);
+    payload.push(`Bayar Rp ${transaction.paid.toLocaleString('id-ID')}`);
+    payload.push(`Kembali Rp ${transaction.change.toLocaleString('id-ID')}`);
   }
 
-  lines.push([ESC, 0x61, 0x00]);
-  lines.push('Terima kasih telah berbelanja');
-  lines.push([LF]);
-  lines.push([ESC, 0x64, 0x03]);
-  lines.push([GS, 0x56, 0x00]);
+  payload.push([ESC, 0x61, 0x01]);
+  payload.push('--------------------');
+  payload.push([ESC, 0x61, 0x00]);
+  payload.push('Terima kasih');
+  payload.push([LF]);
+  payload.push([ESC, 0x64, 0x03]);
+  payload.push([GS, 0x56, 0x00]);
 
+  const bytes = [];
+  for (const line of payload) {
+    bytes.push(...bytesToUint8Array(line));
+  }
+
+  return bytesToUint8Array(bytes);
+}
+
+export function buildReturnReceiptPayload(transaction, returnReason) {
   const payload = [];
-  for (const line of lines) {
-    payload.push(...bytesToUint8Array(line));
+
+  payload.push([ESC, 0x40]);
+  payload.push([ESC, 0x61, 0x01]);
+  payload.push([ESC, 0x21, 0x10]);
+  payload.push('Struk Retur');
+  payload.push([ESC, 0x21, 0x00]);
+  payload.push([ESC, 0x61, 0x00]);
+  payload.push(`No. Transaksi: #${transaction.transactionId}`);
+  payload.push(`Tanggal: ${transaction.date}`);
+  payload.push(`Mitra: ${transaction.mitraName}`);
+  payload.push(`Metode: ${transaction.paymentMethod}`);
+  payload.push([ESC, 0x61, 0x01]);
+  payload.push([ESC, 0x21, 0x10]);
+  payload.push('--------------------');
+  payload.push([ESC, 0x21, 0x00]);
+  payload.push([ESC, 0x61, 0x00]);
+
+  for (const item of transaction.rawItems || []) {
+    payload.push(item.product?.nama_produk || 'Produk');
+    payload.push(`Qty: ${item.quantity}`);
+    payload.push([ESC, 0x61, 0x01]);
+    payload.push('--------------------');
+    payload.push([ESC, 0x61, 0x00]);
   }
 
-  return bytesToUint8Array(payload);
+  payload.push([ESC, 0x61, 0x01]);
+  payload.push([ESC, 0x21, 0x10]);
+  payload.push(`Total Retur: ${transaction.total.toLocaleString('id-ID')}`);
+  payload.push([ESC, 0x21, 0x00]);
+  payload.push([ESC, 0x61, 0x00]);
+
+  if (returnReason) {
+    payload.push(`Alasan: ${returnReason}`);
+  }
+
+  payload.push([ESC, 0x61, 0x01]);
+  payload.push('--------------------');
+  payload.push([ESC, 0x61, 0x00]);
+  payload.push('Terima kasih');
+  payload.push([LF]);
+  payload.push([ESC, 0x64, 0x03]);
+  payload.push([GS, 0x56, 0x00]);
+
+  const bytes = [];
+  for (const line of payload) {
+    bytes.push(...bytesToUint8Array(line));
+  }
+
+  return bytesToUint8Array(bytes);
 }
 
 let cachedDevice = null;
@@ -123,6 +184,21 @@ export async function printReceiptBluetooth(transaction) {
     return { success: true, method: 'bluetooth' };
   } catch (error) {
     console.error('Bluetooth print failed:', error);
+    cachedDevice = null;
+    cachedCharacteristic = null;
+    return { success: false, method: 'bluetooth', error: error.message };
+  }
+}
+
+export async function printReturnReceiptBluetooth(transaction, returnReason) {
+  const payload = buildReturnReceiptPayload(transaction, returnReason);
+
+  try {
+    const { characteristic } = await connectPrinter();
+    await characteristic.writeValue(payload);
+    return { success: true, method: 'bluetooth' };
+  } catch (error) {
+    console.error('Bluetooth return print failed:', error);
     cachedDevice = null;
     cachedCharacteristic = null;
     return { success: false, method: 'bluetooth', error: error.message };
