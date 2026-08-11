@@ -23,16 +23,22 @@ export function buildReceiptPayload(transaction) {
   const now = new Date().toLocaleString('id-ID');
   const payload = [];
 
+  // Reset printer
   payload.push([ESC, 0x40]);
+  
+  // Header Center
   payload.push([ESC, 0x61, 0x01]);
   payload.push('Lapak Berkah Buntulia');
   payload.push('Struk Pembelian');
+  
+  // Align Left
   payload.push([ESC, 0x61, 0x00]);
   payload.push(`No. Transaksi: #${transaction.id.toString().slice(-2)}`);
   payload.push(`Tanggal: ${transaction.completedAt || now}`);
   payload.push(`Metode: ${transaction.paymentMethod || 'Tunai'}`);
   payload.push('--------------------');
 
+  // Items
   for (const item of transaction.items) {
     const itemTotal = item.sellingPrice * item.qty;
     payload.push(item.name);
@@ -47,10 +53,12 @@ export function buildReceiptPayload(transaction) {
     payload.push(`Kembali: Rp ${transaction.change.toLocaleString('id-ID')}`);
   }
 
-  payload.push('Terima kasih');
-  payload.push([LF]);
+  // Footer
   payload.push('--------------------');
-  payload.push([GS, 0x56, 0x00]);
+  payload.push('Terima kasih');
+
+  // Feed minimal 1 baris agar teks terlihat lengkap tepat di garis pemotong
+  payload.push([ESC, 0x64, 0x01]);
 
   const bytes = [];
   for (const line of payload) {
@@ -63,9 +71,14 @@ export function buildReceiptPayload(transaction) {
 export function buildReturnReceiptPayload(transaction, returnReason) {
   const payload = [];
 
+  // Reset printer
   payload.push([ESC, 0x40]);
+  
+  // Header Center
   payload.push([ESC, 0x61, 0x01]);
   payload.push('Struk Retur');
+  
+  // Align Left
   payload.push([ESC, 0x61, 0x00]);
   payload.push(`No. Transaksi: #${transaction.transactionId}`);
   payload.push(`Tanggal: ${transaction.date}`);
@@ -86,9 +99,9 @@ export function buildReturnReceiptPayload(transaction, returnReason) {
   }
 
   payload.push('Terima kasih');
-  payload.push([LF]);
-  payload.push('--------------------');
-  payload.push([GS, 0x56, 0x00]);
+  
+  // Feed minimal 1 baris
+  payload.push([ESC, 0x64, 0x01]);
 
   const bytes = [];
   for (const line of payload) {
@@ -232,11 +245,11 @@ export function printReceiptFallback(transaction) {
         <head>
           <title>Struk #${transaction.id.toString().slice(-2)}</title>
           <style>
-            @page { size: 58mm auto; margin: 2mm; }
+            @page { size: 58mm auto; margin: 0; }
             * { box-sizing: border-box; }
             body {
               margin: 0;
-              padding: 2mm;
+              padding: 2mm 2mm 0mm 2mm;
               font-family: Arial, sans-serif;
               font-size: 11px;
               color: #000;
@@ -251,7 +264,7 @@ export function printReceiptFallback(transaction) {
           </style>
         </head>
         <body>
-          <div class="text-center" style="margin-top: 4px;">
+          <div class="text-center" style="margin-top: 2px;">
             <div style="font-weight: bold; font-size: 12px;">Lapak Berkah Buntulia</div>
             <div style="font-size: 10px; color: #666;">Struk Pembelian</div>
           </div>
@@ -282,8 +295,8 @@ export function printReceiptFallback(transaction) {
               </div>
             ` : ''}
           </div>
-          <div style="margin-top: 6px; border-top: 1px dashed #ccc; padding-top: 4px; text-align: center; font-size: 10px; color: #666;">
-            Terima kasih telah berbelanja
+          <div style="margin-top: 4px; border-top: 1px dashed #ccc; padding-top: 4px; text-align: center; font-size: 10px; color: #666;">
+            Terima kasih
           </div>
         </body>
       </html>
