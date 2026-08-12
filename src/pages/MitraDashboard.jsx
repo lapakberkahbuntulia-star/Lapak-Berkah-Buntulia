@@ -313,17 +313,16 @@ function MitraDashboard({ role, user }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      let emailValue = formData.email || `mitra-${Date.now()}@local`;
-      const existingEmails = new Set(mitraList.map((m) => m.email));
-      if (existingEmails.has(emailValue)) {
-        emailValue = `mitra-${Date.now()}@local`;
-      }
+      const rawEmail = (formData.email || '').trim();
+      const emailValue = rawEmail ? rawEmail.toLowerCase() : `mitra-${Date.now()}@local`;
+      const normalizedExisting = new Set(mitraList.map((m) => (m.email || '').toLowerCase()));
+      const finalEmail = normalizedExisting.has(emailValue) ? `mitra-${Date.now()}@local` : emailValue;
 
       const newMitra = await mitraService.create({
         full_name: formData.fullName,
         address: formData.address,
         phone: formData.phone,
-        email: emailValue,
+        email: finalEmail,
         gender: formData.gender,
         photo: formData.photo,
         status: formData.status,

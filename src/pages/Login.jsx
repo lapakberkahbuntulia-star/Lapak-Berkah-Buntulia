@@ -15,7 +15,8 @@ function Login({ onLogin }) {
     setLoading(true);
 
     try {
-      const user = await authService.login(email, password, role);
+      const normalizedEmail = email.trim().toLowerCase();
+      const user = await authService.login(normalizedEmail, password, role);
       onLogin(user.role, user);
     } catch (err) {
       setError(err.message || 'Login gagal. Periksa kembali kredensial Anda.');

@@ -106,3 +106,44 @@ INSERT INTO product_types (name) VALUES
   ('Bumbu Dapur'),
   ('Lainnya')
 ON CONFLICT (name) DO NOTHING;
+
+-- Enable pgcrypto for password hashing
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Hash existing plaintext passwords
+UPDATE users
+SET password = crypt(password, gen_salt('bf', 10))
+WHERE password IS NOT NULL
+  AND password != ''
+  AND password !~ '^\$2[aby]\$';
+
+-- Auto-hash passwords on insert/update
+CREATE OR REPLACE FUNCTION hash_user_password()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.password IS NOT NULL AND NEW.password != '' THEN
+    IF NEW.password !~ '^\$2[aby]\$' THEN
+      NEW.password = crypt(NEW.password, gen_salt('bf', 10));
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS hash_user_password_trigger ON users;
+CREATE TRIGGER hash_user_password_trigger
+BEFORE INSERT OR UPDATE ON users
+FOR EACH ROW EXECUTE FUNCTION hash_user_password();
+
+-- Secure login RPC
+CREATE OR REPLACE FUNCTION login_user(p_email TEXT, p_password TEXT, p_role TEXT)
+RETURNS TABLE(id UUID, email TEXT, role TEXT, nama TEXT) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT u.id, u.email, u.role, u.nama
+  FROM users u
+  WHERE u.email = p_email
+    AND u.role = p_role
+    AND u.password = crypt(p_password, u.password);
+END;
+$$ LANGUAGE plpgsql STABLE;

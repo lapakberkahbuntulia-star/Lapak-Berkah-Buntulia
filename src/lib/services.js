@@ -2,9 +2,11 @@ import { supabase } from './supabase';
 
 export const authService = {
   async login(email, password, role) {
+    const normalizedEmail = (email || '').trim().toLowerCase();
+
     const { data, error } = await supabase
       .rpc('login_user', {
-        p_email: email,
+        p_email: normalizedEmail,
         p_password: password,
         p_role: role,
       });
@@ -14,6 +16,16 @@ export const authService = {
     }
 
     if (!data || data.length === 0) {
+      const { data: users } = await supabase
+        .from('users')
+        .select('role')
+        .eq('email', normalizedEmail);
+
+      if (users && users.length > 0) {
+        const roles = users.map((u) => u.role).join(', ');
+        throw new Error(`Peran salah. Akun ini terdaftar sebagai: ${roles}`);
+      }
+
       throw new Error('Email, kata sandi, atau peran salah');
     }
 
